@@ -1,45 +1,50 @@
 # Publishing ClonePilot to Smithery
 
-[Smithery](https://smithery.ai) is the largest MCP server registry (7k+ servers, equivalent of Docker Hub for MCP). Listing here is how indie hackers will discover ClonePilot from inside Claude Desktop / Claude Code / Cursor.
+[Smithery](https://smithery.ai) is the largest MCP server registry (7k+ servers, the Docker Hub of MCP). Listing here is how indie hackers discover ClonePilot from inside Claude Desktop / Claude Code / Cursor.
 
-## Prereqs
+## Why this is a manual one-click step
 
-1. **PyPI publish complete** — `pip install clonepilot` works publicly. (Phase 4.)
-2. GitHub repo public.
-3. `smithery.yaml` at repo root (already committed).
-4. `Dockerfile` at repo root (already committed; only used for Smithery's hosted runtime).
-5. A Smithery account linked to GitHub.
+Smithery authenticates via browser OAuth (GitHub-backed). Even an automation can't bypass the consent screen — it's the same security model as `gh auth login` or `vercel login`. So publishing is a one-time browser click.
+
+After that single click, the CLI session is cached on this machine and future `smithery mcp publish` calls require no further interaction.
 
 ## One-time submit
 
 ```bash
-# Install Smithery CLI
-npm install -g @smithery/cli
+# 1. Authenticate (opens a Smithery URL — click "Authorize")
+npx -y @smithery/cli@latest auth login
 
-# Authenticate
-smithery login
-
-# Submit
-smithery publish
+# 2. Publish (reads smithery.yaml + Dockerfile from this repo)
+npx -y @smithery/cli@latest mcp publish \
+  https://github.com/a01050398694-commits/clonepilot \
+  -n askbit/clonepilot
 ```
 
-Smithery reads `smithery.yaml`, validates the config schema, builds the Docker image, and lists the server.
+Smithery scrapes `smithery.yaml`, validates the config schema, builds the Docker image, and lists the server within a few minutes.
 
 ## README badge (after publish)
+
+Already in `README.md` as a commented block — uncomment when the listing goes live:
 
 ```markdown
 [![smithery badge](https://smithery.ai/badge/@askbit/clonepilot)](https://smithery.ai/server/@askbit/clonepilot)
 ```
 
-## Verifying
-
-Users install via:
+## What users get after listing
 
 ```bash
-npx -y @smithery/cli install @askbit/clonepilot --client claude
+npx -y @smithery/cli@latest install @askbit/clonepilot --client claude
 ```
 
-That writes the `mcpServers.clonepilot` block into the user's `claude_desktop_config.json` automatically.
+That single command writes the `mcpServers.clonepilot` block into the user's `claude_desktop_config.json` automatically.
+
+## Until Smithery is live: install direct from GitHub
+
+```bash
+uvx --from git+https://github.com/a01050398694-commits/clonepilot clonepilot
+```
+
+Works today, no Smithery and no PyPI required. The README's primary install instructions already point here.
 
 ## Updating
 

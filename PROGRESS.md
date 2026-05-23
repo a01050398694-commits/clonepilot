@@ -91,17 +91,41 @@ URL → BusinessBlueprint → Next.js 랜딩 자동 생성 → Vercel 배포 →
 ## Phase 3 verdict
 **작동.** 7 MCP tools (analyze · monetize · scaffold · deploy · marketing_kit · attach_domain · oneshot). Smithery 매니페스트 + Dockerfile 준비됨. 배포는 PyPI 토큰 받으면 즉시.
 
-## Phase 4 후보
-- PyPI publish (사용자가 PyPI account + token 발급 1회)
-- Smithery 실제 등록 (PyPI 완료 후 `smithery publish`)
-- Plausible/PostHog 옵션 (open-source 분석)
-- Multi-page 사이트 (Pricing 별도 페이지, FAQ, About)
+## Phase 4 — 2026-05-24 same day
+- Task 22 **Auto-favicon SVG 생성** 스캐폴드에 추가. 브랜드명 첫 글자 + 해시 기반 hue로 결정론적 색상. Next.js 15가 `app/icon.svg`를 자동 favicon으로 서빙 → 404 사라짐.
+- Task 23 Repo 청소. .gitignore에 e2e/test 산출물 + .playwright-mcp/ 추가. 시크릿 누출 grep으로 확인 (sk-ant/vcp/re_/ghp_/sk_live_ 패턴 매칭은 prefix 비교 코드뿐, 실 키 없음).
+- Task 24 **GitHub repo 생성 + push 완료**. https://github.com/a01050398694-commits/clonepilot (public). PAT 인증, 명시적 git add 만 사용.
+- Task 25 Smithery 등록 준비 완료. `smithery auth login --json` 으로 OAuth URL 발급 가능 — 사용자가 ONE click하면 즉시 `smithery mcp publish` 자동 실행 가능. docs/SMITHERY.md에 정확한 절차 박음.
+- Task 26 **Phase 4 final E2E 성공**.
+  - 라이브: https://blogai-dh1gbkzsn-askbit.vercel.app (자동 prod alias 회전)
+  - **0 console errors** (Phase 3의 favicon 404 제거됨)
+  - `/icon.svg → 200 OK` (자동 생성된 SVG favicon)
+  - 페이지 제목 클린: "BlogAI — Write once, earn from 12 platforms with AI blogs."
+  - 스크린샷: ./blogai-phase4.png (hero + 이메일 폼 + 명확한 브랜드)
+
+## Phase 4 verdict
+**작동 + 배포.** GitHub 공개, `uvx --from git+https://github.com/...` 으로 누구나 즉시 설치 가능. Smithery 등록은 사용자 OAuth 클릭 한 번 남음.
+
+## 배포 채널 현황
+| 채널 | 상태 | 명령 |
+|---|---|---|
+| **GitHub clone (즉시)** | ✅ LIVE | `uvx --from git+https://github.com/a01050398694-commits/clonepilot clonepilot` |
+| **Smithery 등록** | ⏸ OAuth 클릭 대기 | `npx -y @smithery/cli@latest auth login` (1회) → `... mcp publish` (이후 자동) |
+| **PyPI 등록** | ⏸ Phase 5 | 계정 이메일 인증 필요 |
+
+## Phase 5 후보
+- PyPI 계정 발급 + publish (사용자 이메일 인증 1회)
+- Smithery 한 번 OAuth 후 자동 publish (사용자 클릭 1회)
+- awesome-mcp-servers PR 제출 (PAT로 자동 가능)
+- GitHub release + 태그 + CHANGELOG 자동화
+- Plausible/PostHog 분석 옵션
+- Multi-page (Pricing/FAQ/About 별도 라우트)
 - A/B 카피 variants
-- favicon 자동 생성 (현재 404)
 
 ## Known gotchas
 1. Vercel은 알려진 CVE가 있는 Next.js 버전을 빌드 통과 후 READY 단계에서 ERROR로 reject. 템플릿의 next 버전을 정기적으로 최신 patch 로 bump 필요.
 2. Vercel Pro/Team 계정은 기본 SSO 보호 ON → preview URL 401. 신규 프로젝트 생성 직후 PATCH 로 해제하는 코드를 vercel.py 에 포함.
 3. Claude tool_use는 max_length 등 pydantic 제약을 잘 안 지킴 — 긴 카피 필드는 description으로 가이드만 주고 max_length는 안 거는 게 안전. oneshot 의 marketing_kit 호출은 best-effort 패턴 (실패해도 deploy URL 살림).
 4. Vercel 프로젝트는 첫 deploy 시 자동 생성되지만 env vars를 deploy 전에 push하려면 명시적으로 `POST /v9/projects` 먼저 호출해야 함 (409 = 이미 존재, OK). env POST는 409 = 이미 설정, 덮어쓰지 않음.
-5. 생성된 Next.js 페이지에 favicon 없음 → 콘솔 404 1건. 기능엔 무영향. Phase 4에서 자동 favicon 생성 (브랜드명 첫 글자 SVG → ico) 검토.
+5. ~~생성된 Next.js 페이지에 favicon 없음 → 콘솔 404 1건.~~ **Phase 4에서 해결**: `app/icon.svg` 자동 생성 (브랜드명 첫 글자 + 해시 색상). Next.js 15가 자동으로 favicon으로 서빙.
+6. Smithery / PyPI 등록은 본질적으로 OAuth 또는 이메일 인증을 요구함 — 완전 자동화 불가. AI agent 측에선 (1) auth URL을 사용자에게 surface하고 (2) 사용자가 한 번 클릭한 후의 모든 publish 단계는 자동화 가능한 패턴이 한계.

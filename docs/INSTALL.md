@@ -12,21 +12,27 @@ ClonePilot ships as a Python MCP server. Once installed, it surfaces three tools
   - `VERCEL_TOKEN` — https://vercel.com/account/tokens (scope: Full Account).
   - `STRIPE_SECRET_KEY` *(optional)* — https://dashboard.stripe.com/apikeys. Without it, `monetize` returns PREVIEW links (`https://example.com/buy/...`) so the pipeline still demos end-to-end.
 
-## Install from source (today)
+## Install directly from GitHub (works today, no PyPI required)
 
 ```bash
-git clone https://github.com/<you>/clonepilot.git
-cd clonepilot
-uv sync
+uvx --from git+https://github.com/a01050398694-commits/clonepilot clonepilot
 ```
 
-To run the server in stdio mode (what every MCP client expects):
+That one command:
+1. Fetches the latest `main` from GitHub.
+2. Installs ClonePilot and its deps into an isolated uv-managed env.
+3. Runs the MCP server in stdio mode — ready to wire into any MCP client.
+
+For development, clone instead:
 
 ```bash
+git clone https://github.com/a01050398694-commits/clonepilot.git
+cd clonepilot
+uv sync
 uv run clonepilot
 ```
 
-## Once published to PyPI
+## Once published to PyPI (Phase 5)
 
 ```bash
 uvx clonepilot
@@ -44,7 +50,7 @@ uvx clonepilot
   "mcpServers": {
     "clonepilot": {
       "command": "uvx",
-      "args": ["clonepilot"],
+      "args": ["--from", "git+https://github.com/a01050398694-commits/clonepilot", "clonepilot"],
       "env": {
         "ANTHROPIC_API_KEY": "sk-ant-...",
         "SUPADATA_API_KEY": "...",
@@ -60,7 +66,8 @@ Restart Claude Desktop. ClonePilot's tools appear in the tools menu.
 ### Claude Code
 
 ```bash
-claude mcp add clonepilot uvx clonepilot \
+claude mcp add clonepilot \
+  -- uvx --from git+https://github.com/a01050398694-commits/clonepilot clonepilot \
   -e ANTHROPIC_API_KEY=sk-ant-... \
   -e SUPADATA_API_KEY=... \
   -e VERCEL_TOKEN=...
@@ -79,7 +86,7 @@ Or edit `~/.claude/settings.json` and add the same `mcpServers` block as above.
 ```toml
 [mcp_servers.clonepilot]
 command = "uvx"
-args = ["clonepilot"]
+args = ["--from", "git+https://github.com/a01050398694-commits/clonepilot", "clonepilot"]
 env = { ANTHROPIC_API_KEY = "sk-ant-...", SUPADATA_API_KEY = "...", VERCEL_TOKEN = "..." }
 ```
 

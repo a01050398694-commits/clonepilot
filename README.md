@@ -29,10 +29,12 @@ App builders like bolt.new, Lovable, and v0 are great — but you still have to 
 ## Install
 
 ```bash
-uv tool install clonepilot
-# or run directly without install:
-uvx clonepilot
+uvx --from git+https://github.com/a01050398694-commits/clonepilot clonepilot
 ```
+
+Or wire it straight into Claude Desktop / Claude Code / Cursor / Codex — full instructions in [`docs/INSTALL.md`](docs/INSTALL.md).
+
+When ClonePilot lands on PyPI (Phase 5), the install shortens to `uvx clonepilot`.
 
 ## Configure (Claude Desktop)
 
