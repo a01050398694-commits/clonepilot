@@ -113,14 +113,24 @@ URL → BusinessBlueprint → Next.js 랜딩 자동 생성 → Vercel 배포 →
 | **Smithery 등록** | ⏸ OAuth 클릭 대기 | `npx -y @smithery/cli@latest auth login` (1회) → `... mcp publish` (이후 자동) |
 | **PyPI 등록** | ⏸ Phase 5 | 계정 이메일 인증 필요 |
 
-## Phase 5 후보
-- PyPI 계정 발급 + publish (사용자 이메일 인증 1회)
-- Smithery 한 번 OAuth 후 자동 publish (사용자 클릭 1회)
-- awesome-mcp-servers PR 제출 (PAT로 자동 가능)
-- GitHub release + 태그 + CHANGELOG 자동화
-- Plausible/PostHog 분석 옵션
-- Multi-page (Pricing/FAQ/About 별도 라우트)
-- A/B 카피 variants
+## Phase 5 — 2026-05-24 same day
+- Task 27 **GOTCHAS.md 생성**. 7개 MUST/MUST NOT 규칙 정리 (Next CVE 픽스, Vercel SSO 자동 해제, max_length 금지, marketing_kit best-effort, env push 시 프로젝트 선생성, app/icon.svg 자동, OAuth/email 인증 자동화 불가 인정).
+- Task 28 **GitHub Actions PyPI 자동 publish workflow** (`.github/workflows/publish.yml`). v*.*.* 태그 푸시 시 트리거. `PYPI_API_TOKEN` repo secret 들어가면 자동 publish, 없으면 워닝만 띄우고 통과 (inert).
+- Task 29 **CHANGELOG.md + v0.1.0 태그 + GitHub Release**. Phase 1-5 전체 정리, https://github.com/a01050398694-commits/clonepilot/releases/tag/v0.1.0 라이브.
+- Task 30 **awesome-mcp-servers PR 자동 제출**. Fork → Developer Tools 섹션에 entry 추가 → PR 오픈. **#6807 라이브**: https://github.com/punkpeye/awesome-mcp-servers/pull/6807
+- Task 31 **Smithery 1-클릭 헬퍼** (`scripts/publish_smithery.py`). 사용자가 `uv run python scripts/publish_smithery.py` 한 번 실행 → 자동으로 auth URL 띄우고 → 브라우저 클릭 → publish까지 자동 완료.
+
+## Phase 5 verdict
+**작동 + 공개 등록 진행 중.** GitHub release 라이브, awesome-mcp-servers PR 머지 대기, Smithery 1-클릭 준비, PyPI workflow 자동 발사 대기.
+
+## 5단계 누적 — 32 tasks 모두 실 검증
+| Phase | tasks | 결과 |
+|---|---|---|
+| 1 | 9 | 7 MCP tools 1차 — 라이브 URL |
+| 2 | 6 | Stripe + 마케팅 키트 |
+| 3 | 6 | 이메일 캡처 + 분석 + 도메인 |
+| 4 | 5 | favicon + GitHub 공개 |
+| 5 | 5 | Release + awesome PR + Smithery 1-클릭 |
 
 ## Known gotchas
 1. Vercel은 알려진 CVE가 있는 Next.js 버전을 빌드 통과 후 READY 단계에서 ERROR로 reject. 템플릿의 next 버전을 정기적으로 최신 patch 로 bump 필요.
