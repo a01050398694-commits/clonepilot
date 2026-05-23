@@ -28,6 +28,7 @@ packages = ["src/clonepilot"]
 
 [dependency-groups]
 dev = [
+    "pillow>=12.2.0",
     "pytest>=8.3.0",
     "ruff>=0.7.0",
 ]

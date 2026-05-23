@@ -1,0 +1,50 @@
+{
+  "twitter_thread": {
+    "tweets": [
+      "bolt.new and v0 still make you type the prompt. ClonePilot doesn't. Paste a YouTube URL inside Claude — get a deployed MVP with Stripe + email capture in ~2 min.",
+      "Here's how it works:\n\n1. Paste a YouTube business URL\n2. `analyze` pulls the transcript → Claude distills a BusinessBlueprint\n3. `monetize` generates Stripe Payment Links per tier\n4. `scaffold` builds a Next.js landing page (Buy buttons + Resend email capture baked in)\n5. `deploy` ships to Vercel, returns the live URL\n\nOr call `oneshot` and skip steps 1–5.",
+      "I tested it on a real Korean YouTube interview about a SaaS business.\n\n2 minutes later: https://blogflow-nine.vercel.app\n\nWorking Stripe-style buttons. Working email capture. Zero hand-coded JSX. I never left Claude.",
+      "ClonePilot is an MCP server — 7 tools total. It lives inside Claude Code, Claude Desktop, Cursor, or Codex. No new tab. No new app. No new mental model.\n\nYou already use Claude to build. This just removes the part where you do the research and write the brief.",
+      "It's fully open source and free.\n\nBring your own Anthropic + Vercel keys.\n\nInstall in one line:\n`uvx --from git+https://github.com/a01050398694-commits/clonepilot`\n\nStar it, try it, tell me what breaks → https://github.com/a01050398694-commits/clonepilot"
+    ]
+  },
+  "product_hunt": {
+    "tagline": "YouTube URL in. Deployed MVP out. From inside Claude.",
+    "description": "ClonePilot is a free, open-source MCP server with 7 tools that turns a YouTube business video into a live Next.js landing page with Stripe payment links and email capture — without you leaving Claude Code, Desktop, Cursor, or Codex.",
+    "first_comment": "Hey PH — I built ClonePilot because my actual workflow was: watch a YouTube video about a business, get excited, open bolt.new or v0, spend 20 minutes writing a prompt from memory, iterate for a weekend, and still not have Stripe wired up.\n\nThe bottleneck wasn't the coding — it was the translation layer between 'video I watched' and 'prompt I typed.'\n\nClonePilot removes that layer. You paste the YouTube URL directly into Claude. The `analyze` tool pulls the transcript and has Claude distill a structured BusinessBlueprint. `monetize` creates real Stripe Payment Links. `scaffold` generates a Next.js 15 + Tailwind landing page with Buy buttons and a Resend email capture form already wired. `deploy` pushes it to Vercel and hands you back the live URL. Or just call `oneshot` and get all of it in one shot.\n\nI ran it on a real Korean YouTube interview — the demo deployed in under 2 minutes: https://blogflow-nine.vercel.app\n\nIt's fully open source, free, and you bring your own keys. Built on FastMCP + Claude Sonnet.\n\nWould love feedback on the tool design and what YouTube niches you'd throw at it first."
+  },
+  "hacker_news": {
+    "title": "Show HN: ClonePilot – MCP server that turns a YouTube URL into a deployed MVP",
+    "body": "ClonePilot is a Python MCP server (FastMCP, 7 tools) that you install into Claude Code, Claude Desktop, Cursor, or Codex. You give it a YouTube business video URL and it produces a live, deployed landing page with Stripe payment links and email capture.\n\nThe pipeline: `analyze` fetches the transcript via yt-dlp and sends it to Claude Sonnet to extract a typed BusinessBlueprint (name, tiers, value props). `monetize` calls the Stripe API to create Payment Links for each tier. `scaffold` templates a Next.js 15 + Tailwind app with the Buy buttons and a Resend-backed opt-in form injected. `deploy` calls the Vercel REST API and returns the live URL. `marketing_kit` generates launch copy for X, PH, HN, Reddit, LinkedIn, and ad creatives. `oneshot` wraps all five in a single tool call.\n\nI tested it on a Korean YouTube interview about a SaaS product — deployed in ~2 minutes: https://blogflow-nine.vercel.app. No hand-coded JSX.\n\nA few honest caveats: transcript quality varies (auto-captions on non-English videos are rough), Stripe Payment Links aren't a full checkout flow, and Vercel free tier cold starts mean the first load is slow. The generated landing is intentionally minimal — one hero, one pricing table, one email form.\n\nIt's fully open source, MIT licensed, bring your own Anthropic + Vercel + Stripe keys.\n\nInstall: `uvx --from git+https://github.com/a01050398694-commits/clonepilot`\n\nRepo: https://github.com/a01050398694-commits/clonepilot\n\nHappy to answer questions about the MCP tool design or the scaffolding approach."
+  },
+  "reddit": {
+    "subreddit": "sideproject",
+    "title": "I built an MCP server that watches a YouTube business video and ships a working MVP — without you leaving Claude",
+    "body": "My side project loop used to be: watch a YouTube video about some business, get inspired, then spend a weekend trying to recreate it with AI tools — most of which still required me to write a detailed prompt from scratch.\n\nSo I built ClonePilot to remove that translation step.\n\nIt's an MCP server you install into Claude Code, Claude Desktop, Cursor, or Codex. You paste in a YouTube URL and it:\n\n- Pulls and processes the transcript\n- Has Claude distill a structured business blueprint\n- Creates Stripe Payment Links for each pricing tier\n- Scaffolds a Next.js 15 + Tailwind landing page with Buy buttons and a Resend email capture form\n- Deploys it to Vercel and hands you back the live URL\n\nOr you call `oneshot` and it does all of that in one tool invocation, roughly 2 minutes end to end.\n\nI tested it on a real Korean YouTube interview. The result: https://blogflow-nine.vercel.app — working buttons, working email form, zero JSX written by me.\n\nIt's free and open source (MIT). You bring your own API keys (Anthropic, Vercel, Stripe, Resend).\n\nInstall: `uvx --from git+https://github.com/a01050398694-commits/clonepilot`\n\nRepo: https://github.com/a01050398694-commits/clonepilot\n\nWould genuinely love to know what YouTube channels or niches you'd point this at. That's the part I find most interesting — the quality of the blueprint is almost entirely a function of how clear the video is about the business model."
+  },
+  "linkedin": {
+    "body": "I got tired of watching a YouTube video about a business idea, getting excited, and then spending a weekend manually translating that excitement into a working product.\n\nSo I built ClonePilot — an open-source MCP server that sits inside Claude Code, Claude Desktop, or Cursor.\n\nThe workflow: paste a YouTube URL → it analyzes the transcript, generates a business blueprint, creates Stripe Payment Links, scaffolds a Next.js landing page with email capture, and deploys to Vercel. One tool call. About 2 minutes.\n\nI tested it on a Korean-language YouTube interview about a SaaS product. The live result is at https://blogflow-nine.vercel.app — no JSX written by hand.\n\nIt's fully free and open source. Bring your own API keys.\n\nIf you work with indie hackers, solo founders, or AI-assisted development teams, I'd value your feedback: https://github.com/a01050398694-commits/clonepilot"
+  },
+  "ads": [
+    {
+      "headline": "YouTube URL in. Live MVP out.",
+      "body": "ClonePilot turns any YouTube business video into a deployed Next.js site with Stripe + email capture — from inside Claude, in ~2 min. Free & open source.",
+      "image_prompt": "Split-screen flat illustration: left side shows a YouTube video player with a business interview paused; right side shows a clean Next.js landing page with a pricing table and a green 'Deployed ✓' badge. Dark background, minimal UI, neon green accent color."
+    },
+    {
+      "headline": "bolt.new still makes you type the prompt.",
+      "body": "ClonePilot watches the YouTube video, writes the brief, builds the page, wires Stripe, and ships to Vercel — without you leaving Claude. Free MCP server.",
+      "image_prompt": "A developer sitting at a desk, staring at a blinking cursor in an empty prompt box labeled 'bolt.new', looking frustrated. On the adjacent monitor, a terminal inside Claude shows a green progress bar reading '✓ Deployed in 1m 52s'. Cinematic lighting, realistic 3D render style."
+    },
+    {
+      "headline": "Clone any SaaS you see on YouTube.",
+      "body": "Watch a business interview. Paste the URL into ClonePilot. Get a live landing page with Stripe pricing tiers and email capture in 2 minutes. Open source.",
+      "image_prompt": "A phone screen showing a YouTube thumbnail of a business founder interview, with a glowing arrow pointing from the phone into a laptop screen displaying a polished SaaS landing page with a pricing table and 'Get Started' buttons. Soft studio lighting, top-down perspective."
+    },
+    {
+      "headline": "Ship the idea before you forget it.",
+      "body": "From YouTube video to deployed MVP with Stripe + email capture in ~2 min — all inside Claude. No new tabs. No new tools. Just paste a URL.",
+      "image_prompt": "A glowing hourglass with sand barely moved, next to a laptop screen showing a Vercel deployment success screen with a live URL. In the background, a faint YouTube play button icon. Minimalist flat design, dark navy background, amber and green accent colors."
+    }
+  ]
+}

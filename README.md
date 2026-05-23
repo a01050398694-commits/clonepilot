@@ -2,9 +2,13 @@
 
 > The MCP server that watches a YouTube business video for you, then ships the MVP.
 
+![ClonePilot launch hero — four phases of the same generated landing page](launch-hero.png)
+
 <!-- Uncomment once published on Smithery + PyPI -->
 <!-- [![smithery badge](https://smithery.ai/badge/@askbit/clonepilot)](https://smithery.ai/server/@askbit/clonepilot) -->
 <!-- [![PyPI](https://img.shields.io/pypi/v/clonepilot)](https://pypi.org/project/clonepilot/) -->
+
+[Live demo](https://blogflow-nine.vercel.app) · [v0.1.0 release](https://github.com/a01050398694-commits/clonepilot/releases/tag/v0.1.0) · [Launch playbook](docs/MARKETING.md)
 
 
 Paste a YouTube URL into Claude Code, Claude Desktop, or Codex. ClonePilot extracts the business model (target, problem, solution, pricing, channel), scaffolds a Next.js landing page in that style, deploys it to Vercel, and hands you back a live URL.
