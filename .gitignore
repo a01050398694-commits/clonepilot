@@ -1,0 +1,38 @@
+.env
+.env.local
+.env.*.local
+*.bak
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.uv/
+build/
+dist/
+
+# Workspace (generated repos)
+workspace/
+generated/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Local test artifacts (regenerable, sometimes contain blueprint snapshots)
+test_blueprint.json
+test_kit.json
+e2e_result.json
+e2e_phase2_result.json
+e2e_phase3_result.json
+
+# Playwright MCP runtime cache
+.playwright-mcp/

@@ -1,0 +1,51 @@
+# Smithery server manifest — https://smithery.ai/docs/build/getting-started
+# After PyPI publish, users install via:
+#   npx -y @smithery/cli install @askbit/clonepilot --client claude
+runtime: container
+startCommand:
+  type: stdio
+  configSchema:
+    type: object
+    title: ClonePilot config
+    description: ClonePilot turns a YouTube business video into a deployed MVP.
+    properties:
+      ANTHROPIC_API_KEY:
+        type: string
+        title: Anthropic API key
+        description: Required. Get one at https://console.anthropic.com/settings/keys.
+      VERCEL_TOKEN:
+        type: string
+        title: Vercel token
+        description: Required for deploy(). Generate at https://vercel.com/account/tokens.
+      SUPADATA_API_KEY:
+        type: string
+        title: Supadata API key
+        description: Optional. Falls back to free youtube-transcript-api.
+      STRIPE_SECRET_KEY:
+        type: string
+        title: Stripe secret key
+        description: Optional. Without it, monetize() returns PREVIEW links.
+      RESEND_API_KEY:
+        type: string
+        title: Resend API key
+        description: Optional. Needed when scaffold uses lead_destination.
+      VERCEL_TEAM_ID:
+        type: string
+        title: Vercel team ID
+        description: Optional. Only when deploying under a team scope.
+    required:
+      - ANTHROPIC_API_KEY
+      - VERCEL_TOKEN
+  commandFunction: |-
+    (config) => ({
+      command: "uvx",
+      args: ["clonepilot"],
+      env: {
+        ANTHROPIC_API_KEY: config.ANTHROPIC_API_KEY,
+        VERCEL_TOKEN: config.VERCEL_TOKEN,
+        SUPADATA_API_KEY: config.SUPADATA_API_KEY,
+        STRIPE_SECRET_KEY: config.STRIPE_SECRET_KEY,
+        RESEND_API_KEY: config.RESEND_API_KEY,
+        VERCEL_TEAM_ID: config.VERCEL_TEAM_ID,
+      },
+    })
