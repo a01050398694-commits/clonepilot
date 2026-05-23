@@ -1,0 +1,39 @@
+name: Publish to PyPI
+
+# Fires when a maintainer pushes a tag like v0.1.0. Builds the wheel + sdist
+# and uploads to PyPI. Inert until the PYPI_API_TOKEN repo secret is set —
+# see docs/INSTALL.md for the one-time PyPI account + token setup.
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+  id-token: write  # required if migrating to PyPI Trusted Publishing later
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.11.7"
+
+      - name: Build distribution
+        run: uv build
+
+      - name: Publish to PyPI
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          if [ -z "$UV_PUBLISH_TOKEN" ]; then
+            echo "::warning::PYPI_API_TOKEN repo secret not set — skipping publish."
+            exit 0
+          fi
+          uv publish
