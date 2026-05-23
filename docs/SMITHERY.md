@@ -8,7 +8,21 @@ Smithery authenticates via browser OAuth (GitHub-backed). Even an automation can
 
 After that single click, the CLI session is cached on this machine and future `smithery mcp publish` calls require no further interaction.
 
-## One-time submit
+## One-time submit (one command)
+
+```bash
+uv run python scripts/publish_smithery.py
+```
+
+The helper:
+
+1. Calls `smithery auth login --json`, prints the auth URL — you click once.
+2. Polls until the browser approval comes back.
+3. Runs `smithery mcp publish https://github.com/a01050398694-commits/clonepilot -n askbit/clonepilot`.
+
+Future publishes skip the browser step — the CLI session is cached on the machine.
+
+## Or, manual two-command flow
 
 ```bash
 # 1. Authenticate (opens a Smithery URL — click "Authorize")
