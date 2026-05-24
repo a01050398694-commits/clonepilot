@@ -1,6 +1,32 @@
 # PROGRESS — ClonePilot MCP
 
-_Last updated: 2026-05-24_
+_Last updated: 2026-05-24 (야간 마케팅 배포 완료)_
+
+## 🟢 새 세션 픽업 — 여기부터 읽으면 끝
+
+**v0.1.0 라이브, 40 tasks 완료, 다음 액션은 `WAKEUP.md` 참조.**
+
+| 자산 | 상태 |
+|---|---|
+| GitHub repo (public) | https://github.com/a01050398694-commits/clonepilot |
+| v0.1.0 release | https://github.com/a01050398694-commits/clonepilot/releases/tag/v0.1.0 |
+| Live demo | https://blogflow-nine.vercel.app |
+| awesome-mcp-servers PR | https://github.com/punkpeye/awesome-mcp-servers/pull/6807 (머지 대기) |
+| X 5-tweet 스레드 | https://x.com/askbit44039/status/2058256792917037509 |
+| Smithery 등록 | ⏸ `uv run python scripts/publish_smithery.py` 1-클릭 대기 |
+| Reddit / Show HN / PH / LinkedIn | ⏸ 수동 (URL+카피는 `docs/MARKETING.md`) |
+
+**다음 액션 자세히**: `WAKEUP.md` 열기 (채널별 정확한 시간/링크/복붙 텍스트).
+
+**7 MCP tools**: `version`, `analyze`, `monetize`, `scaffold`, `deploy`, `marketing_kit`, `attach_domain`, `oneshot`.
+
+**스택**: Python 3.12 + FastMCP · Anthropic Claude · Supadata · Stripe · Vercel · Resend · Next.js 15 + Tailwind.
+
+**경로**: `E:\사업 유튜브 url 분석및 자동실행\`. .env는 `E:\해외유튜브 경제 유튜버 요약 자동화\.env` + `E:\kfashion\.env.local`에서 inline로 가져다 씀 (보호 파일, 복사 안 함).
+
+**알아둘 GOTCHA 7건**: `GOTCHAS.md` (Next CVE 픽스, Vercel SSO 자동 해제, max_length 금지, marketing_kit best-effort, env push 시 프로젝트 선생성, app/icon.svg 자동, OAuth/email 인증 자동화 불가).
+
+---
 
 ## Vision
 글로벌 indie hacker가 YouTube 사업 소개 영상 URL을 Claude/Codex에 한 줄 던지면, 영상 속 비즈니스 모델을 분석해 동일 컨셉의 working MVP (랜딩페이지 + 배포 URL + 마케팅 키트 + 결제)를 자동 생성해주는 MCP 서버.
