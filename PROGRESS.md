@@ -1,20 +1,28 @@
 # PROGRESS — ClonePilot MCP
 
-_Last updated: 2026-05-24 (야간 마케팅 배포 완료)_
+_Last updated: 2026-05-24 (Phase 6: visible 24/7 revenue line live)_
 
 ## 🟢 새 세션 픽업 — 여기부터 읽으면 끝
 
-**v0.1.0 라이브, 40 tasks 완료, 다음 액션은 `WAKEUP.md` 참조.**
+**v0.1.0 + Phase 6 라이브. 갤러리/대시보드/waitlist 동작. 자동 데모 루프 launcher 준비됨.**
 
-| 자산 | 상태 |
+| 자산 | 상태 / URL |
 |---|---|
+| **갤러리 (메인 마케팅 페이지)** | https://clonepilot-gallery-hjqmy0ute-askbit.vercel.app |
+| **첫 데모** (BlogFlow) | https://blogflow-nv4evhjwz-askbit.vercel.app |
+| **두 번째 데모** (PhotoAI — Pieter Levels) | https://photoai-7wzey4ysh-askbit.vercel.app |
+| **CLI 대시보드** | `uv run python scripts/dashboard.py [--watch]` |
+| **Waitlist API** | POST `https://clonepilot-gallery-.../api/waitlist` — Resend 자동 이메일 |
+| **24/7 자동 루프** | `.\scripts\run_forever.ps1` (수동 시작) or `install_scheduler.ps1` (영구 등록) |
 | GitHub repo (public) | https://github.com/a01050398694-commits/clonepilot |
 | v0.1.0 release | https://github.com/a01050398694-commits/clonepilot/releases/tag/v0.1.0 |
-| Live demo | https://blogflow-nine.vercel.app |
 | awesome-mcp-servers PR | https://github.com/punkpeye/awesome-mcp-servers/pull/6807 (머지 대기) |
 | X 5-tweet 스레드 | https://x.com/askbit44039/status/2058256792917037509 |
 | Smithery 등록 | ⏸ `uv run python scripts/publish_smithery.py` 1-클릭 대기 |
+| GitHub Sponsors | ⏸ `docs/SPONSORS_SETUP.md` (KYC 신청 1~3일) |
 | Reddit / Show HN / PH / LinkedIn | ⏸ 수동 (URL+카피는 `docs/MARKETING.md`) |
+
+**결제 전략 (확정)**: Paddle 거절 → Phase A로 결제 processor 가입 보류, waitlist만 운영. N≥10 모이면 Lemon Squeezy 시도. 한국→한국 PayPal 막힘 인지함, 글로벌→한국은 OK.
 
 **다음 액션 자세히**: `WAKEUP.md` 열기 (채널별 정확한 시간/링크/복붙 텍스트).
 
