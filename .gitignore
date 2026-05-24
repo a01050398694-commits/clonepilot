@@ -42,9 +42,11 @@ auto_loop.log
 gallery.json
 
 # Verifier screenshots (regenerable)
-01-gallery-homepage.png
-02-waitlist-form-filled.png
-03-waitlist-success.png
+0[1-9]-*.png
+1[0-9]-*.png
+
+# Local license-quota state when tests use CLONEPILOT_WORKSPACE=cwd
+_license_test/
 
 # Gallery site build artifacts
 gallery_site/.next/

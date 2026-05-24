@@ -244,6 +244,10 @@ def _push_env_vars(
         )
         if resp.status_code in {200, 201, 409}:
             continue
+        # Vercel sometimes returns 400 ENV_CONFLICT instead of 409 for an
+        # existing key — treat it the same. Per GOTCHA #8.
+        if resp.status_code == 400 and "ENV_CONFLICT" in resp.text:
+            continue
         raise VercelDeployError(
             f"Push env {name!r} failed: {resp.status_code} {resp.text[:300]}"
         )

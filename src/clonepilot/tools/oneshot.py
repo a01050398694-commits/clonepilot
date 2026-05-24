@@ -10,6 +10,11 @@ from clonepilot.blueprint.transcript import fetch_transcript
 from clonepilot.blueprint.youtube import extract_video_id
 from clonepilot.config import Config
 from clonepilot.deploy import deploy_to_vercel
+from clonepilot.license import (
+    LicenseExhaustedError,
+    check_deploy_allowed,
+    record_deploy,
+)
 from clonepilot.marketing import generate_marketing_kit
 from clonepilot.monetize import create_payment_links
 from clonepilot.scaffold import scaffold_repo
@@ -37,6 +42,25 @@ def oneshot(
     the deployed page.
     """
     cfg = Config.load()
+
+    # Gate at the top — fail fast before burning Anthropic + Supadata calls
+    # on a request that can't deploy. analyze() / scaffold() remain ungated
+    # when called individually; oneshot is the "I want a live URL" entry.
+    try:
+        license_status = check_deploy_allowed()
+    except LicenseExhaustedError as exc:
+        return {
+            "error": "free_tier_exhausted",
+            "message": str(exc),
+            "deploys_used_this_month": exc.used,
+            "free_limit_per_month": exc.limit,
+            "upgrade_url": exc.upgrade_url,
+            "next_action": (
+                f"You've used your 1 free oneshot this month. "
+                f"Upgrade for unlimited at {exc.upgrade_url}, or call "
+                f"analyze() + scaffold() individually — those still work."
+            ),
+        }
 
     video_id = extract_video_id(youtube_url)
     canonical_url = f"https://www.youtube.com/watch?v={video_id}"
@@ -76,6 +100,7 @@ def oneshot(
         team_id=cfg.vercel_team_id,
         env_vars=env_vars or None,
     )
+    record_deploy(deployed.url)
 
     kit_payload = None
     kit_error = None
@@ -102,4 +127,6 @@ def oneshot(
         },
         "marketing_kit": kit_payload,
         "marketing_kit_error": kit_error,
+        "license_tier": license_status.tier,
+        "deploys_remaining_this_month": license_status.deploys_remaining_this_month,
     }

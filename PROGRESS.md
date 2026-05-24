@@ -8,7 +8,12 @@ _Last updated: 2026-05-24 (Phase 6: visible 24/7 revenue line live)_
 
 | 자산 | 상태 / URL |
 |---|---|
-| **갤러리 (메인 마케팅 페이지)** | https://clonepilot-gallery-hjqmy0ute-askbit.vercel.app |
+| **갤러리 (메인 마케팅 페이지)** | https://clonepilot-gallery.vercel.app (stable alias) |
+| **/install** | https://clonepilot-gallery.vercel.app/install — Claude Desktop/Code/Cursor/Codex MCP config 복붙 |
+| **/pricing** | https://clonepilot-gallery.vercel.app/pricing — Free / Pro $19 / Lifetime $299 (early-bird $9 / $199) |
+| **/demo/[slug]** | https://clonepilot-gallery.vercel.app/demo/blogflow + /demo/photoai — analysis + 9-step roadmap per demo |
+| **/api/upgrade** | POST {email, tier} → waitlist signup (pro/lifetime/either) + Resend 자동 이메일 |
+| **/api/license/verify** | POST {key} → validates Pro/Lifetime license. Hardcoded `cpl_demo_pro` for testing. Real keys via CLONEPILOT_LICENSE_KEYS env in Vercel. |
 | **첫 데모** (BlogFlow) | https://blogflow-nv4evhjwz-askbit.vercel.app |
 | **두 번째 데모** (PhotoAI — Pieter Levels) | https://photoai-7wzey4ysh-askbit.vercel.app |
 | **CLI 대시보드** | `uv run python scripts/dashboard.py [--watch]` |

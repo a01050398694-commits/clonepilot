@@ -72,3 +72,14 @@
 **Why**: Phase 4 spent agent time trying to bypass Smithery's OAuth. There is no bypass — the consent screen is the whole product. Same shape for PyPI (email verify), GitHub fine-grained tokens (browser confirm), and Stripe (KYC).
 
 **Where**: `docs/SMITHERY.md` and `docs/INSTALL.md` both describe the precise one-click flow and the cached-session payoff.
+
+---
+
+## #8 — MUST treat Vercel 400 ENV_CONFLICT as success when upserting env vars
+
+**Rule**: In `_push_env_vars`, accept `400` with `ENV_CONFLICT` in the body as a no-op alongside the 409 case. Don't blow up a deploy because a key already exists.
+
+**Why**: Vercel inconsistently returns either 409 or 400-with-ENV_CONFLICT when you POST an env var that already exists. The original code only handled 409, so any re-deploy of a project that already had the env var failed at the env-push step. The deploy itself doesn't actually need to overwrite — we never want to silently change a user-set value.
+
+**Where**: `src/clonepilot/deploy/vercel.py::_push_env_vars` — the 400-with-ENV_CONFLICT branch sits next to the 409 branch.
+

@@ -1,4 +1,9 @@
-"""MCP tool: deploy(repo_path) → live URL."""
+"""MCP tool: deploy(repo_path) → live URL.
+
+Gated by `clonepilot.license`: free tier = 1 deploy/month, Pro/Lifetime =
+unlimited. analyze() and scaffold() are NEVER gated — those are local-cost,
+and we want every user free to explore.
+"""
 
 from __future__ import annotations
 
@@ -6,6 +11,11 @@ from pathlib import Path
 
 from clonepilot.config import Config
 from clonepilot.deploy import deploy_to_vercel
+from clonepilot.license import (
+    LicenseExhaustedError,
+    check_deploy_allowed,
+    record_deploy,
+)
 from clonepilot.server import mcp
 
 
@@ -27,9 +37,32 @@ def deploy(
 
     Requires `VERCEL_TOKEN` in env. Generate one at
     https://vercel.com/account/tokens (scope: Full Account).
+
+    Free tier: 1 deploy/month, tracked in ~/.clonepilot/usage.json.
+    Pro / Lifetime: set CLONEPILOT_LICENSE_KEY for unlimited deploys.
     """
     cfg = Config.load()
     token = cfg.require_vercel()
+
+    try:
+        status = check_deploy_allowed()
+    except LicenseExhaustedError as exc:
+        # Return a structured error instead of raising — the MCP host will
+        # surface this to Claude, and Claude will tell the user clearly.
+        return {
+            "error": "free_tier_exhausted",
+            "message": str(exc),
+            "deploys_used_this_month": exc.used,
+            "free_limit_per_month": exc.limit,
+            "upgrade_url": exc.upgrade_url,
+            "next_action": (
+                f"You've used your 1 free deploy this month. "
+                f"Upgrade for unlimited at {exc.upgrade_url}, "
+                f"or wait until next month for your free deploy to reset. "
+                f"analyze() and scaffold() still work without limit — you can "
+                f"keep exploring locally."
+            ),
+        }
 
     repo_dir = Path(repo_path).expanduser().resolve()
     if not repo_dir.is_dir():
@@ -46,6 +79,10 @@ def deploy(
         team_id=cfg.vercel_team_id,
         env_vars=env_vars,
     )
+
+    # Only count successful deploys against the free quota.
+    record_deploy(result.url)
+
     return {
         "url": result.url,
         "deployment_id": result.deployment_id,
@@ -54,4 +91,6 @@ def deploy(
         "files_uploaded": result.file_count,
         "bytes_uploaded": result.bytes_uploaded,
         "env_vars_pushed": sorted((env_vars or {}).keys()),
+        "license_tier": status.tier,
+        "deploys_remaining_this_month": status.deploys_remaining_this_month,
     }
