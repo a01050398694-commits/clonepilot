@@ -91,8 +91,10 @@
 
 **Why**: Phase 7 silently dropped every waitlist confirmation email for an hour. The route handlers wrapped `resend.emails.send(...)` in `.catch(() => null)` so the user's signup still returned 200, but Resend itself rejected each call with `403 "askbit.co is not verified"`. The user only discovered it by saying "no email arrived." Two failures stacked: an unverified domain + an over-eager catch.
 
-**Where**: `gallery_site/app/api/upgrade/route.ts` and `gallery_site/app/api/waitlist/route.ts` — both `from` constants are pinned to `onboarding@resend.dev` with a comment pointing back to this rule. When `askbit.co` (or any project-specific domain) is later verified, swap back to `process.env.LEAD_FROM_EMAIL || "onboarding@resend.dev"`.
+**Where**: `gallery_site/app/api/upgrade/route.ts` and `gallery_site/app/api/waitlist/route.ts` — both `from` constants are pinned to `onboarding@resend.dev` with a comment pointing back to this rule. When `askbit.com` (or any project-specific domain) is later verified, swap back to `process.env.LEAD_FROM_EMAIL || "onboarding@resend.dev"`.
 
 **Adjacent lesson**: when calling a third-party API in a route handler, log the failure to console.error before swallowing it — silent catches turn outages into mysteries.
+
+**Update — 2026-05-24 Operator**: discovered the underlying domain issue was worse than "unverified". Probed DNS: `askbit.co` returns NXDOMAIN (no such domain registered anywhere), while `askbit.com` is the actually-registered domain (on Cloudflare nameservers). Every codebase reference to `askbit.co` is a typo for `askbit.com`. Resend can't verify a non-existent domain — no DKIM record will ever propagate. **Sub-rule**: before adding a domain to ANY third-party sender (Resend, Postmark, SES) or auth provider, first run `Resolve-DnsName <domain> -Type NS -Server 1.1.1.1` and confirm it actually has nameservers. Verification step-by-step guide: `docs/RESEND_DOMAIN_VERIFICATION.md`.
 
 

@@ -54,3 +54,7 @@ gallery_site/node_modules/
 
 # Playwright MCP runtime cache
 .playwright-mcp/
+
+# Operator daily-digest snapshot (yesterday's counts, regenerable)
+.daily_digest_state.json
+.daily_digest.log

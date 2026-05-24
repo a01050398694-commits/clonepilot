@@ -50,6 +50,20 @@ export default function Page() {
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-16">
+      <Link
+        href="/pricing#waitlist"
+        className="mb-10 block rounded-lg border border-cyan-400/30 bg-cyan-400/[0.04] px-4 py-3 text-sm hover:border-cyan-400/60 hover:bg-cyan-400/[0.08] transition"
+      >
+        <span className="font-mono text-[10px] uppercase tracking-wider text-cyan-400 mr-2">
+          v1 · coming soon
+        </span>
+        <span className="text-zinc-200">
+          Full SaaS factory, not just landing pages.
+        </span>{" "}
+        <span className="text-zinc-400">
+          Join the waitlist to be first →
+        </span>
+      </Link>
       <header className="mb-14 max-w-3xl">
         <p className="text-cyan-400 font-mono text-xs uppercase tracking-wider mb-3">
           ClonePilot · MCP server · open source

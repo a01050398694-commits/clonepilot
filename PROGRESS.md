@@ -228,3 +228,35 @@ URL → BusinessBlueprint → Next.js 랜딩 자동 생성 → Vercel 배포 →
 4. Vercel 프로젝트는 첫 deploy 시 자동 생성되지만 env vars를 deploy 전에 push하려면 명시적으로 `POST /v9/projects` 먼저 호출해야 함 (409 = 이미 존재, OK). env POST는 409 = 이미 설정, 덮어쓰지 않음.
 5. ~~생성된 Next.js 페이지에 favicon 없음 → 콘솔 404 1건.~~ **Phase 4에서 해결**: `app/icon.svg` 자동 생성 (브랜드명 첫 글자 + 해시 색상). Next.js 15가 자동으로 favicon으로 서빙.
 6. Smithery / PyPI 등록은 본질적으로 OAuth 또는 이메일 인증을 요구함 — 완전 자동화 불가. AI agent 측에선 (1) auth URL을 사용자에게 surface하고 (2) 사용자가 한 번 클릭한 후의 모든 publish 단계는 자동화 가능한 패턴이 한계.
+
+---
+
+## Operator session — Phase 8 prep (2026-05-24)
+
+### 8.4 대기 중 (Builder 8.1 ✅ 신호 받기 전엔 시작 금지)
+
+| Task | 상태 | 결과 / 다음 액션 |
+|---|---|---|
+| Resend 도메인 인증 가이드 | 🟢 문서 완료 | `docs/RESEND_DOMAIN_VERIFICATION.md` — Cloudflare 클릭경로 4 records (MX + SPF + DKIM + DMARC). **사용자 DNS 입력 + Resend 대시보드 Verify 클릭만 남음** |
+| **askbit.co → askbit.com 오타 발견** | 🟢 GOTCHA #9 갱신 | DNS probe로 `askbit.co` NXDOMAIN, `askbit.com`만 실제 등록됨. 코드 주석/문서 전부 `.com` 기준으로 정정 필요 (코드 전환은 Resend 검증 완료 후) |
+| 갤러리 v1 배너 | 🟢 완료 | `gallery_site/app/page.tsx` 헤더 위 `/pricing#waitlist` 링크 배너 추가. 재배포 시 라이브 |
+| 24/7 AutoLoop 상태 점검 | 🟢 결과: NOT_INSTALLED | `docs/OPERATIONS.md` 에 정확한 admin PS 한 줄 설치 절차 박음 (`.\scripts\install_scheduler.ps1`) |
+| `scripts/daily_digest.py` | 🟢 완료 + 동작확인 | 1줄 출력, UTC 일 단위 delta. `.daily_digest_state.json` gitignore 등록. 스모크 테스트: `[2026-05-24 14:57 UTC] waitlist 0 (+0 today) · upgrade 0 (+0): pro 0 · life 0 · either 0 · demos 2` |
+| `docs/OPERATIONS.md` 신규 | 🟢 완료 | daily_digest 사용법 + AutoLoop 등록/확인/제거 + dashboard.py 비교 일원화 |
+| Phase 8.4 (분석리포트 뷰어 개조) | ⏸ 대기 | Builder가 PROGRESS.md 의 Phase 8.1 항목을 ✅ 로 마킹하면 즉시 시작 |
+
+### 사용자 해야 할 일 (Operator가 못 하는 것)
+
+1. **Resend 도메인 인증** — `docs/RESEND_DOMAIN_VERIFICATION.md` 따라 Cloudflare DNS 4줄 입력 + Resend 대시보드 Verify 클릭. 끝나면 "verified" 한 마디 던지면 Operator가 LEAD_FROM_EMAIL 환경변수 push + 갤러리 재배포 자동 수행.
+2. **AutoLoop 등록** (선택) — admin PowerShell 1회: `cd "E:\사업 유튜브 url 분석및 자동실행"; .\scripts\install_scheduler.ps1`. 안 해도 마케팅 SEO 면에서 큰 손해 없음 (현재 갤러리 2개 데모로 충분히 가동).
+3. **askbit.co/askbit.com 의도 확인** — `.co`가 진짜 등록할 계획인 별도 도메인인지, 단순 오타인지. 오타라면 GOTCHA #9 후속 청크에서 코드 전반 grep & replace 일괄 정리.
+
+### Operator 영역 변경 파일 (이 세션)
+
+- `docs/RESEND_DOMAIN_VERIFICATION.md` (신규)
+- `docs/OPERATIONS.md` (신규)
+- `scripts/daily_digest.py` (신규)
+- `gallery_site/app/page.tsx` (배너 추가)
+- `GOTCHAS.md` (#9에 오타 발견 후속 노트)
+- `.gitignore` (`.daily_digest_state.json` + `.daily_digest.log` 추가)
+- `PROGRESS.md` (이 섹션)
