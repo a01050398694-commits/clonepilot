@@ -54,9 +54,11 @@ export async function POST(req: Request) {
   const position = tierList.findIndex((s) => s.email === email) + 1;
 
   const apiKey = process.env.RESEND_API_KEY;
-  // Hardcoded for now — Vercel still has the old LEAD_FROM_EMAIL pointing at
-  // unverified askbit.co. Once askbit.co DNS is verified on Resend, switch
-  // back to: process.env.LEAD_FROM_EMAIL || "onboarding@resend.dev"
+  // Permanent default for waitlist mode — Resend's pre-verified sandbox sender.
+  // No DNS / domain verification needed. If a ClonePilot-specific domain is
+  // purchased later, follow docs/RESEND_DOMAIN_VERIFICATION.md then switch to:
+  //   process.env.LEAD_FROM_EMAIL || "onboarding@resend.dev"
+  // See GOTCHAS.md #9 for the original incident.
   const from = "onboarding@resend.dev";
   const lead = process.env.LEAD_DESTINATION;
 

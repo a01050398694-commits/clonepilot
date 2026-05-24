@@ -256,7 +256,7 @@ URL → BusinessBlueprint → Next.js 랜딩 자동 생성 → Vercel 배포 →
 | Task | 상태 | 결과 / 다음 액션 |
 |---|---|---|
 | Resend 도메인 인증 가이드 | 🟢 문서 완료 | `docs/RESEND_DOMAIN_VERIFICATION.md` — Cloudflare 클릭경로 4 records (MX + SPF + DKIM + DMARC). **사용자 DNS 입력 + Resend 대시보드 Verify 클릭만 남음** |
-| **askbit.co → askbit.com 오타 발견** | 🟢 GOTCHA #9 갱신 | DNS probe로 `askbit.co` NXDOMAIN, `askbit.com`만 실제 등록됨. 코드 주석/문서 전부 `.com` 기준으로 정정 필요 (코드 전환은 Resend 검증 완료 후) |
+| **askbit.co 흔적 정리 (closed)** | 🟢 완료 (2026-05-25) | DNS probe로 `askbit.co` NXDOMAIN 확인. `askbit.com`은 사용자의 별도 프로젝트. **결정: waitlist 모드 동안 `onboarding@resend.dev` 영구 유지** — 새 도메인 구매 불필요. 코드/문서 흔적 모두 청소, RESEND 가이드는 future-ref로 보존. |
 | 갤러리 v1 배너 | 🟢 완료 | `gallery_site/app/page.tsx` 헤더 위 `/pricing#waitlist` 링크 배너 추가. 재배포 시 라이브 |
 | 24/7 AutoLoop 상태 점검 | 🟢 결과: NOT_INSTALLED | `docs/OPERATIONS.md` 에 정확한 admin PS 한 줄 설치 절차 박음 (`.\scripts\install_scheduler.ps1`) |
 | `scripts/daily_digest.py` | 🟢 완료 + 동작확인 | 1줄 출력, UTC 일 단위 delta. `.daily_digest_state.json` gitignore 등록. 스모크 테스트: `[2026-05-24 14:57 UTC] waitlist 0 (+0 today) · upgrade 0 (+0): pro 0 · life 0 · either 0 · demos 2` |
@@ -265,9 +265,8 @@ URL → BusinessBlueprint → Next.js 랜딩 자동 생성 → Vercel 배포 →
 
 ### 사용자 해야 할 일 (Operator가 못 하는 것)
 
-1. **Resend 도메인 인증** — `docs/RESEND_DOMAIN_VERIFICATION.md` 따라 Cloudflare DNS 4줄 입력 + Resend 대시보드 Verify 클릭. 끝나면 "verified" 한 마디 던지면 Operator가 LEAD_FROM_EMAIL 환경변수 push + 갤러리 재배포 자동 수행.
+1. ~~**Resend 도메인 인증**~~ — 보류. 옵션 1 (sandbox sender 유지) 채택. 결제 시작 후 ClonePilot 전용 도메인 살 때 `docs/RESEND_DOMAIN_VERIFICATION.md` 펴서 진행.
 2. **AutoLoop 등록** (선택) — admin PowerShell 1회: `cd "E:\사업 유튜브 url 분석및 자동실행"; .\scripts\install_scheduler.ps1`. 안 해도 마케팅 SEO 면에서 큰 손해 없음 (현재 갤러리 2개 데모로 충분히 가동).
-3. **askbit.co/askbit.com 의도 확인** — `.co`가 진짜 등록할 계획인 별도 도메인인지, 단순 오타인지. 오타라면 GOTCHA #9 후속 청크에서 코드 전반 grep & replace 일괄 정리.
 
 ### Operator 영역 변경 파일 (이 세션)
 
