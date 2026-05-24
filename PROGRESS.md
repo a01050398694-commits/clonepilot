@@ -41,11 +41,16 @@ _Last updated: 2026-05-24 (Phase 7 끝, Phase 8 시작 — 전면 갈아엎기)_
 - 지금 `analyze()` (얕은 가격분석) → Phase 8.1에서 deep analysis로 확장.
 - 갤러리의 BlogFlow/PhotoAI 카드 = "v0 landing-only" 라벨 달고 보존, 신규 카드는 v1 풀빌드 결과.
 
-### 작업 환경 권장
+### 작업 환경 — 2 세션 병렬 (Builder + Operator)
 
-- **메인 작업 창**: 새 PowerShell + `claude` — 이 PROGRESS.md 픽업해서 Phase 8.1부터 시작.
-- **백그라운드 창** (선택): 일반 PowerShell + `run_forever.ps1` — 24/7 자동 데모 양산 (Claude 미사용).
-- 이 창은 오늘 마케팅 작업 컨텍스트 무거우니 닫고 가는 것이 깔끔.
+**`SESSIONS.md` 가 단일 출처(SoT)**. 두 세션의 책임 분리 + 복붙 프롬프트 + 워크플로 전부 거기 있음. 새 세션은 첫 메시지로 반드시 `cat SESSIONS.md` 또는 `Read SESSIONS.md` 실행.
+
+요약:
+- **세션 A "Builder"** — `src/clonepilot/**` 소유. Phase 8.1 → 8.2 → 8.3 → 8.5 본체 엔진.
+- **세션 B "Operator"** — `gallery_site/**`, `docs/**` 소유. Phase 8.4 + 운영 (Resend 도메인 인증, 갤러리 배너, 대시보드 단순화).
+- **백그라운드 (Claude 아님)** — `run_forever.ps1` — 24/7 자동 데모 양산 (선택).
+
+커밋 메시지 첫 단어 = `Builder:` 또는 `Operator:`. 매 커밋 전 `git pull --rebase`. PROGRESS.md 는 각자 자기 섹션만 append.
 
 ---
 
