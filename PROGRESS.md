@@ -1,15 +1,22 @@
 # PROGRESS — ClonePilot MCP
 
-_Last updated: 2026-05-25 (Phase 8.1 Builder 완료 — analyze_deep MCP tool 라이브)_
+_Last updated: 2026-05-25 (Phase 8.1 Builder ✅ + Operator 청소 ✅ — Phase 8.4 scope 사용자 승인됨, 다음 세션 즉시 진입)_
 
 ## 🟢 새 세션 픽업 — 여기부터 읽으면 끝
 
 ### ⚡ 새 세션 시작 시 (30초)
 
-1. `Read SESSIONS.md` → 너가 Builder인지 Operator인지 확정 (커밋 메시지 prefix가 결정함)
-2. `git pull --rebase origin main` 먼저
-3. **Builder**: 아래 "Phase 8.1 Builder 청크 로그"에서 직전 청크 ✅ 확인 → 다음 청크 (현재: Phase 8.2 Project Pack 생성기) 진입
-4. **Operator**: 아래 "다음 액션 (Operator → Builder 핸드오프)" 확인. Phase 8.1 끝났으므로 Phase 8.4 (갤러리 리포트 뷰어) 시작 가능. 참조 JSON 스키마: `e2e_artifacts/deep_analysis_e2e_v2.json`
+1. `Read SESSIONS.md` → 너가 Builder인지 Operator인지 확정 (커밋 메시지 prefix가 결정함).
+2. `git pull --rebase origin main` 먼저.
+3. **Builder**: Phase 8.1 ✅ 끝. 다음 청크 = **Phase 8.2 Project Pack 생성기**. `src/clonepilot/scaffold/` 갈아엎어서 CLAUDE.md + skills + agents + MCP + BUILD_PLAN + HUMAN_TASKS 폴더 생성하는 로직으로 전환.
+4. **Operator**: Phase 8.4 풀 진입 가능. **사용자 OK 받은 스코프 (2026-05-25)**:
+   - (a) `gallery_site/app/demo/[slug]/page.tsx` 풀스크린 리포트 뷰어로 재설계 — blueprint 헤더 → revenue_forecast (TAM/SAM/SOM 차트) → competitors → market trend → SEO → risks + 90-day GTM → data_quality 배지. 빈 섹션은 "set X env key" 안내.
+   - (b) 다국어 토글 (KR/EN/JP/ZH/ES) — 우상단 칩, `?lang=ko` URL, `report.i18n` 에서 hero 카피 오버라이드.
+   - (c) 갤러리 카드 v0/v1 라벨 구분. v1 카드는 "📊 Full analysis →" 버튼.
+   - 산출물: `lib/report.ts` 타입, `components/RevenueChart.tsx`, `components/LangToggle.tsx`, demo page 재작성, 갤러리 시드 갱신, 브라우저 E2E.
+   - 입력 데이터: `e2e_artifacts/deep_analysis_e2e_v2.json` (실 호출 산출물, 12 섹션).
+   - 시간 예상 ~3-4h, 청크 4개로 쪼개기.
+5. **둘 다 보류 액션**: AutoLoop 미설치 (admin PS 1회 `.\scripts\install_scheduler.ps1`), 결제 도메인 (waitlist 모드 영구 — `onboarding@resend.dev` sandbox 유지), 루트 walkthrough PNGs 5개 (커밋 여부 사용자 결정 대기).
 
 ### 핵심 방향 전환 (2026-05-24 야간)
 
