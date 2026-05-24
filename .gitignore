@@ -33,6 +33,22 @@ test_kit.json
 e2e_result.json
 e2e_phase2_result.json
 e2e_phase3_result.json
+seed_smoke.log
+seed_full.log
+deploy_gallery.log
+auto_loop.log
+
+# Gallery seeder output (regenerable, may contain blueprint snapshots)
+gallery.json
+
+# Verifier screenshots (regenerable)
+01-gallery-homepage.png
+02-waitlist-form-filled.png
+03-waitlist-success.png
+
+# Gallery site build artifacts
+gallery_site/.next/
+gallery_site/node_modules/
 
 # Playwright MCP runtime cache
 .playwright-mcp/

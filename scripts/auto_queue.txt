@@ -1,0 +1,15 @@
+# 24h auto-loop queue. One YouTube URL per line. Comments allowed.
+# Indie-hacker / SaaS / solopreneur talks with public captions.
+# Order = priority; the loop picks the first not-yet-processed one each cycle.
+
+# === Hand-curated batch 1 (run after seed_gallery.py) ===
+https://www.youtube.com/watch?v=qfYTbz76P-c
+https://www.youtube.com/watch?v=KaIYn7yi8Vg
+https://www.youtube.com/watch?v=2GcD2_8gxqM
+https://www.youtube.com/watch?v=I0a0lYjQXXg
+https://www.youtube.com/watch?v=p-tD8VyxiAY
+https://www.youtube.com/watch?v=YJlT3oWtJZc
+https://www.youtube.com/watch?v=cIzaaXyrhCo
+https://www.youtube.com/watch?v=H_szemxPcTI
+https://www.youtube.com/watch?v=NoAzpa1x7jU
+https://www.youtube.com/watch?v=4kgaaW39W5g
