@@ -62,6 +62,18 @@ def fetch_waitlist_count(base_url: str | None) -> int | None:
         return None
 
 
+def fetch_upgrade_counts(base_url: str | None) -> dict | None:
+    """Get Pro / Lifetime / Either signup counts from /api/upgrade GET."""
+    if not base_url:
+        return None
+    try:
+        r = httpx.get(f"{base_url.rstrip('/')}/api/upgrade", timeout=10)
+        r.raise_for_status()
+        return r.json()
+    except Exception:
+        return None
+
+
 def fetch_vercel_deploys(token: str, team_id: str) -> list[dict]:
     if not token:
         return []
@@ -81,7 +93,12 @@ def fetch_vercel_deploys(token: str, team_id: str) -> list[dict]:
         return []
 
 
-def render(gallery: dict, waitlist: int | None, deploys: list[dict]) -> str:
+def render(
+    gallery: dict,
+    waitlist: int | None,
+    deploys: list[dict],
+    upgrades: dict | None = None,
+) -> str:
     lines: list[str] = []
     lines.append("")
     lines.append(c("  ClonePilot · live status", "bold"))
@@ -91,9 +108,25 @@ def render(gallery: dict, waitlist: int | None, deploys: list[dict]) -> str:
     fail = sum(1 for e in gallery["entries"] if not e.get("ok"))
     lines.append(f"  Demos live          : {c(str(ok), 'cyan')}   (failed: {fail})")
     lines.append(
-        f"  Waitlist signups    : "
+        f"  Waitlist (homepage) : "
         f"{c(str(waitlist) if waitlist is not None else '—', 'cyan')}"
     )
+    if upgrades:
+        total = upgrades.get("total", 0)
+        pro = upgrades.get("pro", 0)
+        lifetime = upgrades.get("lifetime", 0)
+        either = upgrades.get("either", 0)
+        # Rough MRR/cash projection at current early-bird pricing
+        mrr = pro * 9  # $9/mo early-bird Pro
+        cash = lifetime * 199  # $199 early-bird Lifetime
+        lines.append(
+            f"  Upgrade waitlist    : {c(str(total), 'cyan')}  "
+            f"({c(f'pro {pro}', 'green')} · {c(f'life {lifetime}', 'green')} · either {either})"
+        )
+        if mrr or cash:
+            lines.append(
+                f"  Projected if all pay: {c(f'${mrr}/mo MRR', 'green')} + {c(f'${cash} cash', 'green')}"
+            )
     lines.append(
         f"  Vercel deploys (24h): {c(str(len(deploys)), 'cyan')}"
     )
@@ -162,8 +195,9 @@ def main() -> int:
     def one_pass() -> None:
         gallery = load_gallery()
         wait = fetch_waitlist_count(args.gallery_url)
+        upgrades = fetch_upgrade_counts(args.gallery_url)
         deploys = fetch_vercel_deploys(VERCEL_TOKEN, VERCEL_TEAM_ID)
-        out = render(gallery, wait, deploys)
+        out = render(gallery, wait, deploys, upgrades)
         if args.watch:
             sys.stdout.write("\x1b[2J\x1b[H")  # clear + home
         sys.stdout.write(out + "\n")
