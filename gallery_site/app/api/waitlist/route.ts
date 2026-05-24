@@ -41,7 +41,10 @@ export async function POST(req: Request) {
   const position = list.findIndex((s) => s.email === email) + 1;
 
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.LEAD_FROM_EMAIL || "noreply@askbit.co";
+  // Hardcoded for now — Vercel still has the old LEAD_FROM_EMAIL pointing at
+  // unverified askbit.co. Once askbit.co DNS is verified on Resend, switch
+  // back to: process.env.LEAD_FROM_EMAIL || "onboarding@resend.dev"
+  const from = "onboarding@resend.dev";
   const lead = process.env.LEAD_DESTINATION;
 
   if (apiKey) {
