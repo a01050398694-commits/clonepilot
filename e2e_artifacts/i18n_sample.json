@@ -1,0 +1,65 @@
+{
+  "default_lang": "en",
+  "locales": {
+    "en": {
+      "tagline": "Your voice. Your blog. On autopilot.",
+      "hero": "BlogFlow learns how you write — then ghosts your SEO blog posts in under 3 minutes. No more staring at a blank page or hiring writers who don't sound like you. One click, and a post that reads like you wrote it is live on your site.",
+      "cta": "Write My Blog",
+      "value_props": [
+        "🎙️ Voice fingerprint matching — posts sound unmistakably you",
+        "🔍 SEO keywords baked in from the start, not bolted on",
+        "⚡ First draft ready in 3 minutes flat",
+        "🚀 One-click publish — no copy-paste, no fuss",
+        "✂️ Stop burning founder hours on content you dread writing"
+      ]
+    },
+    "ko": {
+      "tagline": "내 말투 그대로, SEO 블로그 3분 완성",
+      "hero": "BlogFlow는 창업자의 시간이 얼마나 소중한지 압니다. 목소리 샘플 하나만 주면, 당신처럼 쓰는 SEO 블로그 포스팅을 3분 안에 뚝딱 만들어 드립니다. 재스퍼처럼 어디서나 본 듯한 글 말고 — 진짜 내 글처럼 읽히는 콘텐츠로 검색 트래픽을 잡으세요.",
+      "cta": "바로 시작하기",
+      "value_props": [
+        "🎙️ 내 말투·어조를 그대로 학습하는 보이스 핑거프린트",
+        "🔍 SEO 키워드, 처음부터 자연스럽게 녹여드립니다",
+        "⚡ 초안 완성까지 단 3분 — 회의 한 번 잡는 시간도 안 걸려요",
+        "🚀 원클릭 발행으로 복붙 없이 바로 라이브",
+        "✂️ 글쓰기에 쓰던 창업자 시간, 제품 개발에 돌려드립니다"
+      ]
+    },
+    "ja": {
+      "tagline": "あなたの言葉で、SEOブログを3分で。",
+      "hero": "BlogFlowは、あなたの文体を丁寧に学習し、まるでご自身が書いたようなSEOブログ記事を3分以内に仕上げます。汎用的なAI文章とは一線を画す、信頼感のある「あなたらしい言葉」で读者と検索エンジンの両方に響くコンテンツをお届けします。ワンクリックで公開まで完結しますので、執筆にかかるご負担をそのまま事業成長へ振り向けられます。",
+      "cta": "無料で試してみる",
+      "value_props": [
+        "🎙️ 文体・口調をそのまま再現するボイスフィンガープリント技術",
+        "🔍 SEOキーワードを記事の骨格から自然に組み込み",
+        "⚡ わずか3分で高品質な初稿が完成",
+        "🚀 ワンクリック公開で、面倒な作業は一切不要",
+        "✂️ 創業者の貴重な時間を、コンテンツではなくプロダクトへ"
+      ]
+    },
+    "zh": {
+      "tagline": "你的风格，你的博客，3分钟搞定",
+      "hero": "BlogFlow 只需一段语音样本，就能学会你的写作风格，3分钟内生成一篇既像你写的、又对SEO友好的博客文章。告别花大价钱请写手、又改得面目全非的烦恼——同样的时间，多发十倍内容，带来持续的搜索流量。一键发布，省心省力，把时间花在真正值钱的事上。",
+      "cta": "免费体验",
+      "value_props": [
+        "🎙️ 声纹风格匹配，读起来就是你自己写的",
+        "🔍 SEO关键词从结构层面融入，排名更自然",
+        "⚡ 3分钟出初稿，效率提升10倍",
+        "🚀 一键发布，零复制粘贴，直接上线",
+        "✂️ 省下写内容的时间，专注做增长"
+      ]
+    },
+    "es": {
+      "tagline": "Tu voz, tu blog, listo en 3 minutos.",
+      "hero": "BlogFlow aprende cómo escribís vos y redacta artículos SEO que suenan exactamente como tú — no como cualquier IA genérica. Con una sola muestra de tu voz, tenés un borrador listo en 3 minutos que podés publicar con un clic. Que el tráfico orgánico trabaje por tu negocio mientras vos te enfocás en construirlo.",
+      "cta": "Empezar gratis",
+      "value_props": [
+        "🎙️ Tu tono, tu estilo: cada post suena como si lo hubieras escrito vos",
+        "🔍 Keywords SEO integradas desde el primer párrafo, sin forzar",
+        "⚡ Primer borrador en 3 minutos — sin bloqueos, sin excusas",
+        "🚀 Publicá con un clic directo desde la plataforma",
+        "✂️ Dejá de perder horas en contenido y reinvertílas en tu producto"
+      ]
+    }
+  }
+}

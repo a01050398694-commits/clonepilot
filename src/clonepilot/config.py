@@ -30,6 +30,8 @@ class Config:
     stripe_secret_key: str | None
     resend_api_key: str | None
     resend_from_email: str | None
+    ahrefs_api_key: str | None
+    exa_api_key: str | None
     workspace: Path
     model_blueprint: str
     model_copy: str
@@ -68,6 +70,8 @@ class Config:
             stripe_secret_key=_clean(os.getenv("STRIPE_SECRET_KEY")),
             resend_api_key=_clean(os.getenv("RESEND_API_KEY")),
             resend_from_email=_clean(os.getenv("RESEND_FROM_EMAIL")),
+            ahrefs_api_key=_clean(os.getenv("AHREFS_API_KEY")),
+            exa_api_key=_clean(os.getenv("EXA_API_KEY")),
             workspace=workspace,
             model_blueprint=os.getenv(
                 "CLONEPILOT_MODEL_BLUEPRINT", "claude-sonnet-4-6"

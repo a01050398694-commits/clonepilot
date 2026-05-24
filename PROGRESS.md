@@ -1,6 +1,6 @@
 # PROGRESS — ClonePilot MCP
 
-_Last updated: 2026-05-24 (Phase 7 끝, Phase 8 시작 — 전면 갈아엎기)_
+_Last updated: 2026-05-25 (Phase 8.1 Builder 완료 — analyze_deep MCP tool 라이브)_
 
 ## 🟢 새 세션 픽업 — 여기부터 읽으면 끝
 
@@ -18,11 +18,29 @@ _Last updated: 2026-05-24 (Phase 7 끝, Phase 8 시작 — 전면 갈아엎기)_
 
 | # | Task | 결과 |
 |---|---|---|
-| 8.1 | Deep analysis engine (다국어 + 수익예측 + 무료툴 연동) | 진짜 보고서 |
+| 8.1 | Deep analysis engine (다국어 + 수익예측 + 무료툴 연동) | ✅ **완료** — `analyze_deep` MCP tool, BlogFlow E2E 55% confidence |
 | 8.2 | Project Pack 생성기 (CLAUDE.md + skills + BUILD_PLAN + HUMAN_TASKS) | 사용자가 폴더 받음 |
 | 8.3 | Human-task tracker (env watcher + Claude 언블록 시그널) | 사람 막힌 단계 자동 |
 | 8.4 | 갤러리 = 분석리포트 뷰어로 개조 (오늘 만든 마케팅 사이트 base는 유지) | 보고서 미리보기 |
 | 8.5 | E2E 검증 (URL → Project Pack → Claude로 진짜 SaaS 빌드) | v1 출시 게이트 |
+
+### Phase 8.1 Builder 청크 로그 — 2026-05-25
+
+- ✅ **Task 1** `src/clonepilot/analysis/schema.py` — `DeepAnalysisReport` + 11 sub-models (`MarketData`, `Competitor`, `RevenueForecast`, `LocalizedCopy`, `Risk`, `GTMStep`, `DataQuality` 등). 기존 `BusinessBlueprint`는 `report.blueprint` sub-field로 보존 → scaffold/deploy 하위호환.
+- ✅ **Task 2** `analysis/forecast.py` — bottom-up TAM/SAM/SOM. 검색량 × visitor_to_signup_pct × signup_to_paid_pct × ARPU_annual. 3 시나리오 (보수/기본/공격). pytest 8/8 통과.
+- ✅ **Task 3** `analysis/trends.py` — pytrends `interest_over_time` + `interest_by_region`. 키 불필요. `direction (rising|stable|declining|unknown)` + `score_0_100`. 실호출 검증 (`ai blog writer` → rising, score 94).
+- ✅ **Task 4** `analysis/keywords.py` — Ahrefs API v3 HTTP 직접 호출 (`keywords-explorer/overview` + `volume-by-country`). `AHREFS_API_KEY` 없으면 None 반환 (fail-soft 검증).
+- ✅ **Task 5** `analysis/competitors.py` — Exa `/search` → 후보 8개 → 홈+/pricing fetch → Claude tool_use로 `Competitor[]` 추출. `EXA_API_KEY` 없으면 빈 리스트.
+- ✅ **Task 6** `analysis/i18n.py` — 1 LLM 호출로 KR/EN/JP/ZH/ES 동시 추출. 톤 일관성 확보. 실호출 검증 — 한국어 "내 말투 그대로, SEO 블로그 3분 완성" 같은 native 카피.
+- ✅ **Task 7** `analysis/strategy.py` — risks[] + go_to_market_90day[] 한 콜에 추출. `max_tokens=6000` 으로 CJK 안전.
+- ✅ **Task 8** `analysis/pipeline.py` (S0~S11 fail-soft orchestrator) + `analysis/seo.py` + `tools/analyze_deep.py` MCP tool 등록 + `server.py` 라우팅 추가. `config.py`에 `AHREFS_API_KEY`, `EXA_API_KEY` 필드 추가.
+- ✅ **Task 9** **E2E 실호출 검증 성공** — `https://www.youtube.com/watch?v=L9LfsOR1YHw` (BlogFlow Korean) → DeepAnalysisReport 생성. 결과: blueprint ✓ / market ✓ (Trends only) / 5 i18n locales ✓ / 6 risks ✓ / 8 GTM steps ✓ / SEO pack 5 titles ✓ / forecast=None (Ahrefs/Exa 키 부재). **Confidence 55/100** — 정직한 fail-soft. 산출물: `e2e_artifacts/deep_analysis_e2e_v2.json`.
+
+**GOTCHA #10 등록**: CJK 다중섹션 tool_use는 `max_tokens >= 6000`. 안 그러면 두 번째 섹션 silently `[]`.
+
+**다음 액션 (Operator → Builder 핸드오프)**: Operator가 Phase 8.4 시작 가능 — 새 `DeepAnalysisReport` 스키마 기준으로 `gallery_site/app/demo/[slug]/page.tsx` 다시 그리기. 샘플 JSON: `e2e_artifacts/deep_analysis_e2e_v2.json`.
+
+**다음 Builder 청크**: Phase 8.2 (Project Pack 생성기).
 
 자세한 task description: TaskList (task ID 12~16).
 

@@ -44,6 +44,7 @@ def _register_tools() -> None:
     """
     from clonepilot.tools import (  # noqa: F401
         analyze,
+        analyze_deep,
         attach_domain,
         deploy,
         marketing_kit,

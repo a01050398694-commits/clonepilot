@@ -97,4 +97,14 @@
 
 **Update — 2026-05-24 Operator**: discovered the underlying domain issue was worse than "unverified". Probed DNS: `askbit.co` returns NXDOMAIN (no such domain registered anywhere), while `askbit.com` is the actually-registered domain (on Cloudflare nameservers). Every codebase reference to `askbit.co` is a typo for `askbit.com`. Resend can't verify a non-existent domain — no DKIM record will ever propagate. **Sub-rule**: before adding a domain to ANY third-party sender (Resend, Postmark, SES) or auth provider, first run `Resolve-DnsName <domain> -Type NS -Server 1.1.1.1` and confirm it actually has nameservers. Verification step-by-step guide: `docs/RESEND_DOMAIN_VERIFICATION.md`.
 
+---
+
+## #10 — MUST set max_tokens generously for multi-section tool_use in CJK languages
+
+**Rule**: When a single Anthropic `tool_use` call asks for two or more sizeable arrays (risks + GTM, headlines + value props, etc.) AND the output may be in Korean / Japanese / Chinese, set `max_tokens` to at least `6000`. Whichever section serializes second in the JSON gets silently truncated to `[]` when the budget runs out.
+
+**Why**: Phase 8.1 first E2E on a Korean transcript returned 6 well-written risks (250 chars each) but `go_to_market_90day: []`. The tool_use envelope is one JSON object — Anthropic emits fields in declaration order, then stops when `max_tokens` is hit mid-value. The validator on Anthropic's side does NOT re-raise on truncation; the partially-emitted JSON is closed off and the tail array becomes empty. CJK tokens cost ~2x ASCII so a 2500-token budget that's fine for English bursts in Korean.
+
+**Where**: `src/clonepilot/analysis/strategy.py` — `max_tokens=6000`. Apply the same generosity to any other multi-section CJK tool_use call (search for `tool_choice` in the analysis package).
+
 
