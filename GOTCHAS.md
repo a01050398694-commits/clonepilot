@@ -83,3 +83,16 @@
 
 **Where**: `src/clonepilot/deploy/vercel.py::_push_env_vars` — the 400-with-ENV_CONFLICT branch sits next to the 409 branch.
 
+---
+
+## #9 — MUST verify the Resend sender domain OR use `onboarding@resend.dev`
+
+**Rule**: Every Resend `from:` address must be on a domain you have verified in `resend.com/domains` (DNS TXT + DKIM records). Until verified, hardcode `onboarding@resend.dev` — Resend's pre-verified sandbox sender. Never trust a "looks valid" branded address (`noreply@askbit.co`) without checking the dashboard.
+
+**Why**: Phase 7 silently dropped every waitlist confirmation email for an hour. The route handlers wrapped `resend.emails.send(...)` in `.catch(() => null)` so the user's signup still returned 200, but Resend itself rejected each call with `403 "askbit.co is not verified"`. The user only discovered it by saying "no email arrived." Two failures stacked: an unverified domain + an over-eager catch.
+
+**Where**: `gallery_site/app/api/upgrade/route.ts` and `gallery_site/app/api/waitlist/route.ts` — both `from` constants are pinned to `onboarding@resend.dev` with a comment pointing back to this rule. When `askbit.co` (or any project-specific domain) is later verified, swap back to `process.env.LEAD_FROM_EMAIL || "onboarding@resend.dev"`.
+
+**Adjacent lesson**: when calling a third-party API in a route handler, log the failure to console.error before swallowing it — silent catches turn outages into mysteries.
+
+
