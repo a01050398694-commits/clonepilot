@@ -1,10 +1,55 @@
 # PROGRESS — ClonePilot MCP
 
-_Last updated: 2026-05-24 (Phase 6: visible 24/7 revenue line live)_
+_Last updated: 2026-05-24 (Phase 7 끝, Phase 8 시작 — 전면 갈아엎기)_
 
 ## 🟢 새 세션 픽업 — 여기부터 읽으면 끝
 
-**v0.1.0 + Phase 6 라이브. 갤러리/대시보드/waitlist 동작. 자동 데모 루프 launcher 준비됨.**
+### 핵심 방향 전환 (2026-05-24 야간)
+
+사용자와 대화 끝에 진짜 비전 합의됨:
+
+> **URL 1개 → 사업 분석 + 수익예측 (다국어) → 사용자 Claude/Codex에 모든 설정(CLAUDE.md, skills, agents, MCP, BUILD_PLAN, HUMAN_TASKS)을 자동 셋업 → 사용자 Claude가 백엔드+프론트+디자인+결제+로그인 다 자동 빌드 → 사람이 꼭 해야 하는 가입(Stripe KYC 등)은 클릭 1번 가이드 → 사람은 거의 손 안 대고 작동하는 SaaS 1개 완성**
+
+지금 ClonePilot은 이 비전의 **약 10%** — "마케팅 랜딩페이지 자동 생성"까지만 함. Phase 8에서 나머지 90% 갈아엎음.
+
+**영리한 인사이트**: 우리가 코드 생성기를 만들 필요 없음. **Claude Code가 이미 세계 최강 코드 생성기**. ClonePilot은 "사용자 Claude한테 이 사업을 이렇게 만들라고 완벽히 떠먹여주는 셰프" 역할.
+
+### Phase 8 — 5단계 계획 (~2-4주)
+
+| # | Task | 결과 |
+|---|---|---|
+| 8.1 | Deep analysis engine (다국어 + 수익예측 + 무료툴 연동) | 진짜 보고서 |
+| 8.2 | Project Pack 생성기 (CLAUDE.md + skills + BUILD_PLAN + HUMAN_TASKS) | 사용자가 폴더 받음 |
+| 8.3 | Human-task tracker (env watcher + Claude 언블록 시그널) | 사람 막힌 단계 자동 |
+| 8.4 | 갤러리 = 분석리포트 뷰어로 개조 (오늘 만든 마케팅 사이트 base는 유지) | 보고서 미리보기 |
+| 8.5 | E2E 검증 (URL → Project Pack → Claude로 진짜 SaaS 빌드) | v1 출시 게이트 |
+
+자세한 task description: TaskList (task ID 12~16).
+
+### 살림 vs 버림 (오늘 작업물)
+
+**살림**:
+- `gallery_site/` (마케팅 페이지) — 그대로. 쇼윈도우로 살림. 카드 콘텐츠만 Phase 8.4에서 교체.
+- 가격 모델 (Free 1build/mo · Pro $19 · Lifetime $299) — 그대로.
+- waitlist + 이메일 자동발사 — 그대로.
+- License gating (`src/clonepilot/license.py`) — 그대로.
+- 24/7 자동 데모 루프 (`scripts/auto_demo_loop.py`) — 그대로 (마케팅 SEO 면에서 여전히 유효).
+- 대시보드 (`scripts/dashboard.py`) — 그대로.
+
+**버림 / 대폭 수정**:
+- 지금 `scaffold()` (랜딩페이지만) → Phase 8.2에서 "Project Pack 생성기"로 갈아엎음.
+- 지금 `analyze()` (얕은 가격분석) → Phase 8.1에서 deep analysis로 확장.
+- 갤러리의 BlogFlow/PhotoAI 카드 = "v0 landing-only" 라벨 달고 보존, 신규 카드는 v1 풀빌드 결과.
+
+### 작업 환경 권장
+
+- **메인 작업 창**: 새 PowerShell + `claude` — 이 PROGRESS.md 픽업해서 Phase 8.1부터 시작.
+- **백그라운드 창** (선택): 일반 PowerShell + `run_forever.ps1` — 24/7 자동 데모 양산 (Claude 미사용).
+- 이 창은 오늘 마케팅 작업 컨텍스트 무거우니 닫고 가는 것이 깔끔.
+
+---
+
+### Phase 7까지 작업물 인덱스 (살림 자산)
 
 | 자산 | 상태 / URL |
 |---|---|
