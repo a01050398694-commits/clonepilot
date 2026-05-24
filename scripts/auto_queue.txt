@@ -1,15 +1,27 @@
-# 24h auto-loop queue. One YouTube URL per line. Comments allowed.
-# Indie-hacker / SaaS / solopreneur talks with public captions.
-# Order = priority; the loop picks the first not-yet-processed one each cycle.
+# 24h auto-loop queue. One YouTube URL per line. Comments (#) allowed.
+#
+# === HOW TO ADD URLS ===
+# Paste any YouTube business / indie-hacker / SaaS interview here, one per line.
+# The loop will pick the next un-processed one every 3 hours, generate a demo
+# site from it, and add it to the public gallery.
+#
+# REQUIREMENTS for a URL to succeed:
+#   - Video has captions (auto-generated or manual — both OK)
+#   - Video is publicly accessible (not unlisted/private)
+#   - At least one clear business / product mentioned
+#
+# === Known-working seed URLs (already in gallery, will be skipped) ===
+https://www.youtube.com/watch?v=L9LfsOR1YHw
+https://www.youtube.com/watch?v=oFtjKbXKqbg
 
-# === Hand-curated batch 1 (run after seed_gallery.py) ===
-https://www.youtube.com/watch?v=qfYTbz76P-c
-https://www.youtube.com/watch?v=KaIYn7yi8Vg
-https://www.youtube.com/watch?v=2GcD2_8gxqM
-https://www.youtube.com/watch?v=I0a0lYjQXXg
-https://www.youtube.com/watch?v=p-tD8VyxiAY
-https://www.youtube.com/watch?v=YJlT3oWtJZc
-https://www.youtube.com/watch?v=cIzaaXyrhCo
-https://www.youtube.com/watch?v=H_szemxPcTI
-https://www.youtube.com/watch?v=NoAzpa1x7jU
-https://www.youtube.com/watch?v=4kgaaW39W5g
+# === Add YOUR favorite indie-hacker videos below ===
+# Suggested channels with great transcripts:
+#   * Lex Fridman podcast    - Pieter Levels, Marc Andreessen, etc.
+#   * My First Million       - Sam Parr & Shaan Puri founder interviews
+#   * Indie Hackers          - Courtland Allen weekly podcast
+#   * Greg Isenberg          - solopreneur & community businesses
+#   * Starter Story          - $1M+ founder breakdowns
+#   * Ali Abdaal             - knowledge-business teardowns
+#
+# Paste a URL on each line. The loop reads this file every cycle, so adding
+# new URLs while the loop is running takes effect on the next cycle.
