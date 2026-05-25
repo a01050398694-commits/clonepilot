@@ -1,6 +1,6 @@
 # PROGRESS — ClonePilot MCP
 
-_Last updated: 2026-05-25 (Phase 8.1 Builder ✅ + Phase 8.4 Operator ✅ — v1 deep-report viewer 라이브, 다음 청크 후보 적힘)_
+_Last updated: 2026-05-25 (Phase 8.1 ✅ + Phase 8.4 ✅ + 청크 5 (OG/Twitter + 카드 보강) ✅ + 청크 6 (Pricing v1 카피) ✅ — 3회 Vercel prod 배포 완료, clonepilot-gallery.vercel.app 풀 라이브)_
 
 ## 🟢 새 세션 픽업 — 여기부터 읽으면 끝
 
@@ -9,12 +9,12 @@ _Last updated: 2026-05-25 (Phase 8.1 Builder ✅ + Phase 8.4 Operator ✅ — v1
 1. `Read SESSIONS.md` → 너가 Builder인지 Operator인지 확정 (커밋 메시지 prefix가 결정함).
 2. `git pull --rebase origin main` 먼저.
 3. **Builder**: Phase 8.1 ✅. 다음 청크 = **Phase 8.2 Project Pack 생성기**. `src/clonepilot/scaffold/` 갈아엎어서 CLAUDE.md + skills + agents + MCP + BUILD_PLAN + HUMAN_TASKS 폴더 생성하는 로직으로 전환. 추가 보너스: `scripts/seed_gallery.py`에 deep analyze 옵션 추가해서 새 URL → `gallery_site/public/reports/<slug>.json` 자동 시드 (v1 카드 자동 증식).
-4. **Operator**: Phase 8.4 ✅. 다음 청크 후보 — 우선순위순:
-   - (i) **Vercel prod 재배포** + 라이브 URL에서 다국어 토글/리포트 뷰어 실 검증. `vercel --prod` 또는 기존 deploy 파이프라인.
-   - (ii) **OG 이미지 자동 생성** (`/demo/[slug]/opengraph-image.tsx`). 리포트 헤더 카드 (브랜드명 + tagline + confidence 점수) → X/HN/Reddit 공유 시 미리보기.
-   - (iii) **갤러리 v1 카드 미리보기 보강** — 카드에 confidence 점수 + 첫 high-severity risk 1줄 + 5-year trend 화살표 노출.
-   - (iv) **언어별 hero 카피 SEO 메타** — `?lang=ko` 시 description/og:locale 교체로 다국어 SEO 가능.
-5. **둘 다 보류 액션**: AutoLoop 미설치 (admin PS 1회 `.\scripts\install_scheduler.ps1`), 결제 도메인 (waitlist 모드 영구 — `onboarding@resend.dev` sandbox 유지), 루트 walkthrough PNGs 5개 + phase84 스크린샷 4개 (커밋 여부 사용자 결정 대기).
+4. **Operator**: Phase 8.4 ✅ + 청크 5 ✅ + 청크 6 ✅. 다음 청크 후보 — 우선순위순:
+   - (a) **다국어 SEO 메타 + URL routing** — `/ko/demo/blogflow` 또는 `?lang=ko` SSR 반응 (i18n routing). description/og:locale 교체. 큰 작업 (1-2시간), 글로벌 indie hacker 유입 ROI 큼.
+   - (b) **README + CHANGELOG + WAKEUP 갱신** — v1 deep-report 라이브 사실 외부 공지. awesome-mcp-servers PR 코멘트, X 새 스레드, Show HN 재발사 트리거.
+   - (c) **추가 v1 reports 시드** — Builder 영역 (`uv run python scripts/seed_gallery.py --deep <url>`). PhotoAI도 v1 변환. 시각 자산 늘려 마케팅 효과 ↑.
+   - (d) **opengraph-image.tsx 동적 카드** — 지금은 YouTube 썸네일 사용. Next.js ImageResponse로 브랜드명 + 컨피던스 점수 + risk 1줄을 OG 카드로 동적 생성하면 공유 미리보기 더 풍부. 한국어 폰트 임베드 필요.
+5. **둘 다 보류 액션**: AutoLoop 미설치 (admin PS 1회 `.\scripts\install_scheduler.ps1`), 결제 도메인 (waitlist 모드 영구 — `onboarding@resend.dev` sandbox 유지), 루트 walkthrough PNGs 5개 (사용자 결정 대기 — phase84 스크린샷 8개는 이미 커밋됨).
 
 ### 핵심 방향 전환 (2026-05-24 야간)
 
@@ -279,6 +279,26 @@ URL → BusinessBlueprint → Next.js 랜딩 자동 생성 → Vercel 배포 →
 **신규 GOTCHA #11** 등록 예정: Next.js 15 App Router에서 `lib/`에 `node:fs` import 모듈을 두면 client component가 transitively 끌어와서 `UnhandledSchemeError`. server 전용 util은 별도 `.server.ts` 파일에. 타입/순수함수만 client-safe `.ts`에.
 
 **다음 Operator 청크 후보** (우선순위 적힘): 위 §⚡ "다음 청크 후보" 참조.
+
+---
+
+## Phase 8.4 청크 5 — OG/Twitter meta + v1 card preview (2026-05-25)
+
+✅ **완료** — 1회 Vercel prod 배포 + curl + Playwright 검증.
+
+- ✅ `gallery_site/app/layout.tsx` — `metadataBase` + sitewide twitter card.
+- ✅ `gallery_site/app/demo/[slug]/page.tsx` — `generateMetadata` 에 openGraph + twitter (image = `https://i.ytimg.com/vi/<id>/maxresdefault.jpg`, 1280×720). v1/v0 둘 다 적용.
+- ✅ `gallery_site/app/page.tsx` — v1 카드에 `confidence N/100` 배지 + 5-year trend 화살표 + 첫 high-severity risk 1줄 (line-clamp-2). v0 카드는 기존 roadmap teaser 유지.
+- ✅ 라이브 검증: curl `/demo/blogflow` → `og:image` + `og:title` 헤더 정상. 라이브 갤러리에서 "confidence 55/100", "trend ?", "risk·Credibility gap" 노출 확인.
+
+## Phase 8.4 청크 6 — Pricing v1 카피 갱신 (2026-05-25)
+
+✅ **완료** — 1회 Vercel prod 배포 + curl 키워드 grep 검증.
+
+- ✅ `gallery_site/app/pricing/page.tsx` — Pro bullets에 "Deep analysis with all integrations (Ahrefs + Exa + SimilarWeb server-side)" + "5-language reports (EN/KR/JP/ZH/ES) + revenue forecast (TAM/SAM/SOM)" 추가. Free에 "Deep analysis preview — analyze_deep MCP tool" 추가. 헤더 카피에 v1 가치 1줄 보강.
+- ✅ 라이브 검증: `curl /pricing | grep` → `5-language`, `Ahrefs`, `TAM/SAM/SOM`, `analyze_deep` 모두 prod에 노출.
+
+**3회 deploy 누적 — clonepilot-gallery.vercel.app 풀 라이브 상태**: v1 deep-report viewer + 5-lang toggle + v1 카드 미리보기 + OG/Twitter card + v1 pricing 카피. 모든 자동 검증 통과 (typecheck/build/curl/browser console 0 에러).
 
 ---
 

@@ -18,6 +18,7 @@ const TIERS = [
       "See every business analysis + execution roadmap",
       "Install the MCP into Claude Code / Desktop / Cursor / Codex",
       "1 full build/month (analyze + scaffold + deploy)",
+      "Deep analysis preview — analyze_deep MCP tool (Google Trends only, ~55 confidence)",
       "Use your own Anthropic / Vercel keys (BYO)",
     ],
     cta: "Install now (no signup)",
@@ -34,6 +35,8 @@ const TIERS = [
     bullets: [
       "Everything in Free",
       "Unlimited builds",
+      "Deep analysis with all integrations (Ahrefs + Exa + SimilarWeb server-side)",
+      "5-language reports (EN/KR/JP/ZH/ES) + revenue forecast (TAM/SAM/SOM)",
       "Custom domain on each deploy",
       "Marketing kit (X + Reddit + Show HN copy)",
       "Priority generation queue (skip the line)",
@@ -83,9 +86,10 @@ export default function PricingPage() {
         </h1>
         <p className="mt-5 text-zinc-400 leading-relaxed">
           ClonePilot the MCP server is open-source forever — clone it from
-          GitHub anytime. The hosted convenience layer (no key juggling,
-          unlimited deploys, marketing kit, priority queue) is what we charge
-          for.
+          GitHub anytime. Pro / Lifetime is the hosted convenience layer:
+          unlimited deploys, deep market analysis (Ahrefs + Exa + SimilarWeb
+          enabled), 5-language reports, revenue forecast, marketing kit,
+          priority queue.
         </p>
       </header>
 
