@@ -2,16 +2,18 @@
 
 import { useState, type ReactNode } from "react";
 import { UrlAnalysisForm } from "@/components/UrlAnalysisForm";
-import type { Dict } from "@/lib/i18n";
+import type { Dict, Lang } from "@/lib/i18n";
 
 export function HeroSection({
   heroSlot,
   skipQueueSlot,
   formDict,
+  lang,
 }: {
   heroSlot: ReactNode;
   skipQueueSlot: ReactNode;
   formDict: Dict["analyze_form"];
+  lang: Lang;
 }) {
   const [hasResult, setHasResult] = useState(false);
 
@@ -35,6 +37,7 @@ export function HeroSection({
         >
           <UrlAnalysisForm
             d={formDict}
+            lang={lang}
             onResult={() => setHasResult(true)}
             onReset={() => setHasResult(false)}
           />

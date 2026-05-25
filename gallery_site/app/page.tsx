@@ -163,6 +163,7 @@ export default async function Page() {
 
       <HeroSection
         formDict={d.analyze_form}
+        lang={lang}
         heroSlot={<HeroText d={d} reportsShipped={v1Previews.size} />}
         skipQueueSlot={d.hero.skip_queueRich(HeroCode)}
       />

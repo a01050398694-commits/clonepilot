@@ -1,5 +1,31 @@
 # PROGRESS — ClonePilot MCP
 
+_Last updated: 2026-05-26 — v3 monochrome hacker 톤 + 분석 엔진 극한 업그레이드. 사용자가 자는 동안 자율 작업. 신규 데이터 소스 6개 (Reddit / Wayback / channel velocity / YouTube comments / multi-keyword Trends / description forensics), 신규 분석 필드 11개 (green_flags · why_buyers_pay · honest_value · bot_inflation · real_proof · hype_vs_reality · funnel_ladder · one_paragraph_verdict 등), 무채색 hacker 디자인 (흰/검/회만, 모노 폰트, 1px 샤프 보더, 스캔라인 overlay), card lang 토글에 Arabic 추가 (6언어), 자연 번역 (반말 톤 강제 — 파파고 톤 절대 금지)._
+
+## 🟢 v3 한 줄 요약 (2026-05-26 새벽 자율 작업)
+
+**라이브 사이트**: http://localhost:3030 (dev) — Vercel 재배포 대기
+
+**핵심 변화**:
+1. 🎨 **무채색 hacker 톤**: emerald accent 전부 제거. globals.css 재작성 (zinc 무채색 + scanline overlay + striped warning patterns + terminal cursor blink). 모든 컴포넌트 무채색화.
+2. 🔬 **분석 깊이 극한 업그레이드**: 사용자 비용 0원 유지 (무료 공개 API만 — Reddit JSON, Wayback CDX, YouTube commentThreads, HN, Wikipedia, Wayback). 사비 키 = Anthropic + YouTube Data API만.
+3. 📊 **신규 분석 카드**: 16개 섹션. funnel ladder 시각화, comment fingerprint, description forensics 테이블, 6개 circular gauges, vertical timeline, red/green flags side-by-side, terminal-style loading.
+4. 🌐 **번역 자연스러움**: per-lang 톤 가이드 (KO=반말, JA=DMで送るくらい, ZH=微信, ES=tuteo, AR=فصحى مبسطة). Papago 톤 검출되면 재작성.
+5. 🛡️ **운영비 0 전략**: in-memory cache (24h TTL by videoId), IP rate-limit (4/min), default model = Haiku 4.5.
+
+**검증된 결과 (L9LfsOR1YHw 분석)**:
+- business_model = **course-funnel** ✓ 자동 감지
+- confidence = **71/100** (이전 30 대비 2배 이상)
+- honesty = 28, hype_vs_reality = 18, real_proof = 12 (낮을수록 의심)
+- bot_inflation = 35, red_flags 10개, green_flags 6개, funnel_ladder 5단계
+- transcript_chars = 23,271 (localhost에서 youtube-transcript 정상)
+- 콘솔 에러 = 0건, typecheck 깨끗, next build 14페이지 prerender 성공
+- 번역 API 자연도 검증: "수입이 하루아침에 날아갈 수 있어" (반말 톤, 자연), "2개월 차부터는 메일링 리스트 구축해야 살아남음"
+
+**스크린샷 evidence**: `v9-mono-hero.png`, `v9-mono-loading.png`, `v9-mono-card-1.png`, `v9-mono-gauges-zoom.png`, `v9-mono-forensics.png`.
+
+---
+
 _Last updated: 2026-05-25 (v2 인라인 분석 카드 라이브 — 강의팔이 detector + 다중 API + 5개국 카드 번역 + 시각 업그레이드 + 풀 i18n. 다음 = Supadata 새 키 박으면 transcript 살아남.)_
 
 ## 🟢 새 세션 픽업 — 여기부터 읽으면 끝

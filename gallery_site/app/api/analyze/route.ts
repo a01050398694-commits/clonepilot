@@ -5,6 +5,24 @@ import { Innertube } from "youtubei.js";
 import { ProxyAgent, fetch as undiciFetch } from "undici";
 // @ts-expect-error google-trends-api ships no types
 import googleTrends from "google-trends-api";
+import {
+  cacheGet,
+  cacheSet,
+  rateLimitCheck,
+  clientIp,
+} from "@/lib/analyze-cache";
+import {
+  fetchTopComments,
+  analyzeCommentStats,
+  parseDescription,
+  fetchRedditMentions,
+  fetchWaybackFirstSeen,
+  fetchChannelVelocity,
+  fetchTrendsMulti,
+  type Comment,
+  type FunnelLink,
+  type ChannelVelocity,
+} from "@/lib/analyze-signals";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -25,6 +43,7 @@ export type VideoMeta = {
   title: string;
   channel: string;
   channel_id?: string;
+  channel_handle?: string;
   channel_subscribers?: number;
   channel_video_count?: number;
   channel_created_at?: string;
@@ -39,8 +58,13 @@ export type VideoMeta = {
 
 export type SignalBlock = {
   trends?: { keyword: string; direction: string; score: number };
+  trends_multi: { keyword: string; direction: string; score: number }[];
   hn_mentions: number;
   wiki_found: boolean;
+  reddit_mentions: number;
+  reddit_top_titles: string[];
+  wayback_first_seen: string | null;
+  channel_velocity: ChannelVelocity | null;
 };
 
 export type RelatedVideo = {
@@ -75,6 +99,20 @@ export type BuildPath = {
   stack: string[];
 };
 
+export type FunnelStep = {
+  label: string;
+  price_usd_estimate: number;
+  is_observed: boolean;
+};
+
+export type CommentStats = {
+  total: number;
+  avg_length: number;
+  emoji_only_ratio: number;
+  generic_praise_ratio: number;
+  bot_ratio_0_100: number;
+};
+
 export type AnalyzePreview = {
   brand: string;
   tagline: string;
@@ -83,21 +121,35 @@ export type AnalyzePreview = {
   solution: string;
   business_model: BusinessModel;
   red_flags: string[];
+  green_flags: string[];
   likely_real_revenue_source: string;
+  why_buyers_pay: string;
+  honest_value_for_buyer: string;
   clone_feasibility_0_100: number;
   honesty_score_0_100: number;
   confidence_0_100: number;
+  bot_inflation_0_100: number;
+  real_proof_score_0_100: number;
+  hype_vs_reality_0_100: number;
   top_risk: string;
   market_reality: MarketReality;
   revenue_forecast: RevenueForecast;
+  funnel_ladder: FunnelStep[];
   insider_tips: string[];
   build_path: BuildPath;
+  one_paragraph_verdict: string;
   video: VideoMeta;
   signals: SignalBlock;
   related_videos: RelatedVideo[];
+  description_findings: {
+    funnel_links: FunnelLink[];
+    course_keyword_hits: string[];
+    price_mentions_usd: number[];
+  };
+  comment_stats: CommentStats;
 };
 
-/* ─── transcript fetching chain ───────────────────────────────────────── */
+/* ─── transcript fetching chain (unchanged) ──────────────────────────── */
 
 async function fetchViaPageScrape(
   videoId: string,
@@ -266,7 +318,11 @@ type YTVideoItem = {
 };
 
 type YTChannelItem = {
-  snippet?: { publishedAt?: string; title?: string };
+  snippet?: {
+    publishedAt?: string;
+    title?: string;
+    customUrl?: string;
+  };
   statistics?: { subscriberCount?: string; videoCount?: string };
 };
 
@@ -361,13 +417,13 @@ async function fetchRelatedVideos(
   }
 }
 
-/* ─── google trends ────────────────────────────────────────────────────── */
+/* ─── single google trends (kept for primary keyword backwards compat) ─ */
 
 type GoogleTrendsModule = {
   interestOverTime: (opts: { keyword: string; startTime: Date }) => Promise<string>;
 };
 
-async function fetchGoogleTrends(
+async function fetchGoogleTrendsPrimary(
   keyword: string,
 ): Promise<{ keyword: string; direction: string; score: number } | null> {
   if (!keyword || keyword.length < 2) return null;
@@ -378,7 +434,9 @@ async function fetchGoogleTrends(
         keyword,
         startTime: new Date(Date.now() - 5 * 365 * 24 * 60 * 60 * 1000),
       }),
-      new Promise<never>((_, rej) => setTimeout(() => rej(new Error("trends timeout")), 8000)),
+      new Promise<never>((_, rej) =>
+        setTimeout(() => rej(new Error("trends timeout")), 6_000),
+      ),
     ]);
     type Point = { value?: number[] };
     type Parsed = { default?: { timelineData?: Point[] } };
@@ -391,7 +449,8 @@ async function fetchGoogleTrends(
     const r = avg(recent);
     const o = avg(older);
     const ratio = o > 0 ? r / o : 0;
-    const direction = ratio > 1.3 ? "rising" : ratio < 0.7 ? "declining" : "stable";
+    const direction =
+      ratio > 1.3 ? "rising" : ratio < 0.7 ? "declining" : "stable";
     return { keyword, direction, score: Math.min(100, Math.round(r)) };
   } catch {
     return null;
@@ -432,154 +491,276 @@ async function fetchWikiExists(query: string): Promise<boolean> {
   }
 }
 
-/* ─── Anthropic schema + prompt ────────────────────────────────────────── */
+/* ─── Anthropic schema (expanded) ──────────────────────────────────────── */
 
 const EXTRACT_TOOL: Anthropic.Tool = {
   name: "extract_business_preview",
   description:
-    "Brutally honest, actionable business analysis. NOT a video summary. Tell the user the market reality, real revenue, clone path.",
+    "Brutally honest, actionable business analysis. NOT a video summary. The reader is about to spend money or months on this idea — tell them the truth.",
   input_schema: {
     type: "object",
     properties: {
-      brand: { type: "string", description: "Brand or product name. Short. English by default unless transcript clearly demands native." },
-      tagline: { type: "string", description: "One-line value prop, ≤80 chars." },
-      target_audience: { type: "string", description: "Who this is for, 1 sentence." },
-      problem: { type: "string", description: "Pain it claims to solve, 1 sentence." },
-      solution: { type: "string", description: "How it claims to solve, 1 sentence." },
+      brand: { type: "string" },
+      tagline: { type: "string", description: "≤80 chars." },
+      target_audience: { type: "string", description: "≤120 chars." },
+      problem: { type: "string", description: "≤120 chars." },
+      solution: { type: "string", description: "≤120 chars." },
       business_model: {
         type: "string",
-        enum: ["real-product", "course-funnel", "affiliate-bait", "personal-brand", "consulting-front", "unclear"],
-        description: "Classify the ACTUAL business mechanism, not the marketing surface.",
+        enum: [
+          "real-product",
+          "course-funnel",
+          "affiliate-bait",
+          "personal-brand",
+          "consulting-front",
+          "unclear",
+        ],
       },
       red_flags: {
         type: "array",
         items: { type: "string" },
-        description: "Concrete observations, not generic warnings. Examples: 'Revenue screenshots could be Photoshop', '$19 entry → $2k coaching ladder visible in description'. Empty array ONLY if zero red flags.",
+        description:
+          "Concrete observations using the supplied signals. Each ≤180 chars. Empty array only if literally none.",
+      },
+      green_flags: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Concrete positive signals. Each ≤180 chars. Empty array if none.",
       },
       likely_real_revenue_source: {
         type: "string",
-        description: "Where the money REALLY comes from — often different from the claim. Be specific.",
+        description: "Where the money REALLY comes from. ≤220 chars.",
       },
-      clone_feasibility_0_100: { type: "integer", minimum: 0, maximum: 100, description: "Likelihood a cloner hits claimed revenue. Course funnels low (10-30) because real revenue = course itself." },
-      honesty_score_0_100: { type: "integer", minimum: 0, maximum: 100, description: "How honest is the creator? Transparent revenue source + real numbers = 90+. Obvious funnel + inflated claims = 20." },
-      confidence_0_100: { type: "integer", minimum: 0, maximum: 100, description: "Your confidence in THIS analysis. Higher with full transcript + corroborating signals." },
-      top_risk: { type: "string", description: "Single biggest risk for cloner. One short sentence. Specific to THIS business." },
+      why_buyers_pay: {
+        type: "string",
+        description:
+          "Why someone pays the high course price even if the course content is poor — the actual emotional/psychological driver (FOMO, identity, community, status, sunk-cost commitment, etc.). ≤220 chars.",
+      },
+      honest_value_for_buyer: {
+        type: "string",
+        description:
+          "What the buyer actually receives that has real value (community access, accountability, branded shortcut, etc.) vs what is hype. ≤220 chars.",
+      },
+      clone_feasibility_0_100: { type: "integer", minimum: 0, maximum: 100 },
+      honesty_score_0_100: { type: "integer", minimum: 0, maximum: 100 },
+      confidence_0_100: { type: "integer", minimum: 0, maximum: 100 },
+      bot_inflation_0_100: {
+        type: "integer",
+        minimum: 0,
+        maximum: 100,
+        description:
+          "How inflated the comment section looks vs organic. Use the supplied comment_stats heuristics + your read of the video.",
+      },
+      real_proof_score_0_100: {
+        type: "integer",
+        minimum: 0,
+        maximum: 100,
+        description:
+          "How much verifiable proof exists for the revenue claims. Stripe dashboard, audited reports, third-party press, Wikipedia, HN traction, Wayback longevity = high. Bare screenshots = low.",
+      },
+      hype_vs_reality_0_100: {
+        type: "integer",
+        minimum: 0,
+        maximum: 100,
+        description:
+          "0 = pure hype, 100 = matches reality. Combines revenue claim plausibility, market signals, and channel velocity.",
+      },
+      top_risk: { type: "string", description: "≤220 chars." },
       market_reality: {
         type: "object",
-        description: "Honest market sizing & competitive landscape. Use your training data + external signals to estimate. If you don't know, say 'cannot estimate without paid data sources'.",
         properties: {
-          tam_summary: { type: "string", description: "Total addressable market in one line. Example: 'Global content-marketing SaaS ~$8B annual'." },
-          sam_summary: { type: "string", description: "Serviceable subset realistic for this product." },
-          som_year1_summary: { type: "string", description: "What a solo cloner could realistically capture year 1." },
-          trend_summary: { type: "string", description: "Is the market growing, flat, dying? Why? Cite the Google Trends signal provided." },
+          tam_summary: { type: "string", description: "≤100 chars." },
+          sam_summary: { type: "string", description: "≤100 chars." },
+          som_year1_summary: { type: "string", description: "≤100 chars." },
+          trend_summary: { type: "string", description: "≤140 chars." },
           top_competitors: {
             type: "array",
             items: {
               type: "object",
               properties: {
                 name: { type: "string" },
-                url_hint: { type: "string", description: "Best-guess domain or .com handle, no protocol." },
-                why_relevant: { type: "string", description: "1 line — how they compete with this idea." },
+                url_hint: { type: "string" },
+                why_relevant: { type: "string" },
               },
               required: ["name", "why_relevant"],
             },
-            description: "3-5 real competitors you know exist. If none come to mind, return empty array.",
           },
         },
-        required: ["tam_summary", "sam_summary", "som_year1_summary", "trend_summary", "top_competitors"],
+        required: [
+          "tam_summary",
+          "sam_summary",
+          "som_year1_summary",
+          "trend_summary",
+          "top_competitors",
+        ],
       },
       revenue_forecast: {
         type: "object",
-        description: "Solo founder's realistic year-1 ARR estimates in USD. Bottom-up: think traffic × conversion × ARPU. Course funnels should score LOW unless cloner also runs a course.",
         properties: {
-          conservative_arr_usd: { type: "integer", description: "Pessimistic case — 10-20% percentile outcome." },
-          base_arr_usd: { type: "integer", description: "Median case — most likely outcome." },
-          aggressive_arr_usd: { type: "integer", description: "Top 10% case — execution-heavy outcome." },
-          assumptions: {
-            type: "array",
-            items: { type: "string" },
-            description: "3-5 explicit assumptions behind the numbers. Example: 'Assumes 5k organic visitors/mo after 6 months', 'Assumes $19/mo ARPU with 3% trial conversion'.",
-          },
+          conservative_arr_usd: { type: "integer" },
+          base_arr_usd: { type: "integer" },
+          aggressive_arr_usd: { type: "integer" },
+          assumptions: { type: "array", items: { type: "string" } },
         },
-        required: ["conservative_arr_usd", "base_arr_usd", "aggressive_arr_usd", "assumptions"],
+        required: [
+          "conservative_arr_usd",
+          "base_arr_usd",
+          "aggressive_arr_usd",
+          "assumptions",
+        ],
+      },
+      funnel_ladder: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            label: { type: "string", description: "Short rung name." },
+            price_usd_estimate: { type: "integer" },
+            is_observed: {
+              type: "boolean",
+              description:
+                "True if directly observed in description / video / link domains. False if inferred from genre.",
+            },
+          },
+          required: ["label", "price_usd_estimate", "is_observed"],
+        },
+        description:
+          "3-5 rungs in ascending price order. Example: [Free YT, $19 ebook, $497 course, $2,000 coaching, $10,000 mastermind]. If business_model is not a funnel type, return [].",
       },
       insider_tips: {
         type: "array",
         items: { type: "string" },
-        description: "5 non-obvious operator tips someone who actually ran this business would know. Things the video does NOT say. Specific tactics, common pitfalls, secret growth channels, regulatory traps, etc.",
+        description:
+          "5 non-obvious operator-level tips. Each ≤220 chars.",
       },
       build_path: {
         type: "object",
-        description: "Realistic build roadmap for a solo founder using AI coding tools. Be concrete.",
         properties: {
           steps: {
             type: "array",
             items: {
               type: "object",
               properties: {
-                title: { type: "string", description: "Short milestone title." },
-                weeks: { type: "integer", description: "Weeks to ship this step." },
+                title: { type: "string" },
+                weeks: { type: "integer" },
               },
               required: ["title", "weeks"],
             },
-            description: "4-7 milestones from zero to first-paying-customer.",
           },
-          total_weeks: { type: "integer", description: "Sum of weeks across all milestones." },
-          estimated_one_time_cost_usd: { type: "integer", description: "Setup costs: domain, design assets, initial ads, etc." },
-          estimated_monthly_cost_usd: { type: "integer", description: "Recurring infra: Vercel/Supabase/Stripe/OpenAI/etc." },
-          stack: { type: "array", items: { type: "string" }, description: "Recommended stack — concrete tool names. Example: ['Next.js 15', 'Supabase', 'Stripe', 'Resend', 'Claude API']." },
+          total_weeks: { type: "integer" },
+          estimated_one_time_cost_usd: { type: "integer" },
+          estimated_monthly_cost_usd: { type: "integer" },
+          stack: { type: "array", items: { type: "string" } },
         },
-        required: ["steps", "total_weeks", "estimated_one_time_cost_usd", "estimated_monthly_cost_usd", "stack"],
+        required: [
+          "steps",
+          "total_weeks",
+          "estimated_one_time_cost_usd",
+          "estimated_monthly_cost_usd",
+          "stack",
+        ],
+      },
+      one_paragraph_verdict: {
+        type: "string",
+        description:
+          "A single paragraph (5-7 sentences) that a friend would tell you over coffee. No corporate fluff. Tell the reader EXACTLY what to do or skip. ≤900 chars.",
       },
     },
     required: [
-      "brand", "tagline", "target_audience", "problem", "solution",
-      "business_model", "red_flags", "likely_real_revenue_source",
-      "clone_feasibility_0_100", "honesty_score_0_100", "confidence_0_100",
-      "top_risk", "market_reality", "revenue_forecast", "insider_tips", "build_path",
+      "brand",
+      "tagline",
+      "target_audience",
+      "problem",
+      "solution",
+      "business_model",
+      "red_flags",
+      "green_flags",
+      "likely_real_revenue_source",
+      "why_buyers_pay",
+      "honest_value_for_buyer",
+      "clone_feasibility_0_100",
+      "honesty_score_0_100",
+      "confidence_0_100",
+      "bot_inflation_0_100",
+      "real_proof_score_0_100",
+      "hype_vs_reality_0_100",
+      "top_risk",
+      "market_reality",
+      "revenue_forecast",
+      "funnel_ladder",
+      "insider_tips",
+      "build_path",
+      "one_paragraph_verdict",
     ],
   },
 };
 
-const SYSTEM_PROMPT = `You are ClonePilot — a brutally honest business analyst who tells solo founders the TRUTH about YouTube business videos so they don't waste weeks building the wrong thing.
+const SYSTEM_PROMPT = `You are ClonePilot — a brutally honest market analyst that reverse-engineers YouTube business videos so a solo operator does NOT waste months on the wrong idea.
 
-YOU ARE NOT A VIDEO SUMMARIZER. The user does not want to know what was said. They want to know:
-1. **Is this market real and growing, or am I being sold a dream?**
-2. **What's the realistic year-1 revenue I could actually make?**
-3. **Who really competes here? What did the video conveniently not mention?**
-4. **What would an actual operator (who's been doing this for 5 years) tell me that the video skipped?**
-5. **How many weeks and dollars to clone this, concretely?**
-6. **Is the creator a real builder or a course-seller funnel?**
+YOU ARE NOT SUMMARIZING THE VIDEO. The reader can watch the video. They want:
+1. Is this business REAL or am I being sold a dream?
+2. If I clone the idea, what's a realistic year-1 revenue I'd actually make?
+3. Where does the money really come from — product, course, ads, coaching, affiliates?
+4. What did the creator NOT show that I need to know?
+5. Why do people actually pay this creator (the psychological mechanism), and what real value do they get?
+6. Concretely, how many weeks and dollars to clone this?
 
-COURSE-SELLER PATTERNS (auto-detect):
-- "월 X천만원 / I made $X" — claims with no verifiable proof (screenshots are trivially faked)
-- 마감 임박 / limited spots — artificial scarcity
-- $19 → $199 → $2k → $10k coaching ladder visible in description
-- Templated testimonials, sponsored video with hidden disclosure
-- "Anyone in 30 days" — survivorship bias hidden
-- The "real" revenue is selling the course; the activity (blogging, trading) is bait
-- description affiliate links contradicting "this is my real income"
-- Channel grew unnaturally fast vs channel age (paid promotion signal)
-- 90%+ generic "amazing video!" comments (bot inflation)
+COURSE-FUNNEL PATTERNS (auto-detect using ALL supplied signals):
+- "월 X천만원 / I made $X" with no verifiable third-party proof
+- 마감 임박 / "only 7 spots left" — artificial scarcity
+- Description contains links to course platforms (Teachable, Kajabi, Stan, Gumroad, Cafe24, 오픈채팅 link)
+- Funnel ladder visible in description: $19 → $199 → $2,000 → $10,000
+- Sponsored or paid promotion with weak disclosure
+- Comment section: high generic-praise ratio, short comments, emoji-only — bot inflation signal
+- Channel age very young vs subscriber count (paid growth)
+- Almost no HN/Wiki/Reddit chatter despite "huge" numbers claimed
+- Recent uploads pump same product repeatedly
 
 GROUNDING DATA YOU GET:
-- video transcript (or title+desc if transcript fetch failed)
-- channel metrics (subs, age, total videos)
-- Google Trends signal for the brand keyword
-- HackerNews mention count, Wikipedia presence
-- video stats (views, likes, comments, published date)
+- transcript (or title+description if transcript fetch failed)
+- channel metrics (subs, age, total videos, upload velocity 90d)
+- video stats
+- Google Trends (1-3 keywords)
+- HackerNews mentions, Wikipedia presence
+- Reddit search hits (top 5 titles)
+- Wayback Machine first-seen date for the channel
+- Top 30 YouTube comments + bot-likely heuristic score
+- Description parser output: detected links + course keywords + USD-normalized price mentions
 
-USE EVERYTHING. A real business leaves footprints across all of these. A funnel doesn't.
+USE EVERYTHING. A real business leaves footprints across multiple signals. A funnel does not.
+
+WHY BUYERS PAY (think about this honestly):
+Even bad courses sell. Reasons people pay $500-$10k:
+- Sunk-cost psychology: paying more makes them follow through
+- Community / accountability access
+- Identity purchase ("I am someone who took this")
+- FOMO from scarcity, deadlines
+- Trust transfer from creator's brand
+- Aspiration purchase (signaling)
+Distinguish these from genuine educational value.
 
 OUTPUT RULES:
-- Default OUTPUT LANGUAGE: English. The site's UI language is separate and handled client-side.
-- Numbers must be concrete (e.g. "$24,000 ARR" not "modest revenue").
-- Tips must be operator-level non-obvious (e.g. "Most blog-affiliate businesses die at month 4 because Google's spam-update hit AI content hardest in March 2025 — diversify to email list by month 2").
-- Be merciless. The user is about to spend weeks. Truth > validation.`;
+- Default language: English. UI translation is separate.
+- Numbers concrete (e.g., "$24,000 ARR" not "modest revenue"). USD only.
+- Operator-level non-obvious tips. No generic startup advice.
+- one_paragraph_verdict reads like a friend over coffee — direct, no hedging, no corporate fluff.`;
 
 /* ─── main POST handler ────────────────────────────────────────────────── */
 
 export async function POST(req: Request) {
+  const ip = clientIp(req);
+  const retryMs = rateLimitCheck(ip);
+  if (retryMs != null) {
+    return NextResponse.json(
+      {
+        error: `Rate limit. Try again in ${Math.ceil(retryMs / 1000)}s.`,
+        retry_after_ms: retryMs,
+      },
+      { status: 429 },
+    );
+  }
+
   let body: unknown;
   try {
     body = await req.json();
@@ -597,6 +778,15 @@ export async function POST(req: Request) {
     );
   const videoId = m[1];
 
+  const cached = cacheGet<AnalyzePreview>(videoId);
+  if (cached) {
+    return NextResponse.json({
+      ok: true,
+      preview: cached,
+      _debug: { source: "cache" },
+    });
+  }
+
   const supaKey = process.env.SUPADATA_API_KEY;
   const ytKey = process.env.YOUTUBE_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
@@ -608,6 +798,7 @@ export async function POST(req: Request) {
   }
 
   try {
+    /* ── stage 1: video + channel + transcript (sequential where data depends) */
     const [oembed, videoData] = await Promise.all([
       fetchOEmbed(videoId),
       fetchVideoData(videoId, ytKey),
@@ -615,6 +806,8 @@ export async function POST(req: Request) {
     const channelId = videoData?.snippet?.channelId;
     const channelData =
       channelId && ytKey ? await fetchChannelData(channelId, ytKey) : null;
+    const channelHandle =
+      channelData?.snippet?.customUrl?.replace(/^@/, "") ?? "";
 
     let transcript: { text: string; lang: string; source: string };
     let transcriptError: string | null = null;
@@ -630,28 +823,58 @@ export async function POST(req: Request) {
       };
     }
 
+    /* ── stage 2: parallel free signals */
     const brandCandidate =
       oembed.title.split(/[—\-:|]/)[0].trim().slice(0, 60) ||
       videoData?.snippet?.title?.slice(0, 60) ||
       oembed.channel;
 
-    const [trends, hnCount, wikiFound, relatedVideos] = await Promise.all([
-      fetchGoogleTrends(brandCandidate),
+    const desc = videoData?.snippet?.description ?? "";
+    const descFindings = parseDescription(desc);
+
+    const trendsModule = googleTrends as GoogleTrendsModule;
+    const trendKeywords = [
+      brandCandidate,
+      ...descFindings.course_keyword_hits.slice(0, 2),
+    ].filter(Boolean);
+
+    const [
+      trends,
+      trendsMulti,
+      hnCount,
+      wikiFound,
+      relatedVideos,
+      topComments,
+      reddit,
+      waybackFirst,
+      velocity,
+    ] = await Promise.all([
+      fetchGoogleTrendsPrimary(brandCandidate),
+      fetchTrendsMulti(trendKeywords, trendsModule),
       fetchHNMentions(brandCandidate),
       fetchWikiExists(brandCandidate),
       fetchRelatedVideos(brandCandidate, videoId, ytKey),
+      fetchTopComments(videoId, ytKey, 30),
+      fetchRedditMentions(brandCandidate),
+      channelHandle
+        ? fetchWaybackFirstSeen(channelHandle)
+        : Promise.resolve(null),
+      channelId ? fetchChannelVelocity(channelId, ytKey) : Promise.resolve(null),
     ]);
 
+    const commentStats = analyzeCommentStats(topComments);
+
+    /* ── stage 3: build grounding block + call LLM */
     const stats = videoData?.statistics ?? {};
     const chStats = channelData?.statistics ?? {};
     const chSnip = channelData?.snippet ?? {};
-    const description = videoData?.snippet?.description ?? "";
 
     const videoMeta: VideoMeta = {
       id: videoId,
       title: oembed.title || videoData?.snippet?.title || "",
       channel: oembed.channel || videoData?.snippet?.channelTitle || "",
       channel_id: channelId,
+      channel_handle: channelHandle || undefined,
       channel_subscribers: chStats.subscriberCount
         ? Number(chStats.subscriberCount)
         : undefined,
@@ -663,38 +886,103 @@ export async function POST(req: Request) {
       like_count: stats.likeCount ? Number(stats.likeCount) : undefined,
       comment_count: stats.commentCount ? Number(stats.commentCount) : undefined,
       published_at: videoData?.snippet?.publishedAt,
-      description_chars: description.length,
+      description_chars: desc.length,
       transcript_chars: transcript.text.length,
       transcript_source: transcript.source,
     };
+
     const signals: SignalBlock = {
       trends: trends ?? undefined,
+      trends_multi: trendsMulti,
       hn_mentions: hnCount,
       wiki_found: wikiFound,
+      reddit_mentions: reddit.count,
+      reddit_top_titles: reddit.top_titles,
+      wayback_first_seen: waybackFirst,
+      channel_velocity: velocity,
     };
 
     const channelAgeYears = chSnip.publishedAt
       ? (Date.now() - new Date(chSnip.publishedAt).getTime()) /
         (365 * 24 * 60 * 60 * 1000)
       : null;
-    const signalBlock = `EXTERNAL SIGNALS:
-- Video: published ${videoMeta.published_at?.slice(0, 10) ?? "?"} · views ${videoMeta.view_count?.toLocaleString() ?? "?"} · likes ${videoMeta.like_count?.toLocaleString() ?? "?"} · comments ${videoMeta.comment_count?.toLocaleString() ?? "?"}
-- Channel: "${videoMeta.channel}" · subs ${videoMeta.channel_subscribers?.toLocaleString() ?? "?"} · total videos ${videoMeta.channel_video_count ?? "?"} · joined ${chSnip.publishedAt?.slice(0, 10) ?? "?"}${channelAgeYears != null ? ` (age ${channelAgeYears.toFixed(1)} yrs)` : ""}
-- Google Trends keyword "${brandCandidate}": ${trends ? `${trends.direction} (score ${trends.score}/100 over 5 yrs)` : "no signal"}
-- HackerNews mentions of brand: ${hnCount}
-- Wikipedia page for brand: ${wikiFound ? "exists" : "none"}
-- Video description: ${description.length} chars${description.length > 0 ? "\n  " + description.slice(0, 800).replace(/\n/g, "\n  ") : ""}
-${transcriptError ? `\n⚠️  TRANSCRIPT FETCH FAILED: ${transcriptError}\nYou have ONLY title + description below. Cap confidence at 35 and call this out in top_risk.` : `\nTranscript source: ${transcript.source} (${videoMeta.transcript_chars.toLocaleString()} chars total)`}
+
+    const fmtNum = (n: number | undefined) =>
+      n == null ? "?" : n.toLocaleString();
+
+    const linksSummary = descFindings.funnel_links
+      .slice(0, 10)
+      .map(
+        (l, i) =>
+          `  ${i + 1}. [${l.domain}]${l.is_course_hint ? " (COURSE-HINT)" : ""} — ${l.context_snippet.slice(0, 60)}`,
+      )
+      .join("\n");
+
+    const commentSummary = topComments
+      .slice(0, 15)
+      .map(
+        (c, i) =>
+          `  ${i + 1}. (${c.likes}♥) ${c.text.replace(/\s+/g, " ").slice(0, 130)}`,
+      )
+      .join("\n");
+
+    const trendsLine =
+      trendsMulti.length > 0
+        ? trendsMulti
+            .map(
+              (t) =>
+                `"${t.keyword}" ${t.direction} (score ${t.score}/100)`,
+            )
+            .join(" · ")
+        : "no signal";
+
+    const groundingBlock = `EXTERNAL SIGNALS (use ALL of these):
+
+VIDEO:
+- Published ${videoMeta.published_at?.slice(0, 10) ?? "?"} · views ${fmtNum(videoMeta.view_count)} · likes ${fmtNum(videoMeta.like_count)} · comments ${fmtNum(videoMeta.comment_count)}
+
+CHANNEL "${videoMeta.channel}":
+- subs ${fmtNum(videoMeta.channel_subscribers)} · total videos ${fmtNum(videoMeta.channel_video_count)}
+- joined ${chSnip.publishedAt?.slice(0, 10) ?? "?"}${channelAgeYears != null ? ` (age ${channelAgeYears.toFixed(1)} yrs)` : ""}
+- handle @${channelHandle || "?"}
+- wayback-machine first archive: ${waybackFirst ?? "never"}
+- recent 90d uploads: ${velocity?.recent_uploads_90d ?? "?"} (avg view ${fmtNum(velocity?.recent_avg_views ?? undefined)}, ${velocity?.uploads_per_week ?? "?"}/wk)
+
+EXTERNAL FOOTPRINT:
+- Google Trends (5yr): ${trendsLine}
+- HackerNews mentions: ${hnCount}
+- Wikipedia: ${wikiFound ? "page exists" : "no page"}
+- Reddit hits for "${brandCandidate}": ${reddit.count} ${reddit.top_titles.length > 0 ? "(" + reddit.top_titles.slice(0, 3).join(" | ").slice(0, 200) + ")" : ""}
+
+VIDEO DESCRIPTION (${desc.length} chars):
+${desc.slice(0, 1000).replace(/\n/g, " | ")}
+
+DESCRIPTION PARSER:
+- Detected ${descFindings.funnel_links.length} link(s)${descFindings.funnel_links.length > 0 ? ":\n" + linksSummary : ""}
+- Course-genre keywords found: ${descFindings.course_keyword_hits.join(", ") || "none"}
+- USD-normalized prices mentioned: ${descFindings.price_mentions_usd.join(", ") || "none"}
+
+COMMENT STATS (top ${commentStats.total}):
+- Avg length: ${commentStats.avg_length} chars
+- Emoji-only: ${commentStats.emoji_only_ratio}%
+- Generic short praise: ${commentStats.generic_praise_ratio}%
+- Bot-likely heuristic score: ${commentStats.bot_ratio_0_100}/100
+
+TOP COMMENTS:
+${commentSummary || "  (none fetched)"}
+
+${transcriptError ? `\n!! TRANSCRIPT FETCH FAILED: ${transcriptError}\nYou have ONLY title + description below. Cap confidence at 35 and call this out in top_risk.\n` : `Transcript source: ${transcript.source} (${videoMeta.transcript_chars.toLocaleString()} chars)`}
 `;
 
     const clip = transcript.text.slice(0, 14_000);
     const model =
-      process.env.CLONEPILOT_MODEL_BLUEPRINT?.trim() || "claude-sonnet-4-6";
+      process.env.CLONEPILOT_MODEL_BLUEPRINT?.trim() ||
+      "claude-haiku-4-5-20251001";
 
     const client = new Anthropic({ apiKey: anthropicKey });
     const resp = await client.messages.create({
       model,
-      max_tokens: 5000,
+      max_tokens: 6500,
       system: SYSTEM_PROMPT,
       tools: [EXTRACT_TOOL],
       tool_choice: { type: "tool", name: EXTRACT_TOOL.name },
@@ -704,15 +992,16 @@ ${transcriptError ? `\n⚠️  TRANSCRIPT FETCH FAILED: ${transcriptError}\nYou 
           content: [
             {
               type: "text",
-              text: `Analyze this YouTube business video. Deliver actionable market intel — NOT a video summary.
+              text: `Analyze this YouTube business video. Reverse-engineer the business, NOT the video.
 
-${signalBlock}
+${groundingBlock}
+
 TRANSCRIPT (first ${clip.length} chars):
 ---
 ${clip}
 ---
 
-Call extract_business_preview now. Be CONCISE — short sentences, no fluff. Required: brand, tagline (≤80 chars), target_audience (≤120), problem (≤120), solution (≤120), business_model, 3-5 red_flags (each ≤150 chars), likely_real_revenue_source (≤200), 3 numeric scores, top_risk (≤200), market_reality (each summary ≤80, 3-4 competitors), revenue_forecast (3 numbers + 3-5 short assumptions), 5 insider_tips (each ≤200), build_path (4-6 steps, stack 5-8 items). Output in English. Aim for 2500 output tokens total.`,
+Call extract_business_preview now. Output English. Be concise but punchy — operator-level not corporate. Required fields all present.`,
             },
           ],
         },
@@ -728,21 +1017,31 @@ Call extract_business_preview now. Be CONCISE — short sentences, no fluff. Req
     }
     const args = toolUse.input as Omit<
       AnalyzePreview,
-      "video" | "signals" | "related_videos"
+      | "video"
+      | "signals"
+      | "related_videos"
+      | "description_findings"
+      | "comment_stats"
     >;
     const preview: AnalyzePreview = {
       ...args,
       video: videoMeta,
       signals,
       related_videos: relatedVideos,
+      description_findings: descFindings,
+      comment_stats: commentStats,
     };
+
+    cacheSet(videoId, preview);
+
     return NextResponse.json({
       ok: true,
       preview,
       _debug: {
         transcript_source: transcript.source,
         transcript_error: transcriptError,
-        proxy_set: !!process.env.BRIGHTDATA_PROXY_URL,
+        model_used: model,
+        source: "fresh",
       },
     });
   } catch (err) {

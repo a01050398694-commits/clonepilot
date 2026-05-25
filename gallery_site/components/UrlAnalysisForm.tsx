@@ -1,32 +1,49 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   ArrowsClockwise,
-  ChartLineUp,
   ChartBar,
   Lightning,
-  TrendUp,
-  TrendDown,
-  Minus,
   Warning,
-  WarningCircle,
+  WarningOctagon,
   Check,
   CurrencyDollar,
   Hammer,
   PlayCircle,
   Lightbulb,
   Crosshair,
+  Stairs,
+  ChatCircle,
+  Eye,
+  RssSimple,
+  Sparkle,
+  FileText,
+  Skull,
 } from "@phosphor-icons/react";
-import {
-  LANGS,
-  LANG_LABELS,
-  LANG_NAMES,
-  type Dict,
-  type Lang,
-} from "@/lib/i18n";
+import { LANG_NAMES, type Dict, type Lang } from "@/lib/i18n";
+import { cardLabels } from "@/lib/i18n-card-v2";
+
+/* ─── card-only lang superset (adds Arabic) ────────────────────────── */
+
+export type CardLang = Lang | "ar";
+const CARD_LANGS: readonly CardLang[] = ["en", "ko", "ja", "zh", "es", "ar"];
+const CARD_LANG_LABELS: Record<CardLang, string> = {
+  en: "EN",
+  ko: "KO",
+  ja: "JA",
+  zh: "ZH",
+  es: "ES",
+  ar: "AR",
+};
+const CARD_LANG_NAMES: Record<CardLang, string> = {
+  ...LANG_NAMES,
+  ar: "العربية",
+};
+
+/* ─── shared types (mirrors /api/analyze) ──────────────────────────── */
 
 type BusinessModel =
   | "real-product"
@@ -45,6 +62,22 @@ type RelatedVideo = {
   view_count?: number;
   published_at?: string;
 };
+type FunnelStep = {
+  label: string;
+  price_usd_estimate: number;
+  is_observed: boolean;
+};
+type FunnelLink = {
+  url: string;
+  domain: string;
+  context_snippet: string;
+  is_course_hint: boolean;
+};
+type ChannelVelocity = {
+  recent_uploads_90d: number;
+  recent_avg_views: number | null;
+  uploads_per_week: number;
+};
 
 type Preview = {
   brand: string;
@@ -54,10 +87,16 @@ type Preview = {
   solution: string;
   business_model: BusinessModel;
   red_flags: string[];
+  green_flags: string[];
   likely_real_revenue_source: string;
+  why_buyers_pay: string;
+  honest_value_for_buyer: string;
   clone_feasibility_0_100: number;
   honesty_score_0_100: number;
   confidence_0_100: number;
+  bot_inflation_0_100: number;
+  real_proof_score_0_100: number;
+  hype_vs_reality_0_100: number;
   top_risk: string;
   market_reality: {
     tam_summary: string;
@@ -72,6 +111,7 @@ type Preview = {
     aggressive_arr_usd: number;
     assumptions: string[];
   };
+  funnel_ladder: FunnelStep[];
   insider_tips: string[];
   build_path: {
     steps: { title: string; weeks: number }[];
@@ -80,10 +120,12 @@ type Preview = {
     estimated_monthly_cost_usd: number;
     stack: string[];
   };
+  one_paragraph_verdict: string;
   video: {
     id: string;
     title: string;
     channel: string;
+    channel_handle?: string;
     channel_subscribers?: number;
     channel_video_count?: number;
     channel_created_at?: string;
@@ -97,20 +139,41 @@ type Preview = {
   };
   signals: {
     trends?: { keyword: string; direction: string; score: number };
+    trends_multi: { keyword: string; direction: string; score: number }[];
     hn_mentions: number;
     wiki_found: boolean;
+    reddit_mentions: number;
+    reddit_top_titles: string[];
+    wayback_first_seen: string | null;
+    channel_velocity: ChannelVelocity | null;
   };
   related_videos: RelatedVideo[];
+  description_findings: {
+    funnel_links: FunnelLink[];
+    course_keyword_hits: string[];
+    price_mentions_usd: number[];
+  };
+  comment_stats: {
+    total: number;
+    avg_length: number;
+    emoji_only_ratio: number;
+    generic_praise_ratio: number;
+    bot_ratio_0_100: number;
+  };
 };
 
 type Status = "idle" | "loading" | "ok" | "err";
 
+/* ─── outer form ───────────────────────────────────────────────────── */
+
 export function UrlAnalysisForm({
   d,
+  lang,
   onResult,
   onReset,
 }: {
   d: Dict["analyze_form"];
+  lang: Lang;
   onResult?: () => void;
   onReset?: () => void;
 }) {
@@ -153,47 +216,39 @@ export function UrlAnalysisForm({
   }
 
   if (status === "ok" && preview) {
-    return <PreviewCard d={d} preview={preview} onRetry={reset} />;
+    return <PreviewCard d={d} lang={lang} preview={preview} onRetry={reset} />;
   }
 
   if (status === "loading") {
-    return (
-      <div className="rounded-2xl border border-strong bg-surface p-7 shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)]">
-        <div className="flex items-center gap-3">
-          <Lightning
-            size={20}
-            weight="duotone"
-            className="text-accent animate-pulse"
-          />
-          <p className="text-base font-medium text-ink">{d.submitting}</p>
-        </div>
-        <p className="mt-3 text-sm text-ink-muted leading-relaxed">
-          {d.submitting_hint}
-        </p>
-        <div className="mt-5 h-1 w-full rounded-full bg-surface-2 overflow-hidden">
-          <div className="h-full w-1/3 bg-accent animate-[loadbar_2s_ease-in-out_infinite]" />
-        </div>
-        <style>{`@keyframes loadbar { 0%{margin-left:-33%} 100%{margin-left:100%} }`}</style>
-      </div>
-    );
+    return <LoadingPanel d={d} />;
   }
 
   return (
     <form
       onSubmit={onSubmit}
-      className="rounded-2xl border border-strong bg-surface p-7 shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)]"
+      className="border border-strong bg-surface"
+      style={{ borderRadius: 2 }}
     >
-      <div className="flex items-center gap-2 mb-5">
-        <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-        <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-ink-muted">
-          {d.live_badge}
+      {/* terminal-style header bar */}
+      <div className="flex items-center justify-between px-5 h-9 border-b border-strong bg-surface-2">
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-ink breathe" />
+          <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-muted">
+            {d.live_badge}
+          </p>
+        </div>
+        <p className="text-[10px] font-mono tracking-wider text-ink-dim">
+          /analyze
         </p>
       </div>
 
-      <div className="space-y-4">
+      <div className="p-6 space-y-5">
         <div className="grid gap-2">
-          <label htmlFor="ytUrl" className="text-xs font-medium text-ink-muted">
-            {d.label_url}
+          <label
+            htmlFor="ytUrl"
+            className="text-[10px] font-mono uppercase tracking-wider2 text-ink-muted"
+          >
+            &gt; {d.label_url}
           </label>
           <input
             id="ytUrl"
@@ -202,7 +257,8 @@ export function UrlAnalysisForm({
             value={youtubeUrl}
             onChange={(e) => setUrl(e.target.value)}
             placeholder={d.url_placeholder}
-            className="w-full h-11 px-3.5 rounded-lg bg-surface-2 border border-strong outline-none font-mono text-sm text-ink placeholder:text-ink-dim focus:border-accent/60 focus:ring-2 focus:ring-[var(--accent-ring)] transition"
+            className="w-full h-11 px-3 border border-strong bg-bg outline-none font-mono text-sm text-ink placeholder:text-ink-dim focus:border-bright transition"
+            style={{ borderRadius: 2 }}
             autoComplete="off"
             spellCheck={false}
           />
@@ -210,32 +266,119 @@ export function UrlAnalysisForm({
 
         <button
           type="submit"
-          className="group w-full h-11 inline-flex items-center justify-center gap-2 rounded-lg bg-accent text-bg font-semibold text-sm hover:bg-accent-strong active:translate-y-[1px] transition"
+          className="group w-full h-11 inline-flex items-center justify-center gap-2 bg-ink text-bg font-mono uppercase tracking-wider text-xs hover:bg-white active:translate-y-[1px] transition"
+          style={{ borderRadius: 2 }}
         >
-          {d.submit}
+          <span>{d.submit}</span>
           <ArrowRight
-            size={16}
+            size={14}
             weight="bold"
             className="transition group-hover:translate-x-0.5"
           />
         </button>
 
         {status === "err" && err && (
-          <div className="flex items-start gap-2 text-xs text-[var(--danger)] p-3 rounded-lg border border-[var(--danger)]/30 bg-[var(--danger)]/5">
-            <Warning size={14} weight="duotone" className="mt-0.5 flex-shrink-0" />
+          <div className="flex items-start gap-2 p-3 border border-strong stripe-danger text-xs text-ink">
+            <WarningOctagon size={14} weight="duotone" className="mt-0.5 flex-shrink-0" />
             <span>
-              <strong>{d.err_prefix}</strong> {err}
+              <strong className="font-mono uppercase tracking-wider text-[10px] mr-1">
+                {d.err_prefix}
+              </strong>
+              {err}
             </span>
           </div>
         )}
 
-        <p className="text-[11px] text-ink-dim leading-relaxed">{d.disclaimer}</p>
+        <p className="text-[10px] font-mono text-ink-dim leading-relaxed">
+          {d.disclaimer}
+        </p>
       </div>
     </form>
   );
 }
 
-/* ─── Card ─────────────────────────────────────────────────────────────── */
+/* ─── loading panel ────────────────────────────────────────────────── */
+
+function LoadingPanel({ d }: { d: Dict["analyze_form"] }) {
+  const [lines, setLines] = useState<string[]>([]);
+  const steps = useMemo(
+    () => [
+      "fetch:video.metadata",
+      "fetch:transcript.chain",
+      "fetch:channel.velocity",
+      "fetch:youtube.comments x30",
+      "fetch:google.trends x3",
+      "fetch:reddit.search",
+      "fetch:hn.algolia",
+      "fetch:wikipedia.search",
+      "fetch:wayback.first-seen",
+      "parse:description.funnel",
+      "stat:comment.bot-heuristic",
+      "llm:reverse-engineer.business",
+    ],
+    [],
+  );
+  useEffect(() => {
+    let i = 0;
+    const t = setInterval(() => {
+      i = Math.min(i + 1, steps.length);
+      setLines(steps.slice(0, i));
+    }, 700);
+    return () => clearInterval(t);
+  }, [steps]);
+
+  return (
+    <div className="border border-strong bg-surface" style={{ borderRadius: 2 }}>
+      <div className="flex items-center justify-between px-5 h-9 border-b border-strong bg-surface-2">
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-ink breathe" />
+          <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-muted">
+            {d.submitting}
+          </p>
+        </div>
+        <p className="text-[10px] font-mono tracking-wider text-ink-dim">
+          ~30–60s
+        </p>
+      </div>
+      <div className="p-6">
+        <p className="text-xs text-ink-muted font-mono mb-4">
+          {d.submitting_hint}
+        </p>
+        <div className="font-mono text-[11px] space-y-1 min-h-[180px]">
+          {lines.map((l, i) => (
+            <p
+              key={l}
+              className="text-ink-muted fade-up"
+              style={{ ["--i" as string]: i }}
+            >
+              <span className="text-ink-dim">[{String(i + 1).padStart(2, "0")}]</span>{" "}
+              {l}
+              <span className="text-ink">{" ✓"}</span>
+            </p>
+          ))}
+          {lines.length < 12 && (
+            <p className="text-ink">
+              <span className="text-ink-dim">
+                [{String(lines.length + 1).padStart(2, "0")}]
+              </span>{" "}
+              <span className="text-ink-muted">running</span>
+              <span className="term-cursor" />
+            </p>
+          )}
+        </div>
+        <div className="mt-4 h-px w-full bg-strong" />
+        <div
+          className="mt-4 h-1 w-full overflow-hidden border border-strong ind-bar"
+          style={{ borderRadius: 1 }}
+        >
+          <span />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── label + tone helpers ─────────────────────────────────────────── */
 
 function bmLabel(bm: BusinessModel, d: Dict["analyze_form"]): string {
   switch (bm) {
@@ -254,44 +397,24 @@ function bmLabel(bm: BusinessModel, d: Dict["analyze_form"]): string {
   }
 }
 
-function bmTone(bm: BusinessModel): string {
-  if (bm === "course-funnel" || bm === "affiliate-bait") {
-    return "border-[var(--danger)]/40 bg-[var(--danger)]/10 text-[var(--danger)]";
-  }
-  if (bm === "real-product") {
-    return "border-accent/40 bg-accent/10 text-accent";
-  }
-  return "border-strong bg-surface-2 text-ink-muted";
+function bmIcon(bm: BusinessModel) {
+  if (bm === "course-funnel" || bm === "affiliate-bait")
+    return <Skull size={18} weight="duotone" />;
+  if (bm === "real-product")
+    return <Sparkle size={18} weight="duotone" />;
+  return <Eye size={18} weight="duotone" />;
 }
 
-function cardEdge(bm: BusinessModel): { border: string; shadow: string } {
-  if (bm === "course-funnel" || bm === "affiliate-bait") {
-    return {
-      border: "border-[var(--danger)]/30",
-      shadow: "shadow-[0_30px_80px_-30px_rgba(239,68,68,0.35)]",
-    };
-  }
-  if (bm === "real-product") {
-    return {
-      border: "border-accent/30",
-      shadow: "shadow-[0_30px_80px_-30px_rgba(16,185,129,0.35)]",
-    };
-  }
-  return {
-    border: "border-strong",
-    shadow: "shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)]",
-  };
+function bmStampClass(bm: BusinessModel): string {
+  // Monochrome: danger = striped, positive = solid white, neutral = hollow.
+  if (bm === "course-funnel" || bm === "affiliate-bait")
+    return "stripe-danger text-ink border border-bright";
+  if (bm === "real-product")
+    return "stamp-solid border border-bright";
+  return "bg-surface-2 text-ink border border-strong";
 }
 
-function gaugeColors(value: number): { bar: string; text: string } {
-  if (value >= 70)
-    return { bar: "rgb(16 185 129)", text: "text-accent" };
-  if (value >= 40)
-    return { bar: "rgb(251 191 36)", text: "text-amber-400" };
-  return { bar: "rgb(239 68 68)", text: "text-[var(--danger)]" };
-}
-
-function fmtNum(n?: number): string {
+function fmtNum(n?: number | null): string {
   if (n == null) return "—";
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
@@ -304,24 +427,38 @@ function fmtUSD(n: number): string {
   return `$${n.toLocaleString()}`;
 }
 
+function gaugeShade(value: number): string {
+  // Monochrome shading by value: high = white, mid = gray, low = dim gray.
+  if (value >= 70) return "#ffffff";
+  if (value >= 40) return "#a0a0a0";
+  return "#5a5a5a";
+}
+
+/* ─── PreviewCard ──────────────────────────────────────────────────── */
+
 function PreviewCard({
   d,
+  lang,
   preview: rawPreview,
   onRetry,
 }: {
   d: Dict["analyze_form"];
+  lang: Lang;
   preview: Preview;
   onRetry: () => void;
 }) {
-  const [cardLang, setCardLang] = useState<Lang>("en");
+  const [cardLang, setCardLang] = useState<CardLang>("en");
   const [translatedByLang, setTranslatedByLang] = useState<
-    Partial<Record<Lang, Preview>>
+    Partial<Record<CardLang, Preview>>
   >({ en: rawPreview });
-  const [translating, setTranslating] = useState<Lang | null>(null);
+  const [translating, setTranslating] = useState<CardLang | null>(null);
 
   const preview: Preview = translatedByLang[cardLang] ?? rawPreview;
+  const cl = cardLabels(lang); // labels (site lang)
 
-  async function pickLang(target: Lang) {
+  const isRtl = cardLang === "ar";
+
+  async function pickLang(target: CardLang) {
     if (target === cardLang) return;
     if (translatedByLang[target]) {
       setCardLang(target);
@@ -356,6 +493,8 @@ function PreviewCard({
   const m = preview.market_reality;
   const f = preview.revenue_forecast;
   const b = preview.build_path;
+  const cs = preview.comment_stats;
+  const df = preview.description_findings;
   const thumb = `https://i.ytimg.com/vi/${v.id}/maxresdefault.jpg`;
   const ageYears = v.channel_created_at
     ? (Date.now() - new Date(v.channel_created_at).getTime()) /
@@ -367,61 +506,75 @@ function PreviewCard({
     f.aggressive_arr_usd,
     1,
   );
-  const edge = cardEdge(preview.business_model);
 
   return (
-    <div className={`rounded-2xl border bg-surface overflow-hidden ${edge.border} ${edge.shadow}`}>
-      {/* ─── HERO ─── */}
+    <div
+      className="border border-strong bg-surface overflow-hidden"
+      style={{ borderRadius: 2 }}
+    >
+      {/* ─── HEADER (terminal style) ─── */}
+      <div className="flex items-center justify-between px-5 h-9 border-b border-strong bg-surface-2 font-mono text-[10px] uppercase tracking-wider2">
+        <div className="flex items-center gap-2 text-ink-muted">
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-ink breathe" />
+          <span>{d.live_badge}</span>
+          <span className="text-ink-dim">·</span>
+          <span className="text-ink-dim">{v.id}</span>
+        </div>
+        <div className="flex items-center gap-1 text-ink-dim">
+          <span>~{Math.max(40, Math.round(v.transcript_chars / 350))}s</span>
+        </div>
+      </div>
+
+      {/* ─── HERO: thumbnail + business model stamp ─── */}
       <div className="relative">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={thumb}
           alt={v.title || preview.brand}
-          className="w-full aspect-video object-cover opacity-90"
+          className="w-full aspect-video object-cover grayscale contrast-[1.15]"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/40 to-transparent pointer-events-none" />
-        <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-accent/15 text-accent border border-accent/30 px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.15em]">
-          <ChartLineUp size={11} weight="bold" />
-          {d.live_badge}
-        </span>
-        {/* Big business model stamp */}
+        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/30 to-transparent pointer-events-none" />
+        {/* Business model stamp — striped if course-funnel, solid if real-product */}
         <div
-          className={`absolute bottom-4 left-4 right-4 sm:right-auto rounded-xl border-2 px-4 py-3 backdrop-blur-md ${bmTone(preview.business_model)}`}
+          className={`absolute bottom-4 left-4 right-4 sm:right-auto px-4 py-3 inline-flex items-center gap-3 ${bmStampClass(preview.business_model)}`}
+          style={{ borderRadius: 2 }}
         >
-          <p className="text-[10px] font-mono uppercase tracking-[0.18em] opacity-90">
-            {d.card_business_model}
-          </p>
-          <p className="mt-1 text-lg sm:text-xl font-bold tracking-tight">
-            {bmLabel(preview.business_model, d)}
-          </p>
+          <span className="flex-shrink-0">{bmIcon(preview.business_model)}</span>
+          <div>
+            <p className="text-[9px] font-mono uppercase tracking-wider2 opacity-70">
+              {d.card_business_model}
+            </p>
+            <p className="text-lg sm:text-xl font-bold font-mono tracking-tight uppercase">
+              {bmLabel(preview.business_model, d).replace(/^🚩\s*/, "")}
+            </p>
+          </div>
         </div>
         {translating && (
-          <div className="absolute inset-0 bg-bg/75 backdrop-blur-sm flex flex-col items-center justify-center gap-3 p-6">
-            <Lightning
-              size={28}
-              weight="duotone"
-              className="text-accent animate-pulse"
-            />
-            <p className="text-base font-medium text-ink">
+          <div className="absolute inset-0 bg-bg/85 backdrop-blur-sm flex flex-col items-center justify-center gap-3 p-6">
+            <p className="font-mono uppercase tracking-wider text-xs text-ink-muted">
               {d.card_translating}
             </p>
-            <p className="text-xs text-ink-muted">
-              ~5–10s · {LANG_NAMES[translating]}
-            </p>
-            <div className="w-48 h-1 rounded-full bg-surface-2 overflow-hidden">
-              <div className="h-full w-1/2 bg-accent animate-[loadbar_1.4s_ease-in-out_infinite]" />
+            <p className="font-mono text-xl text-ink">{CARD_LANG_NAMES[translating]}</p>
+            <div
+              className="w-48 h-1 border border-strong overflow-hidden ind-bar"
+              style={{ borderRadius: 1 }}
+            >
+              <span />
             </div>
           </div>
         )}
       </div>
 
-      {/* Lang toggle row — visible, labeled */}
-      <div className="px-6 py-3 border-b border-strong/40 bg-surface-2/30 flex items-center justify-between gap-3 flex-wrap">
-        <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-ink-dim">
-          {d.card_translate_label}
+      {/* ─── LANG TOGGLE row ─── */}
+      <div className="px-5 py-3 border-b border-strong bg-surface-2/40 flex items-center justify-between gap-3 flex-wrap">
+        <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim">
+          &gt; {d.card_translate_label}
         </p>
-        <div className="inline-flex items-center gap-1 rounded-full border border-strong bg-surface p-1">
-          {LANGS.map((l) => {
+        <div
+          className="inline-flex items-center border border-strong bg-bg p-0.5"
+          style={{ borderRadius: 2 }}
+        >
+          {CARD_LANGS.map((l) => {
             const active = l === cardLang;
             const isLoading = translating === l;
             return (
@@ -429,89 +582,131 @@ function PreviewCard({
                 key={l}
                 type="button"
                 onClick={() => pickLang(l)}
-                title={LANG_NAMES[l]}
+                title={CARD_LANG_NAMES[l]}
                 className={[
-                  "px-3 py-1 text-xs font-mono rounded-full transition select-none",
+                  "px-2.5 py-1 text-[11px] font-mono uppercase tracking-wider transition select-none",
                   active
-                    ? "bg-ink text-bg font-semibold"
+                    ? "bg-ink text-bg"
                     : "text-ink-muted hover:text-ink hover:bg-surface-2",
                   isLoading ? "opacity-40 cursor-wait" : "",
                 ].join(" ")}
+                style={{ borderRadius: 1 }}
               >
-                {LANG_LABELS[l]}
+                {CARD_LANG_LABELS[l]}
               </button>
             );
           })}
         </div>
       </div>
 
-      <div className="divide-y divide-strong/40">
-        {/* Brand + tagline + 3 big circular gauges */}
-        <Section>
-          <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-ink-dim">
-            {d.card_brand}
+      {/* ─── BODY: stagger fade-up sections ─── */}
+      <div
+        className="divide-y divide-[var(--border)]"
+        dir={isRtl ? "rtl" : "ltr"}
+      >
+        {/* 01 — BRAND + VERDICT */}
+        <Section i={0}>
+          <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim">
+            [01] {d.card_brand}
           </p>
-          <h3 className="mt-1 text-3xl font-bold tracking-tight text-ink">
+          <h3 className="mt-1 text-3xl sm:text-4xl font-bold tracking-tightest text-ink leading-none">
             {preview.brand}
           </h3>
-          <p className="mt-2 text-base text-ink-muted leading-relaxed">
+          <p className="mt-3 text-base text-ink-muted leading-relaxed">
             {preview.tagline}
           </p>
 
           <div
-            className={`mt-5 rounded-xl border px-4 py-3 ${bmTone(preview.business_model)}`}
+            className="mt-6 border border-strong px-4 py-4 stripe-danger relative overflow-hidden"
+            style={{ borderRadius: 2 }}
           >
-            <p className="text-[10px] font-mono uppercase tracking-[0.18em] opacity-80">
-              {d.card_real_revenue}
+            <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim flex items-center gap-1.5">
+              <FileText size={11} weight="bold" />
+              {cl.section_verdict}
             </p>
-            <p className="mt-1 text-sm leading-relaxed text-ink">
-              {preview.likely_real_revenue_source}
+            <p className="mt-2 text-[15px] text-ink leading-relaxed">
+              {preview.one_paragraph_verdict}
             </p>
           </div>
+        </Section>
 
-          <div className="mt-6 grid grid-cols-3 gap-4">
-            <CircleGauge
-              label={d.card_clone_feasibility}
-              value={preview.clone_feasibility_0_100}
+        {/* 02 — three strips: real revenue · why buyers pay · honest value */}
+        <Section i={1}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[var(--border)] border border-strong" style={{ borderRadius: 2 }}>
+            <StripCol
+              label={d.card_real_revenue}
+              body={preview.likely_real_revenue_source}
             />
-            <CircleGauge
-              label={d.card_honesty}
-              value={preview.honesty_score_0_100}
+            <StripCol
+              label={cl.section_why_buyers_pay}
+              body={preview.why_buyers_pay}
             />
-            <CircleGauge
-              label={d.card_confidence}
-              value={preview.confidence_0_100}
+            <StripCol
+              label={cl.section_honest_value}
+              body={preview.honest_value_for_buyer}
             />
           </div>
         </Section>
 
-        {/* Market reality */}
-        <Section icon={<Crosshair size={14} weight="duotone" />} title={d.section_market}>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <KV label={d.market_tam} value={m.tam_summary} />
-            <KV label={d.market_sam} value={m.sam_summary} />
-            <KV label={d.market_som} value={m.som_year1_summary} />
+        {/* 03 — 6 GAUGES */}
+        <Section i={2} eyebrow={`[02] ${d.card_signals}`}>
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
+            <CircleGauge label={cl.gauge_clone} value={preview.clone_feasibility_0_100} />
+            <CircleGauge label={cl.gauge_honesty} value={preview.honesty_score_0_100} />
+            <CircleGauge label={cl.gauge_confidence} value={preview.confidence_0_100} />
+            <CircleGauge label={cl.gauge_hype_vs_reality} value={preview.hype_vs_reality_0_100} />
+            <CircleGauge
+              label={cl.gauge_bot_inflation}
+              value={preview.bot_inflation_0_100}
+              inverted
+            />
+            <CircleGauge label={cl.gauge_real_proof} value={preview.real_proof_score_0_100} />
+          </div>
+        </Section>
+
+        {/* 04 — FUNNEL LADDER */}
+        <Section
+          i={3}
+          eyebrow={`[03] ${cl.section_funnel}`}
+          icon={<Stairs size={12} weight="duotone" />}
+        >
+          {preview.funnel_ladder.length === 0 ? (
+            <p className="text-xs text-ink-dim font-mono">{cl.funnel_empty}</p>
+          ) : (
+            <FunnelLadder steps={preview.funnel_ladder} cl={cl} />
+          )}
+        </Section>
+
+        {/* 05 — MARKET REALITY */}
+        <Section
+          i={4}
+          eyebrow={`[04] ${d.section_market}`}
+          icon={<Crosshair size={12} weight="duotone" />}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[var(--border)] border border-strong" style={{ borderRadius: 2 }}>
+            <Cell label={d.market_tam} value={m.tam_summary} />
+            <Cell label={d.market_sam} value={m.sam_summary} />
+            <Cell label={d.market_som} value={m.som_year1_summary} />
           </div>
           <p className="mt-3 text-xs text-ink-muted leading-relaxed">
-            <strong className="text-ink-dim font-mono uppercase text-[10px] mr-1">
-              {d.market_trend}:
-            </strong>
+            <span className="text-ink-dim font-mono uppercase text-[10px] mr-1 tracking-wider2">
+              {d.market_trend}
+            </span>
             {m.trend_summary}
           </p>
           {m.top_competitors.length > 0 && (
-            <div className="mt-3">
-              <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-ink-dim mb-2">
-                {d.market_competitors}
+            <div className="mt-4">
+              <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim mb-2">
+                &gt; {d.market_competitors}
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-[var(--border)] border border-strong" style={{ borderRadius: 2 }}>
                 {m.top_competitors.map((c) => (
-                  <div
-                    key={c.name}
-                    className="p-2.5 rounded-lg border border-strong bg-surface-2/40"
-                  >
-                    <p className="text-sm font-semibold text-ink">{c.name}</p>
+                  <div key={c.name} className="bg-surface p-3">
+                    <p className="text-sm font-semibold text-ink font-mono">
+                      {c.name}
+                    </p>
                     {c.url_hint && (
-                      <p className="text-[10px] font-mono text-accent">
+                      <p className="text-[10px] font-mono text-ink-muted truncate">
                         {c.url_hint}
                       </p>
                     )}
@@ -525,43 +720,27 @@ function PreviewCard({
           )}
         </Section>
 
-        {/* Revenue forecast */}
+        {/* 06 — REVENUE FORECAST */}
         <Section
-          icon={<CurrencyDollar size={14} weight="duotone" />}
-          title={d.section_forecast}
+          i={5}
+          eyebrow={`[05] ${d.section_forecast}`}
+          icon={<CurrencyDollar size={12} weight="duotone" />}
         >
           <div className="space-y-2">
-            <ForecastBar
-              label={d.forecast_conservative}
-              value={f.conservative_arr_usd}
-              max={fMax}
-              tone="dim"
-            />
-            <ForecastBar
-              label={d.forecast_base}
-              value={f.base_arr_usd}
-              max={fMax}
-              tone="accent"
-            />
-            <ForecastBar
-              label={d.forecast_aggressive}
-              value={f.aggressive_arr_usd}
-              max={fMax}
-              tone="bright"
-            />
+            <ForecastBar label={d.forecast_conservative} value={f.conservative_arr_usd} max={fMax} weight="dim" />
+            <ForecastBar label={d.forecast_base} value={f.base_arr_usd} max={fMax} weight="mid" />
+            <ForecastBar label={d.forecast_aggressive} value={f.aggressive_arr_usd} max={fMax} weight="bright" />
           </div>
           {f.assumptions.length > 0 && (
             <details className="mt-3 group">
-              <summary className="cursor-pointer text-[10px] font-mono uppercase tracking-[0.18em] text-ink-dim hover:text-ink">
+              <summary className="cursor-pointer text-[10px] font-mono uppercase tracking-wider2 text-ink-dim hover:text-ink list-none flex items-center gap-1">
+                <span className="group-open:rotate-90 transition-transform">▶</span>
                 {d.forecast_assumptions} ({f.assumptions.length})
               </summary>
-              <ul className="mt-2 space-y-1">
+              <ul className="mt-2 space-y-1 pl-3">
                 {f.assumptions.map((a, i) => (
-                  <li
-                    key={i}
-                    className="text-xs text-ink-muted leading-relaxed flex gap-2"
-                  >
-                    <span className="text-ink-dim">·</span>
+                  <li key={i} className="text-xs text-ink-muted leading-relaxed flex gap-2">
+                    <span className="text-ink-dim font-mono">·</span>
                     <span>{a}</span>
                   </li>
                 ))}
@@ -570,104 +749,80 @@ function PreviewCard({
           )}
         </Section>
 
-        {/* Red flags or "no flags" */}
-        {preview.red_flags.length > 0 ? (
-          <Section
-            icon={<WarningCircle size={14} weight="duotone" className="text-[var(--danger)]" />}
-            title={`${d.card_red_flags} (${preview.red_flags.length})`}
-            tone="danger"
-          >
-            <ul className="space-y-1.5">
-              {preview.red_flags.map((f, i) => (
-                <li
-                  key={i}
-                  className="text-xs text-ink leading-relaxed flex gap-2"
-                >
-                  <span className="text-[var(--danger)] flex-shrink-0">•</span>
-                  <span>{f}</span>
-                </li>
-              ))}
-            </ul>
-          </Section>
-        ) : (
-          <Section>
-            <div className="rounded-lg border border-accent/30 bg-accent/5 p-3 text-xs text-accent flex items-center gap-2">
-              <Check size={14} weight="bold" />
-              {d.card_no_red_flags}
+        {/* 07 — RED FLAGS + GREEN FLAGS (side by side when both present) */}
+        {(preview.red_flags.length > 0 || preview.green_flags.length > 0) && (
+          <Section i={6}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {preview.red_flags.length > 0 ? (
+                <FlagPanel
+                  eyebrow={`[06] ${d.card_red_flags} (${preview.red_flags.length})`}
+                  flags={preview.red_flags}
+                  variant="danger"
+                />
+              ) : (
+                <div className="border border-strong p-4 flex items-center gap-2 text-xs text-ink-muted" style={{ borderRadius: 2 }}>
+                  <Check size={14} weight="bold" />
+                  {d.card_no_red_flags}
+                </div>
+              )}
+              {preview.green_flags.length > 0 && (
+                <FlagPanel
+                  eyebrow={`[07] ${cl.section_green_flags} (${preview.green_flags.length})`}
+                  flags={preview.green_flags}
+                  variant="positive"
+                />
+              )}
             </div>
           </Section>
         )}
 
-        {/* Insider tips */}
+        {/* 08 — INSIDER TIPS */}
         {preview.insider_tips.length > 0 && (
           <Section
-            icon={<Lightbulb size={14} weight="duotone" />}
-            title={d.section_tips}
+            i={7}
+            eyebrow={`[08] ${d.section_tips}`}
+            icon={<Lightbulb size={12} weight="duotone" />}
           >
             <ol className="space-y-2">
               {preview.insider_tips.map((tip, i) => (
-                <li
-                  key={i}
-                  className="text-xs text-ink leading-relaxed flex gap-3"
-                >
-                  <span className="font-mono text-accent flex-shrink-0">
+                <li key={i} className="text-sm text-ink leading-relaxed flex gap-3">
+                  <span className="font-mono text-ink-dim flex-shrink-0 w-8 text-right">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span>{tip}</span>
+                  <span className="flex-1">{tip}</span>
                 </li>
               ))}
             </ol>
           </Section>
         )}
 
-        {/* Build path */}
+        {/* 09 — BUILD PATH */}
         <Section
-          icon={<Hammer size={14} weight="duotone" />}
-          title={d.section_build}
+          i={8}
+          eyebrow={`[09] ${d.section_build}`}
+          icon={<Hammer size={12} weight="duotone" />}
         >
-          <div className="grid grid-cols-3 gap-px bg-[var(--border)] rounded-lg overflow-hidden border border-strong">
-            <KStat label={d.build_total_weeks} value={`${b.total_weeks} w`} />
-            <KStat
-              label={d.build_one_time_cost}
-              value={fmtUSD(b.estimated_one_time_cost_usd)}
-            />
-            <KStat
-              label={d.build_monthly_cost}
-              value={`${fmtUSD(b.estimated_monthly_cost_usd)}/mo`}
-            />
+          <div className="grid grid-cols-3 gap-px bg-[var(--border)] border border-strong" style={{ borderRadius: 2 }}>
+            <StatCell label={d.build_total_weeks} value={`${b.total_weeks}w`} />
+            <StatCell label={d.build_one_time_cost} value={fmtUSD(b.estimated_one_time_cost_usd)} />
+            <StatCell label={d.build_monthly_cost} value={`${fmtUSD(b.estimated_monthly_cost_usd)}/mo`} />
           </div>
 
-          <ol className="mt-3 space-y-1.5">
-            {b.steps.map((step, i) => (
-              <li
-                key={i}
-                className="flex items-center gap-3 p-2.5 rounded-lg border border-strong bg-surface-2/30"
-              >
-                <span className="font-mono text-[10px] text-ink-dim w-6 flex-shrink-0">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span className="text-xs text-ink flex-1 leading-tight">
-                  {step.title}
-                </span>
-                <span className="font-mono text-[10px] text-accent flex-shrink-0">
-                  {step.weeks}w
-                </span>
-              </li>
-            ))}
-          </ol>
+          <Timeline steps={b.steps} />
 
           {b.stack.length > 0 && (
-            <div className="mt-3">
-              <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-ink-dim mb-2">
-                {d.build_stack}
+            <div className="mt-4">
+              <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim mb-2">
+                &gt; {d.build_stack}
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {b.stack.map((s) => (
+                {b.stack.map((sk) => (
                   <span
-                    key={s}
-                    className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-strong bg-surface-2 text-ink-muted"
+                    key={sk}
+                    className="text-[10px] font-mono px-2 py-0.5 border border-strong text-ink-muted bg-surface-2"
+                    style={{ borderRadius: 1 }}
                   >
-                    {s}
+                    {sk}
                   </span>
                 ))}
               </div>
@@ -675,36 +830,183 @@ function PreviewCard({
           )}
         </Section>
 
-        {/* Related videos */}
+        {/* 10 — EXTERNAL FOOTPRINT */}
+        <Section
+          i={9}
+          eyebrow={`[10] ${cl.section_signals_external}`}
+          icon={<RssSimple size={12} weight="duotone" />}
+        >
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[var(--border)] border border-strong" style={{ borderRadius: 2 }}>
+            <StatCell label="Trend" value={s.trends ? `${s.trends.direction} ${s.trends.score}` : "—"} />
+            <StatCell label="HN" value={`${s.hn_mentions}`} />
+            <StatCell label={cl.sig_reddit} value={`${s.reddit_mentions}`} />
+            <StatCell label="Wiki" value={s.wiki_found ? "yes" : "no"} />
+            <StatCell label={cl.sig_wayback} value={s.wayback_first_seen ?? "—"} />
+            <StatCell
+              label={cl.sig_velocity_per_week}
+              value={s.channel_velocity ? `${s.channel_velocity.uploads_per_week}` : "—"}
+            />
+            <StatCell
+              label={cl.sig_velocity_avg_view}
+              value={s.channel_velocity?.recent_avg_views != null ? fmtNum(s.channel_velocity.recent_avg_views) : "—"}
+            />
+            <StatCell label="Subs" value={fmtNum(v.channel_subscribers)} />
+          </div>
+          {s.reddit_top_titles.length > 0 && (
+            <div className="mt-3">
+              <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim mb-1">
+                &gt; reddit.top
+              </p>
+              <ul className="space-y-1">
+                {s.reddit_top_titles.slice(0, 5).map((t, i) => (
+                  <li key={i} className="text-xs font-mono text-ink-muted leading-snug">
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {s.trends_multi.length > 1 && (
+            <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] font-mono">
+              {s.trends_multi.map((t) => (
+                <span
+                  key={t.keyword}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 border border-strong bg-surface-2 text-ink-muted"
+                  style={{ borderRadius: 1 }}
+                >
+                  {t.direction === "rising" ? "↑" : t.direction === "declining" ? "↓" : "→"}
+                  <span>{t.keyword}</span>
+                  <span className="text-ink-dim">{t.score}</span>
+                </span>
+              ))}
+            </div>
+          )}
+        </Section>
+
+        {/* 11 — DESCRIPTION FORENSICS */}
+        <Section
+          i={10}
+          eyebrow={`[11] ${cl.section_description}`}
+          icon={<FileText size={12} weight="duotone" />}
+        >
+          <div className="grid grid-cols-3 gap-px bg-[var(--border)] border border-strong mb-3" style={{ borderRadius: 2 }}>
+            <StatCell label={cl.desc_links_label} value={`${df.funnel_links.length}`} />
+            <StatCell label={cl.desc_course_keywords_label} value={`${df.course_keyword_hits.length}`} />
+            <StatCell label={cl.desc_price_mentions_label} value={`${df.price_mentions_usd.length}`} />
+          </div>
+
+          {df.funnel_links.length > 0 && (
+            <div className="border border-strong overflow-hidden" style={{ borderRadius: 2 }}>
+              <table className="w-full text-[11px] font-mono">
+                <thead className="bg-surface-2 text-ink-dim uppercase tracking-wider2">
+                  <tr>
+                    <th className="text-left px-3 py-1.5 w-40">domain</th>
+                    <th className="text-left px-3 py-1.5">context</th>
+                    <th className="text-right px-3 py-1.5 w-24">type</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {df.funnel_links.slice(0, 10).map((l, i) => (
+                    <tr
+                      key={i}
+                      className={`border-t border-strong ${l.is_course_hint ? "stripe-danger" : ""}`}
+                    >
+                      <td className="px-3 py-1.5 text-ink truncate max-w-[160px]">
+                        {l.domain}
+                      </td>
+                      <td className="px-3 py-1.5 text-ink-muted truncate max-w-[280px]">
+                        {l.context_snippet || "—"}
+                      </td>
+                      <td className="px-3 py-1.5 text-right">
+                        {l.is_course_hint ? (
+                          <span className="text-ink">{cl.desc_course_hint_chip}</span>
+                        ) : (
+                          <span className="text-ink-dim">link</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {df.price_mentions_usd.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {df.price_mentions_usd.slice(0, 10).map((p) => (
+                <span
+                  key={p}
+                  className="text-[10px] font-mono px-2 py-0.5 border border-bright text-ink bg-surface-2"
+                  style={{ borderRadius: 1 }}
+                >
+                  ${p.toLocaleString()}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {df.course_keyword_hits.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {df.course_keyword_hits.map((k) => (
+                <span
+                  key={k}
+                  className="text-[10px] font-mono px-2 py-0.5 border border-strong text-ink-muted bg-surface-2"
+                  style={{ borderRadius: 1 }}
+                >
+                  #{k}
+                </span>
+              ))}
+            </div>
+          )}
+        </Section>
+
+        {/* 12 — COMMENT FINGERPRINT */}
+        <Section
+          i={11}
+          eyebrow={`[12] ${cl.section_comments}`}
+          icon={<ChatCircle size={12} weight="duotone" />}
+        >
+          {cs.total === 0 ? (
+            <p className="text-xs text-ink-dim font-mono">{cl.comments_empty}</p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[var(--border)] border border-strong" style={{ borderRadius: 2 }}>
+              <StatCell label={cl.comments_total_label} value={`${cs.total}`} />
+              <StatCell label={cl.comments_avg_length_label} value={`${cs.avg_length}`} />
+              <StatCell label={cl.comments_bot_label} value={`${cs.bot_ratio_0_100}/100`} />
+              <StatCell label={cl.comments_emoji_label} value={`${cs.emoji_only_ratio}%`} />
+            </div>
+          )}
+        </Section>
+
+        {/* 13 — RELATED VIDEOS */}
         {preview.related_videos.length > 0 && (
           <Section
-            icon={<PlayCircle size={14} weight="duotone" />}
-            title={d.section_related}
+            i={12}
+            eyebrow={`[13] ${d.section_related}`}
+            icon={<PlayCircle size={12} weight="duotone" />}
           >
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-[var(--border)] border border-strong" style={{ borderRadius: 2 }}>
               {preview.related_videos.map((rv) => (
                 <a
                   key={rv.video_id}
                   href={`https://www.youtube.com/watch?v=${rv.video_id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block rounded-lg border border-strong overflow-hidden hover:border-accent/40 transition"
+                  className="block bg-surface hover:bg-surface-2 transition group"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={rv.thumbnail}
                     alt={rv.title}
-                    className="w-full aspect-video object-cover"
+                    className="w-full aspect-video object-cover grayscale group-hover:grayscale-0 transition"
                   />
-                  <div className="p-2">
+                  <div className="p-3">
                     <p className="text-xs text-ink leading-tight line-clamp-2">
                       {rv.title}
                     </p>
-                    <p className="text-[10px] text-ink-dim mt-1 truncate">
+                    <p className="text-[10px] font-mono text-ink-dim mt-1 truncate">
                       {rv.channel}
-                      {rv.view_count != null
-                        ? ` · ${fmtNum(rv.view_count)} ${d.sig_views}`
-                        : ""}
+                      {rv.view_count != null ? ` · ${fmtNum(rv.view_count)} ${d.sig_views}` : ""}
                     </p>
                   </div>
                 </a>
@@ -713,118 +1015,85 @@ function PreviewCard({
           </Section>
         )}
 
-        {/* Top risk */}
+        {/* 14 — TOP RISK */}
         <Section
-          icon={<Warning size={14} weight="duotone" className="text-amber-400" />}
-          title={d.card_risk}
-          tone="warn"
+          i={13}
+          eyebrow={`[14] ${d.card_risk}`}
+          icon={<Warning size={12} weight="duotone" />}
         >
           <p className="text-sm text-ink leading-relaxed">{preview.top_risk}</p>
         </Section>
 
-        {/* Signals */}
-        <Section
-          icon={<ChartBar size={14} weight="duotone" />}
-          title={d.card_signals}
-        >
+        {/* 15 — RAW SIGNALS CHIPS */}
+        <Section i={14} eyebrow={`[15] raw.signals`} icon={<ChartBar size={12} weight="duotone" />}>
           <div className="flex flex-wrap gap-1.5 text-[10px] font-mono">
             <Chip>{`▶ ${fmtNum(v.view_count)} ${d.sig_views}`}</Chip>
-            {v.like_count != null && (
-              <Chip>{`♥ ${fmtNum(v.like_count)} ${d.sig_likes}`}</Chip>
-            )}
-            {v.channel_subscribers != null && (
-              <Chip>{`◎ ${fmtNum(v.channel_subscribers)} ${d.sig_subs}`}</Chip>
-            )}
-            {ageYears != null && (
-              <Chip>{`${ageYears.toFixed(1)} ${d.sig_channel_age_years}`}</Chip>
-            )}
-            {s.trends && (
-              <Chip
-                tone={
-                  s.trends.direction === "rising"
-                    ? "good"
-                    : s.trends.direction === "declining"
-                      ? "bad"
-                      : "neutral"
-                }
-              >
-                <TrendIcon direction={s.trends.direction} />
-                {`${d.sig_trend} ${s.trends.score}`}
-              </Chip>
-            )}
-            <Chip tone={s.hn_mentions > 0 ? "good" : "neutral"}>
-              {`${d.sig_hn} ${s.hn_mentions}`}
-            </Chip>
-            <Chip tone={s.wiki_found ? "good" : "neutral"}>
-              {s.wiki_found ? d.sig_wiki_yes : d.sig_wiki_no}
-            </Chip>
+            {v.like_count != null && <Chip>{`♥ ${fmtNum(v.like_count)} ${d.sig_likes}`}</Chip>}
+            {v.channel_subscribers != null && <Chip>{`◎ ${fmtNum(v.channel_subscribers)} ${d.sig_subs}`}</Chip>}
+            {ageYears != null && <Chip>{`${ageYears.toFixed(1)} ${d.sig_channel_age_years}`}</Chip>}
             <Chip>{`${d.sig_transcript_via} ${v.transcript_source}`}</Chip>
           </div>
         </Section>
 
-        {/* Clone CTA */}
-        <Section tone="accent">
-          <div className="rounded-xl border border-accent/40 bg-accent/5 p-5">
-            <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-accent flex items-center gap-1.5">
-              <Lightning size={11} weight="bold" />
-              {d.section_clone_cta}
-            </p>
-            <h4 className="mt-2 text-lg font-semibold text-ink">
-              {d.clone_cta_title}
-            </h4>
-            <p className="mt-1.5 text-xs text-ink-muted leading-relaxed">
-              {d.clone_cta_body}
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
+        {/* 16 — CTA */}
+        <div className="px-6 py-7 stripe-danger">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim flex items-center gap-1.5">
+                <Lightning size={11} weight="bold" />
+                {d.section_clone_cta}
+              </p>
+              <h4 className="mt-2 text-lg font-semibold text-ink font-mono">
+                {d.clone_cta_title}
+              </h4>
+              <p className="mt-1 text-xs text-ink-muted leading-relaxed max-w-[60ch]">
+                {d.clone_cta_body}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 flex-shrink-0">
               <Link
                 href="/install"
-                className="inline-flex h-10 items-center gap-2 rounded-lg bg-accent text-bg px-4 text-sm font-semibold hover:bg-accent-strong active:translate-y-[1px] transition"
+                className="inline-flex h-10 items-center gap-2 bg-ink text-bg px-4 text-xs font-mono uppercase tracking-wider hover:bg-white active:translate-y-[1px] transition"
+                style={{ borderRadius: 2 }}
               >
                 {d.clone_cta_btn}
               </Link>
               <button
                 type="button"
                 onClick={onRetry}
-                className="inline-flex h-10 items-center gap-2 rounded-lg border border-strong px-4 text-sm font-medium text-ink-muted hover:text-ink hover:border-accent/40 transition"
+                className="inline-flex h-10 items-center gap-2 border border-strong px-4 text-xs font-mono uppercase tracking-wider text-ink-muted hover:text-ink hover:border-bright transition"
+                style={{ borderRadius: 2 }}
               >
-                <ArrowsClockwise size={14} weight="bold" />
+                <ArrowsClockwise size={12} weight="bold" />
                 {d.card_retry}
               </button>
             </div>
           </div>
-        </Section>
+        </div>
       </div>
     </div>
   );
 }
 
-/* ─── small atoms ─────────────────────────────────────────────────────── */
+/* ─── small atoms ─────────────────────────────────────────────────── */
 
 function Section({
+  i,
+  eyebrow,
   icon,
-  title,
   children,
-  tone,
 }: {
+  i: number;
+  eyebrow?: string;
   icon?: React.ReactNode;
-  title?: string;
   children: React.ReactNode;
-  tone?: "danger" | "warn" | "accent";
 }) {
-  const toneCls =
-    tone === "danger"
-      ? "bg-[var(--danger)]/5"
-      : tone === "warn"
-        ? "bg-amber-500/5"
-        : tone === "accent"
-          ? "bg-accent/5"
-          : "";
   return (
-    <div className={`p-6 ${toneCls}`}>
-      {title && (
-        <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-ink-dim mb-3 flex items-center gap-1.5">
+    <div className="p-6 fade-up" style={{ ["--i" as string]: i }}>
+      {eyebrow && (
+        <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim mb-3 flex items-center gap-1.5">
           {icon}
-          {title}
+          {eyebrow}
         </p>
       )}
       {children}
@@ -832,10 +1101,21 @@ function Section({
   );
 }
 
-function KV({ label, value }: { label: string; value: string }) {
+function StripCol({ label, body }: { label: string; body: string }) {
   return (
-    <div className="p-3 rounded-lg border border-strong bg-surface-2/40">
-      <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-ink-dim">
+    <div className="bg-surface p-4">
+      <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim">
+        {label}
+      </p>
+      <p className="mt-2 text-sm text-ink leading-relaxed">{body}</p>
+    </div>
+  );
+}
+
+function Cell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-surface p-3">
+      <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim">
         {label}
       </p>
       <p className="mt-1 text-xs text-ink leading-relaxed">{value}</p>
@@ -843,61 +1123,50 @@ function KV({ label, value }: { label: string; value: string }) {
   );
 }
 
-function KStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="bg-surface px-3 py-2.5 text-center">
-      <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-ink-dim">
-        {label}
-      </p>
-      <p className="mt-1 font-mono text-sm font-semibold text-accent">{value}</p>
-    </div>
-  );
-}
-
-function CircleGauge({ label, value }: { label: string; value: number }) {
-  const { bar, text } = gaugeColors(value);
-  const deg = Math.max(0, Math.min(100, value)) * 3.6;
-  return (
-    <div className="flex flex-col items-center gap-2">
-      <div
-        className="relative h-24 w-24 rounded-full"
-        style={{
-          background: `conic-gradient(${bar} ${deg}deg, var(--surface-2, #1a1d24) ${deg}deg 360deg)`,
-        }}
-      >
-        <div className="absolute inset-[6px] rounded-full bg-bg flex items-center justify-center flex-col">
-          <span className={`font-mono text-2xl font-bold ${text}`}>{value}</span>
-          <span className="text-[9px] font-mono text-ink-dim">/100</span>
-        </div>
-      </div>
-      <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-ink-dim text-center leading-tight">
-        {label}
-      </p>
-    </div>
-  );
-}
-
-function Gauge({ label, value }: { label: string; value: number }) {
-  const tone =
-    value >= 70
-      ? "text-accent"
-      : value >= 40
-        ? "text-amber-400"
-        : "text-[var(--danger)]";
-  const bar =
-    value >= 70 ? "bg-accent" : value >= 40 ? "bg-amber-400" : "bg-[var(--danger)]";
+function StatCell({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-surface px-3 py-2.5">
-      <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-ink-dim">
+      <p className="text-[9px] font-mono uppercase tracking-wider2 text-ink-dim truncate">
         {label}
       </p>
-      <p className={`mt-1 font-mono text-base font-semibold ${tone}`}>
+      <p className="mt-0.5 font-mono text-sm font-semibold text-ink truncate tabnums">
         {value}
-        <span className="text-ink-dim text-xs">/100</span>
       </p>
-      <div className="mt-1 h-1 rounded-full bg-surface-2 overflow-hidden">
-        <div className={`h-full ${bar}`} style={{ width: `${value}%` }} />
+    </div>
+  );
+}
+
+function CircleGauge({
+  label,
+  value,
+  inverted = false,
+}: {
+  label: string;
+  value: number;
+  inverted?: boolean;
+}) {
+  // For "inverted" gauges (where lower is better — e.g. bot inflation),
+  // shade by (100 - value) but still display the raw value.
+  const shadeValue = inverted ? 100 - value : value;
+  const ringColor = gaugeShade(shadeValue);
+  const deg = Math.max(0, Math.min(100, value)) * 3.6;
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <div
+        className="relative h-20 w-20 rounded-full"
+        style={{
+          background: `conic-gradient(${ringColor} ${deg}deg, var(--surface-2) ${deg}deg 360deg)`,
+        }}
+      >
+        <div className="absolute inset-[5px] rounded-full bg-bg flex items-center justify-center flex-col">
+          <span className="font-mono text-xl font-bold text-ink tabnums">
+            {value}
+          </span>
+        </div>
       </div>
+      <p className="text-[9px] font-mono uppercase tracking-wider2 text-ink-dim text-center leading-tight max-w-[8ch]">
+        {label}
+      </p>
     </div>
   );
 }
@@ -906,62 +1175,140 @@ function ForecastBar({
   label,
   value,
   max,
-  tone,
+  weight,
 }: {
   label: string;
   value: number;
   max: number;
-  tone: "dim" | "accent" | "bright";
+  weight: "dim" | "mid" | "bright";
 }) {
   const pct = Math.max(2, Math.round((value / max) * 100));
   const barCls =
-    tone === "bright"
-      ? "bg-gradient-to-r from-accent to-[var(--accent-strong)]"
-      : tone === "accent"
-        ? "bg-accent"
-        : "bg-accent/40";
+    weight === "bright"
+      ? "bg-ink"
+      : weight === "mid"
+        ? "bg-[#b5b5b5]"
+        : "bg-[#5a5a5a]";
   return (
     <div>
       <div className="flex items-baseline justify-between mb-1">
-        <span className="text-[11px] font-mono uppercase tracking-[0.15em] text-ink-muted">
+        <span className="text-[10px] font-mono uppercase tracking-wider2 text-ink-muted">
           {label}
         </span>
-        <span className="font-mono text-sm font-semibold text-ink">
-          {fmtUSD(value)}{" "}
-          <span className="text-[10px] text-ink-dim">ARR</span>
+        <span className="font-mono text-sm font-semibold text-ink tabnums">
+          {fmtUSD(value)}
+          <span className="text-[10px] text-ink-dim ml-1">ARR</span>
         </span>
       </div>
-      <div className="h-2 rounded-full bg-surface-2 overflow-hidden">
+      <div className="h-1.5 border border-strong bg-bg overflow-hidden" style={{ borderRadius: 1 }}>
         <div className={`h-full ${barCls}`} style={{ width: `${pct}%` }} />
       </div>
     </div>
   );
 }
 
-function Chip({
-  children,
-  tone = "neutral",
-}: {
-  children: React.ReactNode;
-  tone?: "good" | "bad" | "neutral";
-}) {
-  const cls =
-    tone === "good"
-      ? "border-accent/40 bg-accent/5 text-accent"
-      : tone === "bad"
-        ? "border-[var(--danger)]/40 bg-[var(--danger)]/5 text-[var(--danger)]"
-        : "border-strong bg-surface-2 text-ink-muted";
+function Chip({ children }: { children: React.ReactNode }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 ${cls}`}
+      className="inline-flex items-center gap-1 border border-strong px-2 py-0.5 bg-surface-2 text-ink-muted"
+      style={{ borderRadius: 1 }}
     >
       {children}
     </span>
   );
 }
 
-function TrendIcon({ direction }: { direction: string }) {
-  if (direction === "rising") return <TrendUp size={10} weight="bold" />;
-  if (direction === "declining") return <TrendDown size={10} weight="bold" />;
-  return <Minus size={10} weight="bold" />;
+function FunnelLadder({
+  steps,
+  cl,
+}: {
+  steps: FunnelStep[];
+  cl: ReturnType<typeof cardLabels>;
+}) {
+  const max = Math.max(...steps.map((s) => s.price_usd_estimate), 1);
+  return (
+    <ol className="space-y-1">
+      {steps.map((s, i) => {
+        const pct = Math.max(8, Math.round((s.price_usd_estimate / max) * 100));
+        return (
+          <li
+            key={i}
+            className={`flex items-center gap-3 border ${s.is_observed ? "border-bright" : "border-strong border-dashed"} bg-surface-2 px-3 py-2`}
+            style={{ borderRadius: 2 }}
+          >
+            <span className="font-mono text-[10px] text-ink-dim w-6 flex-shrink-0 tabnums">
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <span className="flex-1 text-sm text-ink leading-tight font-mono">
+              {s.label}
+            </span>
+            <div className="hidden sm:block w-32 h-1 bg-bg border border-strong overflow-hidden" style={{ borderRadius: 1 }}>
+              <div
+                className={s.is_observed ? "h-full bg-ink" : "h-full bg-[#5a5a5a]"}
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+            <span className="font-mono text-sm font-semibold text-ink w-20 text-right flex-shrink-0 tabnums">
+              {fmtUSD(s.price_usd_estimate)}
+            </span>
+            <span
+              className={`text-[9px] font-mono uppercase tracking-wider2 ${s.is_observed ? "text-ink" : "text-ink-dim"} w-16 text-right flex-shrink-0`}
+            >
+              {s.is_observed ? cl.funnel_observed_chip : cl.funnel_inferred_chip}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function FlagPanel({
+  eyebrow,
+  flags,
+  variant,
+}: {
+  eyebrow: string;
+  flags: string[];
+  variant: "danger" | "positive";
+}) {
+  const wrap =
+    variant === "danger"
+      ? "border-strong stripe-danger"
+      : "border-bright bg-surface-2";
+  const bullet = variant === "danger" ? "■" : "□";
+  return (
+    <div className={`border ${wrap} p-4`} style={{ borderRadius: 2 }}>
+      <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim mb-2">
+        {eyebrow}
+      </p>
+      <ul className="space-y-1.5">
+        {flags.map((f, i) => (
+          <li key={i} className="text-xs text-ink leading-relaxed flex gap-2">
+            <span className="font-mono text-ink-muted flex-shrink-0">{bullet}</span>
+            <span>{f}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function Timeline({ steps }: { steps: { title: string; weeks: number }[] }) {
+  return (
+    <ol className="mt-4 relative pl-5">
+      <span className="absolute left-2 top-2 bottom-2 w-px bg-strong" aria-hidden />
+      {steps.map((s, i) => (
+        <li key={i} className="relative pb-3 last:pb-0">
+          <span className="absolute -left-3.5 top-1 inline-block h-2 w-2 bg-ink" />
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-sm text-ink leading-tight">{s.title}</span>
+            <span className="font-mono text-[10px] text-ink-muted flex-shrink-0 tabnums">
+              {s.weeks}w
+            </span>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
 }
