@@ -734,7 +734,15 @@ Call extract_business_preview now. Be CONCISE — short sentences, no fluff. Req
       signals,
       related_videos: relatedVideos,
     };
-    return NextResponse.json({ ok: true, preview });
+    return NextResponse.json({
+      ok: true,
+      preview,
+      _debug: {
+        transcript_source: transcript.source,
+        transcript_error: transcriptError,
+        proxy_set: !!process.env.BRIGHTDATA_PROXY_URL,
+      },
+    });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "unknown error";
     return NextResponse.json({ error: msg }, { status: 500 });
