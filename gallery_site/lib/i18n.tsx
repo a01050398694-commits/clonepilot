@@ -107,6 +107,28 @@ export type Dict = {
     card_install_cta: string;
     card_retry: string;
     err_prefix: string;
+    card_business_model: string;
+    bm_real_product: string;
+    bm_course_funnel: string;
+    bm_affiliate_bait: string;
+    bm_personal_brand: string;
+    bm_consulting_front: string;
+    bm_unclear: string;
+    card_red_flags: string;
+    card_no_red_flags: string;
+    card_real_revenue: string;
+    card_clone_feasibility: string;
+    card_honesty: string;
+    card_signals: string;
+    sig_views: string;
+    sig_likes: string;
+    sig_subs: string;
+    sig_channel_age_years: string;
+    sig_trend: string;
+    sig_hn: string;
+    sig_wiki_yes: string;
+    sig_wiki_no: string;
+    sig_transcript_via: string;
   };
   waitlist_form: {
     placeholder_email: string;
@@ -224,6 +246,28 @@ const EN: Dict = {
     card_install_cta: "Get the full 12-section report",
     card_retry: "Analyze another video",
     err_prefix: "Analysis failed:",
+    card_business_model: "Business model",
+    bm_real_product: "Real product",
+    bm_course_funnel: "🚩 Course-funnel",
+    bm_affiliate_bait: "🚩 Affiliate-bait",
+    bm_personal_brand: "Personal brand",
+    bm_consulting_front: "Consulting front",
+    bm_unclear: "Unclear",
+    card_red_flags: "Red flags",
+    card_no_red_flags: "No major red flags",
+    card_real_revenue: "Likely real revenue",
+    card_clone_feasibility: "Clone feasibility",
+    card_honesty: "Honesty",
+    card_signals: "External signals",
+    sig_views: "views",
+    sig_likes: "likes",
+    sig_subs: "subs",
+    sig_channel_age_years: "yrs",
+    sig_trend: "trend",
+    sig_hn: "HN",
+    sig_wiki_yes: "Wiki ✓",
+    sig_wiki_no: "Wiki —",
+    sig_transcript_via: "transcript via",
   },
   waitlist_form: {
     placeholder_email: "you@startup.com",
@@ -338,6 +382,28 @@ const KO: Dict = {
     card_install_cta: "12섹션 풀 리포트 받기",
     card_retry: "다른 영상 분석",
     err_prefix: "분석 실패:",
+    card_business_model: "사업 유형",
+    bm_real_product: "진짜 제품 사업",
+    bm_course_funnel: "🚩 강의팔이 funnel",
+    bm_affiliate_bait: "🚩 제휴 마케팅 미끼",
+    bm_personal_brand: "퍼스널 브랜드",
+    bm_consulting_front: "컨설팅 미끼",
+    bm_unclear: "분류 불명",
+    card_red_flags: "강의팔이 적신호",
+    card_no_red_flags: "특별한 적신호 없음",
+    card_real_revenue: "실제 수익원 추정",
+    card_clone_feasibility: "복제 가능성",
+    card_honesty: "정직도",
+    card_signals: "외부 신호",
+    sig_views: "조회",
+    sig_likes: "좋아요",
+    sig_subs: "구독자",
+    sig_channel_age_years: "년차",
+    sig_trend: "트렌드",
+    sig_hn: "HN",
+    sig_wiki_yes: "위키 ✓",
+    sig_wiki_no: "위키 —",
+    sig_transcript_via: "자막 출처",
   },
   waitlist_form: {
     placeholder_email: "you@startup.com",
@@ -452,6 +518,28 @@ const JA: Dict = {
     card_install_cta: "12セクションのフルレポート取得",
     card_retry: "別の動画を解析",
     err_prefix: "解析失敗:",
+    card_business_model: "ビジネスモデル",
+    bm_real_product: "本物の製品事業",
+    bm_course_funnel: "🚩 講座売りファネル",
+    bm_affiliate_bait: "🚩 アフィリエイト誘導",
+    bm_personal_brand: "パーソナルブランド",
+    bm_consulting_front: "コンサル誘導",
+    bm_unclear: "分類不明",
+    card_red_flags: "講座売り赤信号",
+    card_no_red_flags: "目立った赤信号なし",
+    card_real_revenue: "実際の収益源(推定)",
+    card_clone_feasibility: "クローン実現性",
+    card_honesty: "正直度",
+    card_signals: "外部シグナル",
+    sig_views: "視聴",
+    sig_likes: "いいね",
+    sig_subs: "登録",
+    sig_channel_age_years: "年目",
+    sig_trend: "トレンド",
+    sig_hn: "HN",
+    sig_wiki_yes: "Wiki ✓",
+    sig_wiki_no: "Wiki —",
+    sig_transcript_via: "字幕ソース",
   },
   waitlist_form: {
     placeholder_email: "you@startup.com",
@@ -565,6 +653,28 @@ const ZH: Dict = {
     card_install_cta: "获取 12 个板块的完整报告",
     card_retry: "分析其他视频",
     err_prefix: "分析失败:",
+    card_business_model: "商业模式",
+    bm_real_product: "真实产品业务",
+    bm_course_funnel: "🚩 课程销售漏斗",
+    bm_affiliate_bait: "🚩 联盟营销诱饵",
+    bm_personal_brand: "个人品牌",
+    bm_consulting_front: "咨询引流",
+    bm_unclear: "无法分类",
+    card_red_flags: "课程销售红旗",
+    card_no_red_flags: "未发现明显红旗",
+    card_real_revenue: "实际收入来源(推测)",
+    card_clone_feasibility: "复制可行性",
+    card_honesty: "诚信度",
+    card_signals: "外部信号",
+    sig_views: "观看",
+    sig_likes: "点赞",
+    sig_subs: "订阅",
+    sig_channel_age_years: "年",
+    sig_trend: "趋势",
+    sig_hn: "HN",
+    sig_wiki_yes: "维基 ✓",
+    sig_wiki_no: "维基 —",
+    sig_transcript_via: "字幕来源",
   },
   waitlist_form: {
     placeholder_email: "you@startup.com",
@@ -681,6 +791,28 @@ const ES: Dict = {
     card_install_cta: "Conseguir el reporte completo de 12 secciones",
     card_retry: "Analizar otro vídeo",
     err_prefix: "Análisis fallido:",
+    card_business_model: "Modelo de negocio",
+    bm_real_product: "Producto real",
+    bm_course_funnel: "🚩 Funnel de cursos",
+    bm_affiliate_bait: "🚩 Cebo de afiliación",
+    bm_personal_brand: "Marca personal",
+    bm_consulting_front: "Captador de consultoría",
+    bm_unclear: "Sin clasificar",
+    card_red_flags: "Banderas rojas",
+    card_no_red_flags: "Sin banderas rojas claras",
+    card_real_revenue: "Fuente real de ingresos (estimada)",
+    card_clone_feasibility: "Viabilidad de clonar",
+    card_honesty: "Honestidad",
+    card_signals: "Señales externas",
+    sig_views: "vistas",
+    sig_likes: "likes",
+    sig_subs: "subs",
+    sig_channel_age_years: "años",
+    sig_trend: "tendencia",
+    sig_hn: "HN",
+    sig_wiki_yes: "Wiki ✓",
+    sig_wiki_no: "Wiki —",
+    sig_transcript_via: "transcript vía",
   },
   waitlist_form: {
     placeholder_email: "you@startup.com",

@@ -7,9 +7,22 @@ import {
   ArrowsClockwise,
   ChartLineUp,
   Lightning,
+  TrendUp,
+  TrendDown,
+  Minus,
   Warning,
+  WarningCircle,
+  Check,
 } from "@phosphor-icons/react";
 import type { Dict } from "@/lib/i18n";
+
+type BusinessModel =
+  | "real-product"
+  | "course-funnel"
+  | "affiliate-bait"
+  | "personal-brand"
+  | "consulting-front"
+  | "unclear";
 
 type Preview = {
   brand: string;
@@ -17,13 +30,32 @@ type Preview = {
   target_audience: string;
   problem: string;
   solution: string;
+  business_model: BusinessModel;
+  red_flags: string[];
+  likely_real_revenue_source: string;
+  clone_feasibility_0_100: number;
+  honesty_score_0_100: number;
   confidence_0_100: number;
   top_risk: string;
   video: {
     id: string;
     title: string;
     channel: string;
+    channel_subscribers?: number;
+    channel_video_count?: number;
+    channel_created_at?: string;
+    view_count?: number;
+    like_count?: number;
+    comment_count?: number;
+    published_at?: string;
+    description_chars: number;
     transcript_chars: number;
+    transcript_source: string;
+  };
+  signals: {
+    trends?: { keyword: string; direction: string; score: number };
+    hn_mentions: number;
+    wiki_found: boolean;
   };
 };
 
@@ -71,7 +103,11 @@ export function UrlAnalysisForm({ d }: { d: Dict["analyze_form"] }) {
     return (
       <div className="rounded-2xl border border-strong bg-surface p-7 shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)]">
         <div className="flex items-center gap-3">
-          <Lightning size={20} weight="duotone" className="text-accent animate-pulse" />
+          <Lightning
+            size={20}
+            weight="duotone"
+            className="text-accent animate-pulse"
+          />
           <p className="text-base font-medium text-ink">{d.submitting}</p>
         </div>
         <p className="mt-3 text-sm text-ink-muted leading-relaxed">
@@ -132,7 +168,11 @@ export function UrlAnalysisForm({ d }: { d: Dict["analyze_form"] }) {
 
         {status === "err" && err && (
           <div className="flex items-start gap-2 text-xs text-[var(--danger)] p-3 rounded-lg border border-[var(--danger)]/30 bg-[var(--danger)]/5">
-            <Warning size={14} weight="duotone" className="mt-0.5 flex-shrink-0" />
+            <Warning
+              size={14}
+              weight="duotone"
+              className="mt-0.5 flex-shrink-0"
+            />
             <span>
               <strong>{d.err_prefix}</strong> {err}
             </span>
@@ -147,6 +187,42 @@ export function UrlAnalysisForm({ d }: { d: Dict["analyze_form"] }) {
   );
 }
 
+/* ─── card ─────────────────────────────────────────────────────────── */
+
+function bmLabel(bm: BusinessModel, d: Dict["analyze_form"]): string {
+  switch (bm) {
+    case "real-product":
+      return d.bm_real_product;
+    case "course-funnel":
+      return d.bm_course_funnel;
+    case "affiliate-bait":
+      return d.bm_affiliate_bait;
+    case "personal-brand":
+      return d.bm_personal_brand;
+    case "consulting-front":
+      return d.bm_consulting_front;
+    default:
+      return d.bm_unclear;
+  }
+}
+
+function bmTone(bm: BusinessModel): string {
+  if (bm === "course-funnel" || bm === "affiliate-bait") {
+    return "border-[var(--danger)]/40 bg-[var(--danger)]/10 text-[var(--danger)]";
+  }
+  if (bm === "real-product") {
+    return "border-accent/40 bg-accent/10 text-accent";
+  }
+  return "border-strong bg-surface-2 text-ink-muted";
+}
+
+function fmt(n?: number): string {
+  if (n == null) return "—";
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
+  return n.toLocaleString();
+}
+
 function PreviewCard({
   d,
   preview,
@@ -156,15 +232,21 @@ function PreviewCard({
   preview: Preview;
   onRetry: () => void;
 }) {
-  const thumb = `https://i.ytimg.com/vi/${preview.video.id}/hqdefault.jpg`;
-  const cls = confidenceClass(preview.confidence_0_100);
+  const v = preview.video;
+  const s = preview.signals;
+  const thumb = `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`;
+  const ageYears = v.channel_created_at
+    ? (Date.now() - new Date(v.channel_created_at).getTime()) /
+      (365 * 24 * 60 * 60 * 1000)
+    : null;
+
   return (
     <div className="rounded-2xl border border-strong bg-surface overflow-hidden shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)]">
       <div className="relative">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={thumb}
-          alt={preview.video.title || preview.brand}
+          alt={v.title || preview.brand}
           className="w-full aspect-video object-cover opacity-90"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/40 to-transparent pointer-events-none" />
@@ -175,6 +257,7 @@ function PreviewCard({
       </div>
 
       <div className="p-6 space-y-5">
+        {/* Brand + tagline */}
         <div>
           <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-ink-dim">
             {d.card_brand}
@@ -187,27 +270,121 @@ function PreviewCard({
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-px bg-[var(--border)] rounded-lg overflow-hidden border border-strong">
-          <MiniRow label={d.card_confidence} value={`${preview.confidence_0_100}/100`} className={cls} />
-          <MiniRow
-            label={d.card_transcript_chars}
-            value={preview.video.transcript_chars.toLocaleString()}
+        {/* Business model big badge */}
+        <div
+          className={`rounded-xl border px-4 py-3 ${bmTone(preview.business_model)}`}
+        >
+          <p className="text-[10px] font-mono uppercase tracking-[0.18em] opacity-80">
+            {d.card_business_model}
+          </p>
+          <p className="mt-1 text-base font-semibold">
+            {bmLabel(preview.business_model, d)}
+          </p>
+          <p className="mt-1 text-xs leading-relaxed opacity-90">
+            {preview.likely_real_revenue_source}
+          </p>
+        </div>
+
+        {/* Gauges row */}
+        <div className="grid grid-cols-3 gap-px bg-[var(--border)] rounded-lg overflow-hidden border border-strong">
+          <Gauge
+            label={d.card_clone_feasibility}
+            value={preview.clone_feasibility_0_100}
+          />
+          <Gauge
+            label={d.card_honesty}
+            value={preview.honesty_score_0_100}
+          />
+          <Gauge
+            label={d.card_confidence}
+            value={preview.confidence_0_100}
           />
         </div>
 
+        {/* Target / Problem / Solution */}
         <div className="grid gap-3">
           <Field label={d.card_target} value={preview.target_audience} />
           <Field label={d.card_problem} value={preview.problem} />
           <Field label={d.card_solution} value={preview.solution} />
         </div>
 
-        <div className="rounded-lg border border-[var(--danger)]/30 bg-[var(--danger)]/5 p-4">
-          <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--danger)]">
+        {/* Red flags */}
+        {preview.red_flags.length > 0 ? (
+          <div className="rounded-lg border border-[var(--danger)]/40 bg-[var(--danger)]/5 p-4">
+            <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--danger)] flex items-center gap-1.5">
+              <WarningCircle size={11} weight="bold" />
+              {d.card_red_flags} ({preview.red_flags.length})
+            </p>
+            <ul className="mt-2 space-y-1.5">
+              {preview.red_flags.map((f, i) => (
+                <li
+                  key={i}
+                  className="text-xs text-ink leading-relaxed flex gap-2"
+                >
+                  <span className="text-[var(--danger)] flex-shrink-0">•</span>
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <div className="rounded-lg border border-accent/30 bg-accent/5 p-3 text-xs text-accent flex items-center gap-2">
+            <Check size={14} weight="bold" />
+            {d.card_no_red_flags}
+          </div>
+        )}
+
+        {/* Top risk */}
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+          <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-amber-400">
             {d.card_risk}
           </p>
-          <p className="mt-1.5 text-sm text-ink leading-relaxed">{preview.top_risk}</p>
+          <p className="mt-1.5 text-sm text-ink leading-relaxed">
+            {preview.top_risk}
+          </p>
         </div>
 
+        {/* External signals */}
+        <div>
+          <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-ink-dim mb-2">
+            {d.card_signals}
+          </p>
+          <div className="flex flex-wrap gap-1.5 text-[10px] font-mono">
+            <Chip>{`▶ ${fmt(v.view_count)} ${d.sig_views}`}</Chip>
+            {v.like_count != null && (
+              <Chip>{`♥ ${fmt(v.like_count)} ${d.sig_likes}`}</Chip>
+            )}
+            {v.channel_subscribers != null && (
+              <Chip>{`◎ ${fmt(v.channel_subscribers)} ${d.sig_subs}`}</Chip>
+            )}
+            {ageYears != null && (
+              <Chip>{`${ageYears.toFixed(1)} ${d.sig_channel_age_years}`}</Chip>
+            )}
+            {s.trends && (
+              <Chip
+                tone={
+                  s.trends.direction === "rising"
+                    ? "good"
+                    : s.trends.direction === "declining"
+                      ? "bad"
+                      : "neutral"
+                }
+              >
+                <TrendIcon direction={s.trends.direction} />
+                {`${d.sig_trend} ${s.trends.score}`}
+              </Chip>
+            )}
+            <Chip tone={s.hn_mentions > 0 ? "good" : "neutral"}>
+              {`${d.sig_hn} ${s.hn_mentions}`}
+            </Chip>
+            <Chip tone={s.wiki_found ? "good" : "neutral"}>
+              {s.wiki_found ? d.sig_wiki_yes : d.sig_wiki_no}
+            </Chip>
+            <Chip>{`${d.sig_transcript_via} ${v.transcript_source}`}</Chip>
+          </div>
+        </div>
+
+        {/* CTA */}
         <div className="pt-3 border-t border-strong/60 flex flex-wrap gap-3 items-center">
           <Link
             href="/install"
@@ -230,17 +407,6 @@ function PreviewCard({
   );
 }
 
-function MiniRow({ label, value, className }: { label: string; value: string; className?: string }) {
-  return (
-    <div className="bg-surface px-3 py-2.5">
-      <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-ink-dim">
-        {label}
-      </p>
-      <p className={`mt-1 font-mono text-sm ${className ?? "text-ink"}`}>{value}</p>
-    </div>
-  );
-}
-
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div className="p-3 rounded-lg border border-strong bg-surface-2/40">
@@ -252,8 +418,64 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
-function confidenceClass(c: number): string {
-  if (c >= 70) return "text-accent";
-  if (c >= 40) return "text-amber-400";
-  return "text-[var(--danger)]";
+function Gauge({ label, value }: { label: string; value: number }) {
+  const tone =
+    value >= 70
+      ? "text-accent"
+      : value >= 40
+        ? "text-amber-400"
+        : "text-[var(--danger)]";
+  return (
+    <div className="bg-surface px-3 py-2.5">
+      <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-ink-dim">
+        {label}
+      </p>
+      <p className={`mt-1 font-mono text-base font-semibold ${tone}`}>
+        {value}
+        <span className="text-ink-dim text-xs">/100</span>
+      </p>
+      <div className="mt-1 h-1 rounded-full bg-surface-2 overflow-hidden">
+        <div
+          className={`h-full ${
+            value >= 70
+              ? "bg-accent"
+              : value >= 40
+                ? "bg-amber-400"
+                : "bg-[var(--danger)]"
+          }`}
+          style={{ width: `${value}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function Chip({
+  children,
+  tone = "neutral",
+}: {
+  children: React.ReactNode;
+  tone?: "good" | "bad" | "neutral";
+}) {
+  const cls =
+    tone === "good"
+      ? "border-accent/40 bg-accent/5 text-accent"
+      : tone === "bad"
+        ? "border-[var(--danger)]/40 bg-[var(--danger)]/5 text-[var(--danger)]"
+        : "border-strong bg-surface-2 text-ink-muted";
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 ${cls}`}
+    >
+      {children}
+    </span>
+  );
+}
+
+function TrendIcon({ direction }: { direction: string }) {
+  if (direction === "rising")
+    return <TrendUp size={10} weight="bold" />;
+  if (direction === "declining")
+    return <TrendDown size={10} weight="bold" />;
+  return <Minus size={10} weight="bold" />;
 }
