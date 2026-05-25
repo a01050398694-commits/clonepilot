@@ -91,18 +91,22 @@ export type Dict = {
   analyze_form: {
     live_badge: string;
     label_url: string;
-    label_email: string;
     url_placeholder: string;
-    email_placeholder: string;
     submit: string;
     submitting: string;
+    submitting_hint: string;
     disclaimer: string;
-    ok_queued_prefix: string;
-    /** template with `{n}` placeholder for queue position */
-    ok_position_template: string;
-    ok_body_prefix: string;
-    ok_body_suffix: string;
-    ok_byo_hint: string;
+    card_brand: string;
+    card_tagline: string;
+    card_target: string;
+    card_problem: string;
+    card_solution: string;
+    card_confidence: string;
+    card_risk: string;
+    card_transcript_chars: string;
+    card_install_cta: string;
+    card_retry: string;
+    err_prefix: string;
   };
   waitlist_form: {
     placeholder_email: string;
@@ -200,22 +204,26 @@ const EN: Dict = {
     pricing_hint_link: "pricing page",
   },
   analyze_form: {
-    live_badge: "Live analysis queue",
+    live_badge: "Live analysis",
     label_url: "YouTube business video",
-    label_email: "Where to send the report",
     url_placeholder: "https://www.youtube.com/watch?v=...",
-    email_placeholder: "you@startup.com",
-    submit: "Run deep analysis",
-    submitting: "Queuing…",
+    submit: "Analyze video",
+    submitting: "Analyzing…",
+    submitting_hint:
+      "Usually 30–60 seconds. AI is reading the transcript right now.",
     disclaimer:
-      "One free deep-analysis report per email. No card required. We email the report and nothing else.",
-    ok_queued_prefix: "Queued",
-    ok_position_template: " — position #{n}",
-    ok_body_prefix: "We will email the deep-analysis report to",
-    ok_body_suffix:
-      "once it finishes. Usually under 24 hours during the manual-batch phase. The live API will drop this to under five minutes.",
-    ok_byo_hint:
-      "Want it instantly? The MCP is open-source — install once and run it inside your Claude Code yourself.",
+      "Free preview. No signup. The MCP itself is open-source — install once and run the full 12-section report inside your own Claude Code.",
+    card_brand: "Brand",
+    card_tagline: "Tagline",
+    card_target: "Target",
+    card_problem: "Problem",
+    card_solution: "Solution",
+    card_confidence: "Confidence",
+    card_risk: "Top risk",
+    card_transcript_chars: "transcript chars analyzed",
+    card_install_cta: "Get the full 12-section report",
+    card_retry: "Analyze another video",
+    err_prefix: "Analysis failed:",
   },
   waitlist_form: {
     placeholder_email: "you@startup.com",
@@ -311,22 +319,25 @@ const KO: Dict = {
     pricing_hint_link: "가격 페이지",
   },
   analyze_form: {
-    live_badge: "실시간 분석 큐",
+    live_badge: "실시간 분석",
     label_url: "유튜브 사업 영상",
-    label_email: "리포트 받을 이메일",
     url_placeholder: "https://www.youtube.com/watch?v=...",
-    email_placeholder: "you@startup.com",
-    submit: "심층 분석 실행",
-    submitting: "대기열 등록 중…",
+    submit: "분석 시작",
+    submitting: "분석 중…",
+    submitting_hint: "보통 30~60초 걸립니다. AI가 자막을 읽고 있어요.",
     disclaimer:
-      "이메일 1개당 무료 심층 리포트 1번. 카드 등록 필요 없음. 리포트 외 다른 메일은 안 보냅니다.",
-    ok_queued_prefix: "대기열 등록 완료",
-    ok_position_template: " — 순번 #{n}",
-    ok_body_prefix: "심층 분석 리포트를",
-    ok_body_suffix:
-      "주소로 보내드립니다. 수동 배치 단계라 보통 24시간 안에. 실시간 API 붙으면 5분 미만으로 줄어듭니다.",
-    ok_byo_hint:
-      "당장 받고 싶으세요? MCP가 오픈소스라 한 번 설치하면 본인 Claude Code 안에서 직접 돌릴 수 있습니다.",
+      "무료 미리보기. 가입 불필요. MCP 자체는 오픈소스 — 한 번 설치하면 본인 Claude Code에서 12섹션 풀 리포트를 직접 돌릴 수 있습니다.",
+    card_brand: "브랜드",
+    card_tagline: "한 줄 소개",
+    card_target: "타깃",
+    card_problem: "문제",
+    card_solution: "솔루션",
+    card_confidence: "신뢰도",
+    card_risk: "최대 위험",
+    card_transcript_chars: "자 자막 분석함",
+    card_install_cta: "12섹션 풀 리포트 받기",
+    card_retry: "다른 영상 분석",
+    err_prefix: "분석 실패:",
   },
   waitlist_form: {
     placeholder_email: "you@startup.com",
@@ -422,22 +433,25 @@ const JA: Dict = {
     pricing_hint_link: "料金ページ",
   },
   analyze_form: {
-    live_badge: "リアルタイム解析キュー",
+    live_badge: "リアルタイム解析",
     label_url: "YouTubeのビジネス動画",
-    label_email: "レポート送付先メール",
     url_placeholder: "https://www.youtube.com/watch?v=...",
-    email_placeholder: "you@startup.com",
-    submit: "深掘り解析を実行",
-    submitting: "キュー登録中…",
+    submit: "解析開始",
+    submitting: "解析中…",
+    submitting_hint: "通常30〜60秒。AIがトランスクリプトを読んでいます。",
     disclaimer:
-      "メール1件につき無料の深掘りレポート1本。カード登録不要。レポート以外のメールは送りません。",
-    ok_queued_prefix: "キュー登録完了",
-    ok_position_template: " — 順番 #{n}",
-    ok_body_prefix: "深掘り解析レポートを",
-    ok_body_suffix:
-      "宛にお送りします。手動バッチ期間中は通常24時間以内。ライブAPIが稼働すれば5分未満まで短縮されます。",
-    ok_byo_hint:
-      "今すぐ欲しいですか?MCPはオープンソースなので、一度インストールすれば自分のClaude Code内で直接実行できます。",
+      "無料プレビュー。登録不要。MCP本体はオープンソース — 一度入れれば自分のClaude Code内で12セクションのフルレポートを直接実行できます。",
+    card_brand: "ブランド",
+    card_tagline: "キャッチコピー",
+    card_target: "ターゲット",
+    card_problem: "課題",
+    card_solution: "ソリューション",
+    card_confidence: "信頼度",
+    card_risk: "最大リスク",
+    card_transcript_chars: "文字を解析",
+    card_install_cta: "12セクションのフルレポート取得",
+    card_retry: "別の動画を解析",
+    err_prefix: "解析失敗:",
   },
   waitlist_form: {
     placeholder_email: "you@startup.com",
@@ -532,22 +546,25 @@ const ZH: Dict = {
     pricing_hint_link: "定价页",
   },
   analyze_form: {
-    live_badge: "实时分析队列",
+    live_badge: "实时分析",
     label_url: "YouTube 商业视频",
-    label_email: "接收报告的邮箱",
     url_placeholder: "https://www.youtube.com/watch?v=...",
-    email_placeholder: "you@startup.com",
-    submit: "运行深度分析",
-    submitting: "排队中…",
+    submit: "开始分析",
+    submitting: "分析中…",
+    submitting_hint: "通常 30~60 秒。AI 正在阅读字幕。",
     disclaimer:
-      "每个邮箱免费一份深度报告。无需信用卡。除了报告外不会发送任何邮件。",
-    ok_queued_prefix: "已排队",
-    ok_position_template: " —— 第 #{n} 位",
-    ok_body_prefix: "我们会把深度分析报告发到",
-    ok_body_suffix:
-      "邮箱。手动批处理阶段通常 24 小时内。实时 API 上线后会缩短到 5 分钟内。",
-    ok_byo_hint:
-      "想立刻拿到?MCP 是开源的 —— 装一次就能在自己的 Claude Code 里直接运行。",
+      "免费预览。无需注册。MCP 本身开源 —— 装一次就能在自己的 Claude Code 里直接运行 12 个板块的完整报告。",
+    card_brand: "品牌",
+    card_tagline: "一句话介绍",
+    card_target: "目标用户",
+    card_problem: "问题",
+    card_solution: "方案",
+    card_confidence: "置信度",
+    card_risk: "最大风险",
+    card_transcript_chars: "字字幕已分析",
+    card_install_cta: "获取 12 个板块的完整报告",
+    card_retry: "分析其他视频",
+    err_prefix: "分析失败:",
   },
   waitlist_form: {
     placeholder_email: "you@startup.com",
@@ -644,22 +661,26 @@ const ES: Dict = {
     pricing_hint_link: "página de precios",
   },
   analyze_form: {
-    live_badge: "Cola de análisis en vivo",
+    live_badge: "Análisis en vivo",
     label_url: "Vídeo de negocio en YouTube",
-    label_email: "A qué email enviar el reporte",
     url_placeholder: "https://www.youtube.com/watch?v=...",
-    email_placeholder: "you@startup.com",
-    submit: "Ejecutar análisis profundo",
-    submitting: "Encolando…",
+    submit: "Analizar vídeo",
+    submitting: "Analizando…",
+    submitting_hint:
+      "Normalmente 30–60 segundos. La IA está leyendo el transcript.",
     disclaimer:
-      "Un reporte profundo gratis por email. No requiere tarjeta. Solo te enviamos el reporte y nada más.",
-    ok_queued_prefix: "En cola",
-    ok_position_template: " — posición #{n}",
-    ok_body_prefix: "Te enviaremos el reporte de análisis profundo a",
-    ok_body_suffix:
-      "cuando termine. Normalmente bajo 24 horas durante la fase de batch manual. La API en vivo bajará esto a menos de cinco minutos.",
-    ok_byo_hint:
-      "¿Lo quieres al instante? El MCP es open-source — instálalo una vez y ejecútalo dentro de tu propio Claude Code.",
+      "Vista previa gratis. Sin registro. El MCP en sí es open-source — instálalo una vez y ejecuta el reporte completo de 12 secciones dentro de tu propio Claude Code.",
+    card_brand: "Marca",
+    card_tagline: "Lema",
+    card_target: "Público",
+    card_problem: "Problema",
+    card_solution: "Solución",
+    card_confidence: "Confianza",
+    card_risk: "Riesgo principal",
+    card_transcript_chars: "caracteres de transcript analizados",
+    card_install_cta: "Conseguir el reporte completo de 12 secciones",
+    card_retry: "Analizar otro vídeo",
+    err_prefix: "Análisis fallido:",
   },
   waitlist_form: {
     placeholder_email: "you@startup.com",
