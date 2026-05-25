@@ -88,6 +88,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, translated: preview });
   }
 
+  // Strip non-translatable bulk from the input — pure data fields the LLM
+  // does not need to see (and that we will splice back in on the client side
+  // would also be an option, but keeping the structure intact for the LLM
+  // and merging the omitted fields after is simpler).
+  const p = preview as Record<string, unknown>;
+  const slimmed = {
+    ...p,
+    related_videos: undefined,
+    description_findings: undefined,
+    comment_stats: undefined,
+    signals: undefined,
+    video: undefined,
+  };
+
   const model =
     process.env.CLONEPILOT_MODEL_TRANSLATE?.trim() ||
     "claude-haiku-4-5-20251001";
@@ -96,7 +110,7 @@ export async function POST(req: Request) {
     const client = new Anthropic({ apiKey });
     const resp = await client.messages.create({
       model,
-      max_tokens: 5500,
+      max_tokens: 8000,
       tools: [TRANSLATE_TOOL],
       tool_choice: { type: "tool", name: TRANSLATE_TOOL.name },
       messages: [
@@ -122,7 +136,7 @@ DO NOT TRANSLATE:
 DO TRANSLATE every sentence and phrase a human reads: brand description, tagline, target_audience, problem, solution, red_flags[*], green_flags[*], likely_real_revenue_source, why_buyers_pay, honest_value_for_buyer, top_risk, market_reality.* (all 4 string fields), market_reality.top_competitors[*].why_relevant, revenue_forecast.assumptions[*], insider_tips[*], build_path.steps[*].title, funnel_ladder[*].label, one_paragraph_verdict.
 
 Input JSON (some fields may be absent — translate only present ones; keep schema identical):
-${JSON.stringify(preview).slice(0, 22_000)}
+${JSON.stringify(slimmed).slice(0, 18_000)}
 
 Call return_translated_preview now with the full translated object.`,
             },
@@ -139,7 +153,17 @@ Call return_translated_preview now with the full translated object.`,
     if (!result) {
       return NextResponse.json({ error: "empty translated" }, { status: 502 });
     }
-    return NextResponse.json({ ok: true, translated: result });
+    // Merge back the untranslated heavy fields (related videos, signals, etc.)
+    // so the client can display them without losing data.
+    const merged = {
+      ...(result as Record<string, unknown>),
+      video: p.video,
+      signals: p.signals,
+      related_videos: p.related_videos,
+      description_findings: p.description_findings,
+      comment_stats: p.comment_stats,
+    };
+    return NextResponse.json({ ok: true, translated: merged });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "unknown";
     return NextResponse.json({ error: msg }, { status: 500 });

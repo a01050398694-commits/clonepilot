@@ -534,6 +534,16 @@ function PreviewCard({
           className="w-full aspect-video object-cover grayscale contrast-[1.15]"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/30 to-transparent pointer-events-none" />
+        {/* Hacker corner brackets */}
+        <span aria-hidden className="absolute top-2 left-2 w-4 h-4 border-l border-t border-bright pointer-events-none" />
+        <span aria-hidden className="absolute top-2 right-2 w-4 h-4 border-r border-t border-bright pointer-events-none" />
+        <span aria-hidden className="absolute bottom-2 left-2 w-4 h-4 border-l border-b border-bright pointer-events-none" />
+        <span aria-hidden className="absolute bottom-2 right-2 w-4 h-4 border-r border-b border-bright pointer-events-none" />
+        {/* Tiny target reticle top-right of thumbnail */}
+        <div className="absolute top-3 right-3 inline-flex items-center gap-1.5 px-2 py-0.5 bg-bg/70 backdrop-blur-sm border border-strong" style={{ borderRadius: 1 }}>
+          <span className="inline-block h-1 w-1 rounded-full bg-ink breathe" />
+          <span className="text-[9px] font-mono uppercase tracking-wider2 text-ink">decoded</span>
+        </div>
         {/* Business model stamp — striped if course-funnel, solid if real-product */}
         <div
           className={`absolute bottom-4 left-4 right-4 sm:right-auto px-4 py-3 inline-flex items-center gap-3 ${bmStampClass(preview.business_model)}`}
@@ -555,6 +565,9 @@ function PreviewCard({
               {d.card_translating}
             </p>
             <p className="font-mono text-xl text-ink">{CARD_LANG_NAMES[translating]}</p>
+            <p className="font-mono text-[10px] text-ink-dim uppercase tracking-wider2">
+              ~{translating === "ar" || translating === "zh" ? "30–60s" : "10–25s"}
+            </p>
             <div
               className="w-48 h-1 border border-strong overflow-hidden ind-bar"
               style={{ borderRadius: 1 }}
