@@ -99,6 +99,62 @@ export type AnalyzePreview = {
 
 /* ─── transcript fetching chain ───────────────────────────────────────── */
 
+async function fetchViaPageScrape(
+  videoId: string,
+): Promise<{ text: string; lang: string; source: string }> {
+  const proxyUrl = process.env.BRIGHTDATA_PROXY_URL;
+  const dispatcher = proxyUrl ? new ProxyAgent(proxyUrl) : undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const baseInit = dispatcher ? { dispatcher } as any : undefined;
+  const r = await fetch(`https://www.youtube.com/watch?v=${videoId}&hl=ko`, {
+    headers: {
+      "user-agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36",
+      "accept-language": "ko,en;q=0.8",
+    },
+    signal: AbortSignal.timeout(15_000),
+    ...(baseInit ?? {}),
+  });
+  if (!r.ok) throw new Error(`yt page ${r.status}`);
+  const html = await r.text();
+  const m = html.match(/"captionTracks":(\[[^\]]+\])/);
+  if (!m) throw new Error("no captionTracks in page html");
+  type Track = { baseUrl: string; languageCode: string; vssId?: string };
+  const tracks = JSON.parse(m[1]) as Track[];
+  if (tracks.length === 0) throw new Error("captionTracks empty");
+  const pick =
+    tracks.find((t) => t.languageCode === "ko") ??
+    tracks.find((t) => t.languageCode === "en") ??
+    tracks[0];
+  const trackUrl = pick.baseUrl.replace(/&fmt=[^&]*/g, "");
+  const tr = await fetch(trackUrl, {
+    signal: AbortSignal.timeout(15_000),
+    ...(baseInit ?? {}),
+  });
+  if (!tr.ok) throw new Error(`caption track ${tr.status}`);
+  const xml = await tr.text();
+  const texts = [...xml.matchAll(/<text[^>]*>([\s\S]*?)<\/text>/g)].map((mm) =>
+    decodeXml(mm[1].replace(/\n/g, " ")),
+  );
+  const text = texts.join(" ").replace(/\s+/g, " ").trim();
+  if (text.length < 50) throw new Error("page-scrape transcript too short");
+  return {
+    text,
+    lang: pick.languageCode,
+    source: proxyUrl ? "page-scrape+proxy" : "page-scrape",
+  };
+}
+
+function decodeXml(s: string): string {
+  return s
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)));
+}
+
 async function fetchViaInnertube(videoId: string) {
   const proxyUrl = process.env.BRIGHTDATA_PROXY_URL;
   type CreateOpts = Parameters<typeof Innertube.create>[0];
@@ -161,6 +217,7 @@ async function fetchTranscript(videoId: string, supaKey?: string) {
     string,
     () => Promise<{ text: string; lang: string; source: string }>,
   ]> = [
+    ["page-scrape", () => fetchViaPageScrape(videoId)],
     ["innertube", () => fetchViaInnertube(videoId)],
     ["youtube-transcript", () => fetchViaYouTubeTranscript(videoId)],
   ];
