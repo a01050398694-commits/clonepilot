@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { YoutubeTranscript } from "youtube-transcript";
 import { Innertube } from "youtubei.js";
-import { ProxyAgent } from "undici";
+import { ProxyAgent, fetch as undiciFetch } from "undici";
 // @ts-expect-error google-trends-api ships no types
 import googleTrends from "google-trends-api";
 
@@ -104,22 +104,24 @@ async function fetchViaPageScrape(
 ): Promise<{ text: string; lang: string; source: string }> {
   const proxyUrl = process.env.BRIGHTDATA_PROXY_URL;
   const dispatcher = proxyUrl ? new ProxyAgent(proxyUrl) : undefined;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const baseInit = dispatcher ? { dispatcher } as any : undefined;
-  const r = await fetch(`https://www.youtube.com/watch?v=${videoId}&hl=ko`, {
-    headers: {
-      "user-agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36",
-      "accept-language": "ko,en;q=0.8",
+  const headers = {
+    "user-agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36",
+    "accept-language": "ko,en;q=0.8",
+  };
+  const r = await undiciFetch(
+    `https://www.youtube.com/watch?v=${videoId}&hl=ko`,
+    {
+      headers,
+      dispatcher,
+      signal: AbortSignal.timeout(20_000),
     },
-    signal: AbortSignal.timeout(15_000),
-    ...(baseInit ?? {}),
-  });
+  );
   if (!r.ok) throw new Error(`yt page ${r.status}`);
   const html = await r.text();
   const m = html.match(/"captionTracks":(\[[^\]]+\])/);
   if (!m) throw new Error("no captionTracks in page html");
-  type Track = { baseUrl: string; languageCode: string; vssId?: string };
+  type Track = { baseUrl: string; languageCode: string };
   const tracks = JSON.parse(m[1]) as Track[];
   if (tracks.length === 0) throw new Error("captionTracks empty");
   const pick =
@@ -127,9 +129,9 @@ async function fetchViaPageScrape(
     tracks.find((t) => t.languageCode === "en") ??
     tracks[0];
   const trackUrl = pick.baseUrl.replace(/&fmt=[^&]*/g, "");
-  const tr = await fetch(trackUrl, {
-    signal: AbortSignal.timeout(15_000),
-    ...(baseInit ?? {}),
+  const tr = await undiciFetch(trackUrl, {
+    dispatcher,
+    signal: AbortSignal.timeout(20_000),
   });
   if (!tr.ok) throw new Error(`caption track ${tr.status}`);
   const xml = await tr.text();
