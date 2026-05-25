@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import Link from "next/link";
 import { WaitlistForm } from "./WaitlistForm";
-import { listReportSlugs } from "@/lib/report.server";
+import { listReportSlugs, loadReport } from "@/lib/report.server";
 
 export const dynamic = "force-static";
 export const revalidate = 60;
@@ -45,10 +45,40 @@ function videoIdFromUrl(url: string): string | null {
   return m ? m[1] : null;
 }
 
+type V1Preview = {
+  confidence: number;
+  firstHighRisk: string | null;
+  trendArrow: string;
+};
+
+function buildV1Preview(slug: string): V1Preview | null {
+  const r = loadReport(slug);
+  if (!r) return null;
+  const high = r.risks.find((x) => x.severity === "high");
+  const arrow =
+    r.market.five_year_trend === "rising"
+      ? "↑"
+      : r.market.five_year_trend === "declining"
+        ? "↓"
+        : r.market.five_year_trend === "stable"
+          ? "→"
+          : "?";
+  return {
+    confidence: r.data_quality.confidence_0_100,
+    firstHighRisk: high?.risk.split("—")[0].trim() ?? null,
+    trendArrow: arrow,
+  };
+}
+
 export default function Page() {
   const gallery = loadGallery();
   const ok = gallery.entries.filter((e) => e.ok && e.live_url && e.name);
   const v1Slugs = new Set(listReportSlugs());
+  const v1Previews = new Map<string, V1Preview>();
+  for (const slug of v1Slugs) {
+    const p = buildV1Preview(slug);
+    if (p) v1Previews.set(slug, p);
+  }
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-16">
@@ -124,13 +154,17 @@ export default function Page() {
             Demos are generating. Refresh in a couple of minutes.
           </div>
         ) : (
-          ok.map((e) => (
-            <DemoCard
-              key={e.live_url}
-              entry={e}
-              isV1={v1Slugs.has(slugify(e.name!))}
-            />
-          ))
+          ok.map((e) => {
+            const s = slugify(e.name!);
+            return (
+              <DemoCard
+                key={e.live_url}
+                entry={e}
+                isV1={v1Slugs.has(s)}
+                v1Preview={v1Previews.get(s) ?? null}
+              />
+            );
+          })
         )}
       </section>
 
@@ -169,7 +203,15 @@ export default function Page() {
   );
 }
 
-function DemoCard({ entry: e, isV1 }: { entry: Entry; isV1: boolean }) {
+function DemoCard({
+  entry: e,
+  isV1,
+  v1Preview,
+}: {
+  entry: Entry;
+  isV1: boolean;
+  v1Preview: V1Preview | null;
+}) {
   const vid = videoIdFromUrl(e.video_url);
   const thumb = vid ? `https://i.ytimg.com/vi/${vid}/hqdefault.jpg` : null;
   const slug = slugify(e.name!);
@@ -224,18 +266,40 @@ function DemoCard({ entry: e, isV1 }: { entry: Entry; isV1: boolean }) {
           )}
         </div>
 
-        <div>
-          <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-600">
-            🛠 Roadmap (Claude executes)
-          </p>
-          <ol className="mt-1 text-zinc-400 space-y-0.5">
-            <li>1. Next.js landing page</li>
-            <li>2. Stripe {paidTiers.length}-tier checkout</li>
-            <li>3. Email capture + Vercel deploy</li>
-            <li>4. Marketing kit (X / Reddit / HN)</li>
-            <li className="text-zinc-600">+ 4 more steps...</li>
-          </ol>
-        </div>
+        {isV1 && v1Preview ? (
+          <div>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-600">
+              📊 Deep report
+            </p>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
+                confidence {v1Preview.confidence}/100
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-900 text-zinc-400 border border-zinc-800">
+                trend {v1Preview.trendArrow}
+              </span>
+            </div>
+            {v1Preview.firstHighRisk && (
+              <p className="mt-2 text-[11px] text-red-300/80 leading-snug line-clamp-2">
+                <span className="font-mono text-red-400 mr-1">risk·</span>
+                {v1Preview.firstHighRisk}
+              </p>
+            )}
+          </div>
+        ) : (
+          <div>
+            <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-600">
+              🛠 Roadmap (Claude executes)
+            </p>
+            <ol className="mt-1 text-zinc-400 space-y-0.5">
+              <li>1. Next.js landing page</li>
+              <li>2. Stripe {paidTiers.length}-tier checkout</li>
+              <li>3. Email capture + Vercel deploy</li>
+              <li>4. Marketing kit (X / Reddit / HN)</li>
+              <li className="text-zinc-600">+ 4 more steps...</li>
+            </ol>
+          </div>
+        )}
       </div>
 
       <div className="px-5 pb-5 mt-2 space-y-2">

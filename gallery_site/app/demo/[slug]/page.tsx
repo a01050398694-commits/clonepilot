@@ -66,16 +66,47 @@ export async function generateMetadata({
   const { slug } = await params;
   const report = loadReport(slug);
   if (report) {
+    const thumb = `https://i.ytimg.com/vi/${report.source.video_id}/maxresdefault.jpg`;
+    const title = `${report.blueprint.name} — deep analysis · ClonePilot`;
+    const description = report.blueprint.tagline;
     return {
-      title: `${report.blueprint.name} — deep analysis · ClonePilot`,
-      description: report.blueprint.tagline,
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        type: "article",
+        images: [{ url: thumb, width: 1280, height: 720, alt: report.blueprint.name }],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title,
+        description,
+        images: [thumb],
+      },
     };
   }
   const e = findEntry(slug);
   if (!e) return { title: "Demo not found — ClonePilot" };
+  const vid = videoId(e.video_url);
+  const thumb = vid ? `https://i.ytimg.com/vi/${vid}/maxresdefault.jpg` : null;
+  const title = `${e.name} — built from YouTube in ${e.elapsed_sec?.toFixed(0)}s · ClonePilot`;
+  const description = e.tagline ?? "Built from a YouTube URL by ClonePilot.";
   return {
-    title: `${e.name} — built from YouTube in ${e.elapsed_sec?.toFixed(0)}s · ClonePilot`,
-    description: e.tagline,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      ...(thumb ? { images: [{ url: thumb, width: 1280, height: 720, alt: e.name ?? "demo" }] } : {}),
+    },
+    twitter: {
+      card: thumb ? "summary_large_image" : "summary",
+      title,
+      description,
+      ...(thumb ? { images: [thumb] } : {}),
+    },
   };
 }
 
