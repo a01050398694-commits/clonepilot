@@ -291,6 +291,7 @@ function PreviewCard({
   const [translating, setTranslating] = useState<Lang | null>(null);
 
   const preview = translated ?? rawPreview;
+  const cacheKey = (lang: Lang) => `cp_translate:${rawPreview.video.id}:${lang}`;
 
   async function pickLang(target: Lang) {
     if (target === cardLang || translating) return;
@@ -298,6 +299,17 @@ function PreviewCard({
       setCardLang("en");
       setTranslated(null);
       return;
+    }
+    // sessionStorage cache hit
+    try {
+      const cached = sessionStorage.getItem(cacheKey(target));
+      if (cached) {
+        setTranslated(JSON.parse(cached) as Preview);
+        setCardLang(target);
+        return;
+      }
+    } catch {
+      /* sessionStorage unavailable — ignore */
     }
     setTranslating(target);
     try {
@@ -310,6 +322,11 @@ function PreviewCard({
       if (res.ok && data.translated) {
         setTranslated(data.translated as Preview);
         setCardLang(target);
+        try {
+          sessionStorage.setItem(cacheKey(target), JSON.stringify(data.translated));
+        } catch {
+          /* quota or disabled — ignore */
+        }
       }
     } finally {
       setTranslating(null);
@@ -349,10 +366,21 @@ function PreviewCard({
           {d.live_badge}
         </span>
         {translating && (
-          <div className="absolute inset-0 bg-bg/60 backdrop-blur-sm flex items-center justify-center">
-            <p className="text-sm font-mono text-ink animate-pulse">
+          <div className="absolute inset-0 bg-bg/75 backdrop-blur-sm flex flex-col items-center justify-center gap-3 p-6">
+            <Lightning
+              size={28}
+              weight="duotone"
+              className="text-accent animate-pulse"
+            />
+            <p className="text-base font-medium text-ink">
               {d.card_translating}
             </p>
+            <p className="text-xs text-ink-muted">
+              ~5–10s · {LANG_NAMES[translating]}
+            </p>
+            <div className="w-48 h-1 rounded-full bg-surface-2 overflow-hidden">
+              <div className="h-full w-1/2 bg-accent animate-[loadbar_1.4s_ease-in-out_infinite]" />
+            </div>
           </div>
         )}
       </div>

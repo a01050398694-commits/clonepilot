@@ -59,9 +59,8 @@ export async function POST(req: Request) {
   }
 
   const model =
-    process.env.CLONEPILOT_MODEL_COPY?.trim() ||
-    process.env.CLONEPILOT_MODEL_BLUEPRINT?.trim() ||
-    "claude-sonnet-4-6";
+    process.env.CLONEPILOT_MODEL_TRANSLATE?.trim() ||
+    "claude-haiku-4-5-20251001";
 
   try {
     const client = new Anthropic({ apiKey });
