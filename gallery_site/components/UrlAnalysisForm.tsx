@@ -20,7 +20,13 @@ import {
   Lightbulb,
   Crosshair,
 } from "@phosphor-icons/react";
-import type { Dict } from "@/lib/i18n";
+import {
+  LANGS,
+  LANG_LABELS,
+  LANG_NAMES,
+  type Dict,
+  type Lang,
+} from "@/lib/i18n";
 
 type BusinessModel =
   | "real-product"
@@ -260,13 +266,43 @@ function fmtUSD(n: number): string {
 
 function PreviewCard({
   d,
-  preview,
+  preview: rawPreview,
   onRetry,
 }: {
   d: Dict["analyze_form"];
   preview: Preview;
   onRetry: () => void;
 }) {
+  const [cardLang, setCardLang] = useState<Lang>("en");
+  const [translated, setTranslated] = useState<Preview | null>(null);
+  const [translating, setTranslating] = useState<Lang | null>(null);
+
+  const preview = translated ?? rawPreview;
+
+  async function pickLang(target: Lang) {
+    if (target === cardLang || translating) return;
+    if (target === "en") {
+      setCardLang("en");
+      setTranslated(null);
+      return;
+    }
+    setTranslating(target);
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ preview: rawPreview, targetLang: target }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.translated) {
+        setTranslated(data.translated as Preview);
+        setCardLang(target);
+      }
+    } finally {
+      setTranslating(null);
+    }
+  }
+
   const v = preview.video;
   const s = preview.signals;
   const m = preview.market_reality;
@@ -299,6 +335,36 @@ function PreviewCard({
           <ChartLineUp size={11} weight="bold" />
           {d.live_badge}
         </span>
+        <div className="absolute top-3 right-3 inline-flex items-center gap-0.5 rounded-full border border-strong bg-surface/85 backdrop-blur p-0.5">
+          {LANGS.map((l) => {
+            const active = l === cardLang;
+            const isLoading = translating === l;
+            return (
+              <button
+                key={l}
+                type="button"
+                onClick={() => pickLang(l)}
+                title={LANG_NAMES[l]}
+                className={[
+                  "px-2 py-0.5 text-[10px] font-mono rounded-full transition",
+                  active
+                    ? "bg-ink text-bg font-semibold"
+                    : "text-ink-muted hover:text-ink hover:bg-surface-2",
+                  isLoading ? "opacity-40 cursor-wait" : "",
+                ].join(" ")}
+              >
+                {LANG_LABELS[l]}
+              </button>
+            );
+          })}
+        </div>
+        {translating && (
+          <div className="absolute inset-0 bg-bg/60 backdrop-blur-sm flex items-center justify-center">
+            <p className="text-xs font-mono text-ink animate-pulse">
+              {d.card_translating}
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="divide-y divide-strong/40">
