@@ -129,6 +129,30 @@ export type Dict = {
     sig_wiki_yes: string;
     sig_wiki_no: string;
     sig_transcript_via: string;
+    section_market: string;
+    market_tam: string;
+    market_sam: string;
+    market_som: string;
+    market_trend: string;
+    market_competitors: string;
+    section_forecast: string;
+    forecast_conservative: string;
+    forecast_base: string;
+    forecast_aggressive: string;
+    forecast_assumptions: string;
+    section_tips: string;
+    section_build: string;
+    build_total_weeks: string;
+    build_one_time_cost: string;
+    build_monthly_cost: string;
+    build_stack: string;
+    section_related: string;
+    section_clone_cta: string;
+    clone_cta_title: string;
+    clone_cta_body: string;
+    clone_cta_btn: string;
+    card_translate_label: string;
+    card_translating: string;
   };
   waitlist_form: {
     placeholder_email: string;
@@ -268,6 +292,31 @@ const EN: Dict = {
     sig_wiki_yes: "Wiki ✓",
     sig_wiki_no: "Wiki —",
     sig_transcript_via: "transcript via",
+    section_market: "Market reality",
+    market_tam: "TAM",
+    market_sam: "SAM",
+    market_som: "SOM (year 1)",
+    market_trend: "Trend",
+    market_competitors: "Real competitors",
+    section_forecast: "Realistic year-1 revenue",
+    forecast_conservative: "Conservative",
+    forecast_base: "Base case",
+    forecast_aggressive: "Aggressive",
+    forecast_assumptions: "Assumptions",
+    section_tips: "Insider tips operators won't share",
+    section_build: "Clone roadmap",
+    build_total_weeks: "weeks total",
+    build_one_time_cost: "one-time",
+    build_monthly_cost: "monthly",
+    build_stack: "Recommended stack",
+    section_related: "Related videos (YouTube)",
+    section_clone_cta: "Build this with Claude",
+    clone_cta_title: "Want this site live in 2 minutes?",
+    clone_cta_body:
+      "ClonePilot's open-source MCP runs analyze_deep + scaffold + deploy inside your own Claude Code. Free tier: 1 build/month.",
+    clone_cta_btn: "Install ClonePilot →",
+    card_translate_label: "Translate this card:",
+    card_translating: "Translating…",
   },
   waitlist_form: {
     placeholder_email: "you@startup.com",
@@ -404,6 +453,31 @@ const KO: Dict = {
     sig_wiki_yes: "위키 ✓",
     sig_wiki_no: "위키 —",
     sig_transcript_via: "자막 출처",
+    section_market: "시장 현실",
+    market_tam: "전체 시장 (TAM)",
+    market_sam: "유효 시장 (SAM)",
+    market_som: "1년차 현실 (SOM)",
+    market_trend: "트렌드",
+    market_competitors: "실제 경쟁사",
+    section_forecast: "1년차 현실 수익 추정",
+    forecast_conservative: "보수",
+    forecast_base: "기본",
+    forecast_aggressive: "공격",
+    forecast_assumptions: "전제",
+    section_tips: "운영자만 아는 꿀팁",
+    section_build: "복제 로드맵",
+    build_total_weeks: "주 소요",
+    build_one_time_cost: "초기 비용",
+    build_monthly_cost: "월 비용",
+    build_stack: "추천 스택",
+    section_related: "관련 유튜브 영상",
+    section_clone_cta: "Claude로 직접 빌드",
+    clone_cta_title: "이 사이트 2분 안에 라이브로 받고 싶다면?",
+    clone_cta_body:
+      "ClonePilot 오픈소스 MCP가 본인 Claude Code 안에서 analyze_deep + scaffold + deploy를 다 돌립니다. 무료 티어: 월 1빌드.",
+    clone_cta_btn: "ClonePilot 설치 →",
+    card_translate_label: "이 카드 번역:",
+    card_translating: "번역 중…",
   },
   waitlist_form: {
     placeholder_email: "you@startup.com",
@@ -540,6 +614,31 @@ const JA: Dict = {
     sig_wiki_yes: "Wiki ✓",
     sig_wiki_no: "Wiki —",
     sig_transcript_via: "字幕ソース",
+    section_market: "市場の現実",
+    market_tam: "全体市場 (TAM)",
+    market_sam: "有効市場 (SAM)",
+    market_som: "1年目現実 (SOM)",
+    market_trend: "トレンド",
+    market_competitors: "実際の競合",
+    section_forecast: "1年目の現実収益",
+    forecast_conservative: "保守",
+    forecast_base: "ベース",
+    forecast_aggressive: "強気",
+    forecast_assumptions: "前提",
+    section_tips: "運営者だけが知るコツ",
+    section_build: "クローン ロードマップ",
+    build_total_weeks: "週合計",
+    build_one_time_cost: "初期コスト",
+    build_monthly_cost: "月額コスト",
+    build_stack: "推奨スタック",
+    section_related: "関連YouTube動画",
+    section_clone_cta: "Claudeで直接ビルド",
+    clone_cta_title: "このサイトを2分でライブ公開?",
+    clone_cta_body:
+      "ClonePilotのオープンソースMCPが自分のClaude Code内でanalyze_deep + scaffold + deployを全部走らせます。無料: 月1ビルド。",
+    clone_cta_btn: "ClonePilotをインストール →",
+    card_translate_label: "このカードを翻訳:",
+    card_translating: "翻訳中…",
   },
   waitlist_form: {
     placeholder_email: "you@startup.com",
@@ -675,6 +774,31 @@ const ZH: Dict = {
     sig_wiki_yes: "维基 ✓",
     sig_wiki_no: "维基 —",
     sig_transcript_via: "字幕来源",
+    section_market: "市场现实",
+    market_tam: "整体市场 (TAM)",
+    market_sam: "有效市场 (SAM)",
+    market_som: "首年现实 (SOM)",
+    market_trend: "趋势",
+    market_competitors: "真实竞品",
+    section_forecast: "首年现实收益估算",
+    forecast_conservative: "保守",
+    forecast_base: "基础",
+    forecast_aggressive: "激进",
+    forecast_assumptions: "前提",
+    section_tips: "运营者才知道的内幕",
+    section_build: "克隆路线图",
+    build_total_weeks: "周共计",
+    build_one_time_cost: "一次性",
+    build_monthly_cost: "月度",
+    build_stack: "推荐技术栈",
+    section_related: "相关 YouTube 视频",
+    section_clone_cta: "用 Claude 直接构建",
+    clone_cta_title: "想 2 分钟内把这个站点跑起来?",
+    clone_cta_body:
+      "ClonePilot 开源 MCP 在你自己的 Claude Code 里跑 analyze_deep + scaffold + deploy。免费档: 月 1 次构建。",
+    clone_cta_btn: "安装 ClonePilot →",
+    card_translate_label: "翻译此卡片:",
+    card_translating: "翻译中…",
   },
   waitlist_form: {
     placeholder_email: "you@startup.com",
@@ -813,6 +937,31 @@ const ES: Dict = {
     sig_wiki_yes: "Wiki ✓",
     sig_wiki_no: "Wiki —",
     sig_transcript_via: "transcript vía",
+    section_market: "Realidad del mercado",
+    market_tam: "Mercado total (TAM)",
+    market_sam: "Mercado realista (SAM)",
+    market_som: "Año 1 realista (SOM)",
+    market_trend: "Tendencia",
+    market_competitors: "Competidores reales",
+    section_forecast: "Ingresos realistas año 1",
+    forecast_conservative: "Conservador",
+    forecast_base: "Base",
+    forecast_aggressive: "Agresivo",
+    forecast_assumptions: "Supuestos",
+    section_tips: "Consejos que los operadores no comparten",
+    section_build: "Hoja de ruta para clonar",
+    build_total_weeks: "semanas total",
+    build_one_time_cost: "inicial",
+    build_monthly_cost: "mensual",
+    build_stack: "Stack recomendado",
+    section_related: "Vídeos relacionados (YouTube)",
+    section_clone_cta: "Constrúyelo con Claude",
+    clone_cta_title: "¿Quieres este sitio en vivo en 2 minutos?",
+    clone_cta_body:
+      "El MCP open-source de ClonePilot ejecuta analyze_deep + scaffold + deploy dentro de tu propio Claude Code. Gratis: 1 build/mes.",
+    clone_cta_btn: "Instalar ClonePilot →",
+    card_translate_label: "Traducir esta tarjeta:",
+    card_translating: "Traduciendo…",
   },
   waitlist_form: {
     placeholder_email: "you@startup.com",

@@ -42,6 +42,38 @@ export type SignalBlock = {
   wiki_found: boolean;
 };
 
+export type RelatedVideo = {
+  video_id: string;
+  title: string;
+  channel: string;
+  thumbnail: string;
+  view_count?: number;
+  published_at?: string;
+};
+
+export type MarketReality = {
+  tam_summary: string;
+  sam_summary: string;
+  som_year1_summary: string;
+  trend_summary: string;
+  top_competitors: { name: string; url_hint?: string; why_relevant: string }[];
+};
+
+export type RevenueForecast = {
+  conservative_arr_usd: number;
+  base_arr_usd: number;
+  aggressive_arr_usd: number;
+  assumptions: string[];
+};
+
+export type BuildPath = {
+  steps: { title: string; weeks: number }[];
+  total_weeks: number;
+  estimated_one_time_cost_usd: number;
+  estimated_monthly_cost_usd: number;
+  stack: string[];
+};
+
 export type AnalyzePreview = {
   brand: string;
   tagline: string;
@@ -55,8 +87,13 @@ export type AnalyzePreview = {
   honesty_score_0_100: number;
   confidence_0_100: number;
   top_risk: string;
+  market_reality: MarketReality;
+  revenue_forecast: RevenueForecast;
+  insider_tips: string[];
+  build_path: BuildPath;
   video: VideoMeta;
   signals: SignalBlock;
+  related_videos: RelatedVideo[];
 };
 
 /* ─── transcript fetching chain ───────────────────────────────────────── */
@@ -195,6 +232,62 @@ async function fetchChannelData(
   }
 }
 
+async function fetchRelatedVideos(
+  query: string,
+  excludeId: string,
+  ytKey: string | undefined,
+): Promise<RelatedVideo[]> {
+  if (!ytKey || !query) return [];
+  try {
+    const sr = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&relevanceLanguage=en&maxResults=8&q=${encodeURIComponent(query)}&key=${ytKey}`,
+      { signal: AbortSignal.timeout(8_000) },
+    );
+    if (!sr.ok) return [];
+    type SearchItem = {
+      id?: { videoId?: string };
+      snippet?: {
+        title?: string;
+        channelTitle?: string;
+        publishedAt?: string;
+        thumbnails?: { medium?: { url?: string }; default?: { url?: string } };
+      };
+    };
+    const sj = (await sr.json()) as { items?: SearchItem[] };
+    const candidates = (sj.items ?? [])
+      .filter((i) => i.id?.videoId && i.id.videoId !== excludeId)
+      .slice(0, 3);
+    if (candidates.length === 0) return [];
+
+    const ids = candidates.map((c) => c.id!.videoId!).join(",");
+    const sr2 = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${ids}&key=${ytKey}`,
+      { signal: AbortSignal.timeout(8_000) },
+    );
+    type StatItem = { id?: string; statistics?: { viewCount?: string } };
+    const sj2 = sr2.ok ? ((await sr2.json()) as { items?: StatItem[] }) : { items: [] };
+    const viewMap = new Map<string, number>();
+    for (const it of sj2.items ?? []) {
+      if (it.id && it.statistics?.viewCount) {
+        viewMap.set(it.id, Number(it.statistics.viewCount));
+      }
+    }
+    return candidates.map((c) => ({
+      video_id: c.id!.videoId!,
+      title: c.snippet?.title ?? "",
+      channel: c.snippet?.channelTitle ?? "",
+      thumbnail:
+        c.snippet?.thumbnails?.medium?.url ??
+        c.snippet?.thumbnails?.default?.url ??
+        `https://i.ytimg.com/vi/${c.id!.videoId!}/mqdefault.jpg`,
+      view_count: viewMap.get(c.id!.videoId!),
+      published_at: c.snippet?.publishedAt,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 /* ─── google trends ────────────────────────────────────────────────────── */
 
 type GoogleTrendsModule = {
@@ -271,103 +364,145 @@ async function fetchWikiExists(query: string): Promise<boolean> {
 const EXTRACT_TOOL: Anthropic.Tool = {
   name: "extract_business_preview",
   description:
-    "Brutally honest analysis. Detect course-seller funnels, affiliate-bait, fake testimonials, artificial scarcity.",
+    "Brutally honest, actionable business analysis. NOT a video summary. Tell the user the market reality, real revenue, clone path.",
   input_schema: {
     type: "object",
     properties: {
-      brand: { type: "string", description: "Brand or product name in original language. Short." },
-      tagline: { type: "string", description: "One-line value prop, ≤80 chars, original language." },
+      brand: { type: "string", description: "Brand or product name. Short. English by default unless transcript clearly demands native." },
+      tagline: { type: "string", description: "One-line value prop, ≤80 chars." },
       target_audience: { type: "string", description: "Who this is for, 1 sentence." },
       problem: { type: "string", description: "Pain it claims to solve, 1 sentence." },
       solution: { type: "string", description: "How it claims to solve, 1 sentence." },
       business_model: {
         type: "string",
-        enum: [
-          "real-product",
-          "course-funnel",
-          "affiliate-bait",
-          "personal-brand",
-          "consulting-front",
-          "unclear",
-        ],
-        description:
-          "Classify the ACTUAL business: real-product (they sell a real product/service used by paying customers), course-funnel (YouTube is bait to sell high-ticket courses/coaching), affiliate-bait (monetized via affiliate kickbacks), personal-brand (selling themselves as influencer), consulting-front (YouTube to drive consulting leads), unclear (can't tell).",
+        enum: ["real-product", "course-funnel", "affiliate-bait", "personal-brand", "consulting-front", "unclear"],
+        description: "Classify the ACTUAL business mechanism, not the marketing surface.",
       },
       red_flags: {
         type: "array",
         items: { type: "string" },
-        description:
-          "Course-seller red flags spotted. Each item should be a concrete observation, NOT a generic warning. Examples: '월 1억 주장 → 스크린샷 외 증빙 없음', '한정 100명 마감임박 압박', '$19 미끼 강의 → $2,000 1대1 코칭 funnel', '댓글 90%가 \"대박이에요!\" 봇 패턴'. Empty array ONLY if you found zero red flags.",
+        description: "Concrete observations, not generic warnings. Examples: 'Revenue screenshots could be Photoshop', '$19 entry → $2k coaching ladder visible in description'. Empty array ONLY if zero red flags.",
       },
       likely_real_revenue_source: {
         type: "string",
-        description:
-          "Where the money REALLY comes from — often different from what the video claims. Be specific. Example: '영상은 블로그 광고 수익이라 말하지만 실제로는 70% 강의 판매 + 20% 제휴 + 10% 광고로 추정'.",
+        description: "Where the money REALLY comes from — often different from the claim. Be specific.",
       },
-      clone_feasibility_0_100: {
-        type: "integer",
-        minimum: 0,
-        maximum: 100,
-        description:
-          "If a user cloned the EXACT activity shown (e.g. start a blog, do this trade), how likely they'd hit the claimed revenue? Course funnels score LOW (10-30) — the real revenue is from the course, not the activity. Real products score higher.",
+      clone_feasibility_0_100: { type: "integer", minimum: 0, maximum: 100, description: "Likelihood a cloner hits claimed revenue. Course funnels low (10-30) because real revenue = course itself." },
+      honesty_score_0_100: { type: "integer", minimum: 0, maximum: 100, description: "How honest is the creator? Transparent revenue source + real numbers = 90+. Obvious funnel + inflated claims = 20." },
+      confidence_0_100: { type: "integer", minimum: 0, maximum: 100, description: "Your confidence in THIS analysis. Higher with full transcript + corroborating signals." },
+      top_risk: { type: "string", description: "Single biggest risk for cloner. One short sentence. Specific to THIS business." },
+      market_reality: {
+        type: "object",
+        description: "Honest market sizing & competitive landscape. Use your training data + external signals to estimate. If you don't know, say 'cannot estimate without paid data sources'.",
+        properties: {
+          tam_summary: { type: "string", description: "Total addressable market in one line. Example: 'Global content-marketing SaaS ~$8B annual'." },
+          sam_summary: { type: "string", description: "Serviceable subset realistic for this product." },
+          som_year1_summary: { type: "string", description: "What a solo cloner could realistically capture year 1." },
+          trend_summary: { type: "string", description: "Is the market growing, flat, dying? Why? Cite the Google Trends signal provided." },
+          top_competitors: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                url_hint: { type: "string", description: "Best-guess domain or .com handle, no protocol." },
+                why_relevant: { type: "string", description: "1 line — how they compete with this idea." },
+              },
+              required: ["name", "why_relevant"],
+            },
+            description: "3-5 real competitors you know exist. If none come to mind, return empty array.",
+          },
+        },
+        required: ["tam_summary", "sam_summary", "som_year1_summary", "trend_summary", "top_competitors"],
       },
-      honesty_score_0_100: {
-        type: "integer",
-        minimum: 0,
-        maximum: 100,
-        description:
-          "How honest is the creator? 90+ = transparent about revenue source, shows real numbers, mentions difficulty. 50 = vague but plausible. 20 = obvious funnel with inflated claims and hidden upsells. 0 = scam.",
+      revenue_forecast: {
+        type: "object",
+        description: "Solo founder's realistic year-1 ARR estimates in USD. Bottom-up: think traffic × conversion × ARPU. Course funnels should score LOW unless cloner also runs a course.",
+        properties: {
+          conservative_arr_usd: { type: "integer", description: "Pessimistic case — 10-20% percentile outcome." },
+          base_arr_usd: { type: "integer", description: "Median case — most likely outcome." },
+          aggressive_arr_usd: { type: "integer", description: "Top 10% case — execution-heavy outcome." },
+          assumptions: {
+            type: "array",
+            items: { type: "string" },
+            description: "3-5 explicit assumptions behind the numbers. Example: 'Assumes 5k organic visitors/mo after 6 months', 'Assumes $19/mo ARPU with 3% trial conversion'.",
+          },
+        },
+        required: ["conservative_arr_usd", "base_arr_usd", "aggressive_arr_usd", "assumptions"],
       },
-      confidence_0_100: {
-        type: "integer",
-        minimum: 0,
-        maximum: 100,
-        description:
-          "How confident YOU are in this analysis. Higher when transcript is full + external signals (trends/HN/wiki) corroborate. Lower (30-40) when only title+description available.",
+      insider_tips: {
+        type: "array",
+        items: { type: "string" },
+        description: "5 non-obvious operator tips someone who actually ran this business would know. Things the video does NOT say. Specific tactics, common pitfalls, secret growth channels, regulatory traps, etc.",
       },
-      top_risk: {
-        type: "string",
-        description:
-          "The single biggest risk for a cloner. One short sentence, original language. Be specific to THIS business, not generic.",
+      build_path: {
+        type: "object",
+        description: "Realistic build roadmap for a solo founder using AI coding tools. Be concrete.",
+        properties: {
+          steps: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                title: { type: "string", description: "Short milestone title." },
+                weeks: { type: "integer", description: "Weeks to ship this step." },
+              },
+              required: ["title", "weeks"],
+            },
+            description: "4-7 milestones from zero to first-paying-customer.",
+          },
+          total_weeks: { type: "integer", description: "Sum of weeks across all milestones." },
+          estimated_one_time_cost_usd: { type: "integer", description: "Setup costs: domain, design assets, initial ads, etc." },
+          estimated_monthly_cost_usd: { type: "integer", description: "Recurring infra: Vercel/Supabase/Stripe/OpenAI/etc." },
+          stack: { type: "array", items: { type: "string" }, description: "Recommended stack — concrete tool names. Example: ['Next.js 15', 'Supabase', 'Stripe', 'Resend', 'Claude API']." },
+        },
+        required: ["steps", "total_weeks", "estimated_one_time_cost_usd", "estimated_monthly_cost_usd", "stack"],
       },
     },
     required: [
-      "brand",
-      "tagline",
-      "target_audience",
-      "problem",
-      "solution",
-      "business_model",
-      "red_flags",
-      "likely_real_revenue_source",
-      "clone_feasibility_0_100",
-      "honesty_score_0_100",
-      "confidence_0_100",
-      "top_risk",
+      "brand", "tagline", "target_audience", "problem", "solution",
+      "business_model", "red_flags", "likely_real_revenue_source",
+      "clone_feasibility_0_100", "honesty_score_0_100", "confidence_0_100",
+      "top_risk", "market_reality", "revenue_forecast", "insider_tips", "build_path",
     ],
   },
 };
 
-const SYSTEM_PROMPT = `You are a brutally honest business analyst specializing in detecting "course-seller" funnels on YouTube — creators whose videos are actually marketing funnels for high-ticket courses, coaching, or PDFs, rather than real product businesses. You have seen 10,000+ of these and recognize the patterns at a glance.
+const SYSTEM_PROMPT = `You are ClonePilot — a brutally honest business analyst who tells solo founders the TRUTH about YouTube business videos so they don't waste weeks building the wrong thing.
 
-RED FLAG PATTERNS YOU AUTO-DETECT:
-- "월 X천만원 벌었어요" / "I made $X with this method" — claims with no verifiable proof (screenshots are trivially faked)
-- "마감 임박", "오늘만 가격", "한정 100명" — artificial scarcity
-- $19 미끼 강의 → $199 mid-tier → $2,000~10,000 1:1 코칭 — classic price ladder
-- 후기가 템플릿 같음, before/after 사진에 맥락 없음, 출연자가 유료 광고 흔적
-- "누구나 30일 안에 가능" — survivorship bias 가린 약속
-- "진짜" 수익 = 강의 판매, 영상이 다루는 활동 (블로깅, 트레이딩 등) 자체는 미끼
-- description에 affiliate 링크 / 스폰서 표기 → "이게 내 진짜 수익" 주장과 충돌
-- "무료 PDF" 미끼 → 이메일 funnel → 코칭 pitch
-- 구독자 급증이 부자연스러움 (예: 가입 6개월에 50만 구독 = 유료 promotion 가능성)
-- 댓글이 "대박이에요!" 같은 generic 응답 90% → 봇 inflation
+YOU ARE NOT A VIDEO SUMMARIZER. The user does not want to know what was said. They want to know:
+1. **Is this market real and growing, or am I being sold a dream?**
+2. **What's the realistic year-1 revenue I could actually make?**
+3. **Who really competes here? What did the video conveniently not mention?**
+4. **What would an actual operator (who's been doing this for 5 years) tell me that the video skipped?**
+5. **How many weeks and dollars to clone this, concretely?**
+6. **Is the creator a real builder or a course-seller funnel?**
 
-YOUR JOB:
-The user is about to invest weeks of work cloning this business. They deserve the TRUTH, not validation. If the underlying activity does not pay the bills and the course does, classify as "course-funnel" and explain in red_flags.
+COURSE-SELLER PATTERNS (auto-detect):
+- "월 X천만원 / I made $X" — claims with no verifiable proof (screenshots are trivially faked)
+- 마감 임박 / limited spots — artificial scarcity
+- $19 → $199 → $2k → $10k coaching ladder visible in description
+- Templated testimonials, sponsored video with hidden disclosure
+- "Anyone in 30 days" — survivorship bias hidden
+- The "real" revenue is selling the course; the activity (blogging, trading) is bait
+- description affiliate links contradicting "this is my real income"
+- Channel grew unnaturally fast vs channel age (paid promotion signal)
+- 90%+ generic "amazing video!" comments (bot inflation)
 
-Use the EXTERNAL SIGNALS (channel subscriber count vs channel age, Google Trends for market viability, HN/Wikipedia for verifiability) to cross-check the video's claims. Real businesses leave footprints. Funnels don't.
+GROUNDING DATA YOU GET:
+- video transcript (or title+desc if transcript fetch failed)
+- channel metrics (subs, age, total videos)
+- Google Trends signal for the brand keyword
+- HackerNews mention count, Wikipedia presence
+- video stats (views, likes, comments, published date)
 
-Output every text field in the SAME LANGUAGE as the video (so a native speaker can read the card). Be merciless and specific, not generic.`;
+USE EVERYTHING. A real business leaves footprints across all of these. A funnel doesn't.
+
+OUTPUT RULES:
+- Default OUTPUT LANGUAGE: English. The site's UI language is separate and handled client-side.
+- Numbers must be concrete (e.g. "$24,000 ARR" not "modest revenue").
+- Tips must be operator-level non-obvious (e.g. "Most blog-affiliate businesses die at month 4 because Google's spam-update hit AI content hardest in March 2025 — diversify to email list by month 2").
+- Be merciless. The user is about to spend weeks. Truth > validation.`;
 
 /* ─── main POST handler ────────────────────────────────────────────────── */
 
@@ -427,10 +562,11 @@ export async function POST(req: Request) {
       videoData?.snippet?.title?.slice(0, 60) ||
       oembed.channel;
 
-    const [trends, hnCount, wikiFound] = await Promise.all([
+    const [trends, hnCount, wikiFound, relatedVideos] = await Promise.all([
       fetchGoogleTrends(brandCandidate),
       fetchHNMentions(brandCandidate),
       fetchWikiExists(brandCandidate),
+      fetchRelatedVideos(brandCandidate, videoId, ytKey),
     ]);
 
     const stats = videoData?.statistics ?? {};
@@ -485,7 +621,7 @@ ${transcriptError ? `\n⚠️  TRANSCRIPT FETCH FAILED: ${transcriptError}\nYou 
     const client = new Anthropic({ apiKey: anthropicKey });
     const resp = await client.messages.create({
       model,
-      max_tokens: 2500,
+      max_tokens: 6000,
       system: SYSTEM_PROMPT,
       tools: [EXTRACT_TOOL],
       tool_choice: { type: "tool", name: EXTRACT_TOOL.name },
@@ -495,7 +631,7 @@ ${transcriptError ? `\n⚠️  TRANSCRIPT FETCH FAILED: ${transcriptError}\nYou 
           content: [
             {
               type: "text",
-              text: `Analyze this YouTube business video for course-seller patterns and real-business viability.
+              text: `Analyze this YouTube business video. Deliver actionable market intel — NOT a video summary.
 
 ${signalBlock}
 TRANSCRIPT (first ${clip.length} chars):
@@ -503,7 +639,7 @@ TRANSCRIPT (first ${clip.length} chars):
 ${clip}
 ---
 
-Call extract_business_preview with your brutally honest take. All text fields MUST be in the SAME LANGUAGE as the video's title/transcript.`,
+Call extract_business_preview with all required fields. Be concrete with numbers, ruthless about funnels, generous with insider tips. Output in English.`,
             },
           ],
         },
@@ -517,8 +653,16 @@ Call extract_business_preview with your brutally honest take. All text fields MU
         { status: 502 },
       );
     }
-    const args = toolUse.input as Omit<AnalyzePreview, "video" | "signals">;
-    const preview: AnalyzePreview = { ...args, video: videoMeta, signals };
+    const args = toolUse.input as Omit<
+      AnalyzePreview,
+      "video" | "signals" | "related_videos"
+    >;
+    const preview: AnalyzePreview = {
+      ...args,
+      video: videoMeta,
+      signals,
+      related_videos: relatedVideos,
+    };
     return NextResponse.json({ ok: true, preview });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "unknown error";
