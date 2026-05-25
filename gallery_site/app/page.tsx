@@ -3,17 +3,16 @@ import path from "node:path";
 import Link from "next/link";
 import {
   ArrowUpRight,
-  GithubLogo,
   TerminalWindow,
   ChartLineUp,
-  Lightning,
+  GithubLogo,
 } from "@phosphor-icons/react/dist/ssr";
 import { WaitlistForm } from "./WaitlistForm";
 import { UrlAnalysisForm } from "@/components/UrlAnalysisForm";
+import { SiteNav, SiteFooter } from "@/components/SiteChrome";
 import { listReportSlugs, loadReport } from "@/lib/report.server";
-
-export const dynamic = "force-static";
-export const revalidate = 60;
+import { getLang } from "@/lib/lang";
+import { t, LANG_HTML, type Dict } from "@/lib/i18n";
 
 type Tier = { name: string; price_usd: number; features: string[] };
 type Entry = {
@@ -86,7 +85,21 @@ function buildV1Preview(slug: string): V1Preview | null {
   };
 }
 
-export default function Page() {
+function Em({ children }: { children: React.ReactNode }) {
+  return <span className="text-accent">{children}</span>;
+}
+
+function CodeMark({ children }: { children: React.ReactNode }) {
+  return <code className="font-mono text-ink-muted">{children}</code>;
+}
+
+function PriceEm({ children }: { children: React.ReactNode }) {
+  return <span className="text-ink">{children}</span>;
+}
+
+export default async function Page() {
+  const lang = await getLang();
+  const d = t(lang);
   const gallery = loadGallery();
   const ok = gallery.entries.filter((e) => e.ok && e.live_url && e.name);
   const v1Slugs = new Set(listReportSlugs());
@@ -98,7 +111,7 @@ export default function Page() {
 
   return (
     <div className="min-h-[100dvh]">
-      <SiteNav />
+      <SiteNav lang={lang} d={d} />
 
       {/* ─── HERO ─── */}
       <section className="mx-auto max-w-[1240px] px-6 pt-16 pb-24 md:pt-24 md:pb-32">
@@ -106,21 +119,15 @@ export default function Page() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-strong bg-surface px-3 py-1 text-[11px] font-mono uppercase tracking-[0.18em] text-ink-muted">
               <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent" />
-              Open-source MCP — v0.1
+              {d.hero.badge}
             </div>
 
             <h1 className="mt-6 text-[44px] md:text-[64px] leading-[1.02] tracking-tightish font-semibold text-ink">
-              YouTube business video,
-              <br />
-              <span className="text-ink-muted">in.</span>{" "}
-              <span className="text-accent">Deployed site,</span> out.
+              {d.hero.titleRich(Em)}
             </h1>
 
             <p className="mt-7 max-w-[58ch] text-[17px] leading-relaxed text-ink-muted">
-              ClonePilot is an open-source MCP for Claude Code, Cursor, and
-              Codex. Paste any business video. Get a Next.js landing page,
-              Stripe checkout, email capture, a deep market report in five
-              languages, and a live Vercel URL.
+              {d.hero.subtitle}
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-3">
@@ -129,13 +136,13 @@ export default function Page() {
                 className="group inline-flex h-11 items-center gap-2 rounded-lg bg-ink text-bg px-4 text-sm font-semibold hover:bg-white active:translate-y-[1px] transition"
               >
                 <TerminalWindow size={16} weight="duotone" />
-                Install for free
+                {d.hero.cta_install}
               </Link>
               <Link
                 href="#gallery"
                 className="group inline-flex h-11 items-center gap-2 rounded-lg border border-strong px-4 text-sm font-medium text-ink hover:border-accent/40 hover:text-accent transition"
               >
-                See live reports
+                {d.hero.cta_see_reports}
                 <ArrowUpRight
                   size={14}
                   weight="bold"
@@ -149,27 +156,25 @@ export default function Page() {
                 className="group inline-flex h-11 items-center gap-2 rounded-lg border border-strong px-4 text-sm font-medium text-ink-muted hover:border-strong hover:text-ink transition"
               >
                 <GithubLogo size={16} weight="duotone" />
-                GitHub
+                {d.hero.cta_github}
               </a>
             </div>
 
             <dl className="mt-12 grid grid-cols-3 gap-px bg-[var(--border)] rounded-xl overflow-hidden border border-strong">
-              <Stat label="Reports shipped" value={String(v1Previews.size)} />
-              <Stat label="Languages" value="5" />
+              <Stat label={d.hero.stat_reports_label} value={String(v1Previews.size)} />
+              <Stat label={d.hero.stat_languages_label} value="5" />
               <Stat
-                label="Median build time"
-                value="~2m"
+                label={d.hero.stat_build_time_label}
+                value={d.hero.stat_build_time_value}
                 accent="emerald"
               />
             </dl>
           </div>
 
           <div className="lg:pt-2">
-            <UrlAnalysisForm />
+            <UrlAnalysisForm d={d.analyze_form} />
             <p className="mt-4 px-1 text-[11px] text-ink-dim leading-relaxed">
-              Or skip the queue: install the MCP and run{" "}
-              <code className="font-mono text-ink-muted">analyze_deep</code> in
-              your own Claude Code right now.
+              {d.hero.skip_queueRich(CodeMark)}
             </p>
           </div>
         </div>
@@ -181,14 +186,14 @@ export default function Page() {
           <div className="grid grid-cols-1 md:grid-cols-[0.4fr_1fr] gap-10">
             <div>
               <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-ink-muted">
-                How it works
+                {d.how.eyebrow}
               </p>
               <h2 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tightish">
-                Three calls. One live site.
+                {d.how.title}
               </h2>
             </div>
             <ol className="divide-y divide-[var(--border)] border-y border-strong">
-              {STEPS.map((s, i) => (
+              {d.how.steps.map((s, i) => (
                 <li
                   key={s.title}
                   className="grid grid-cols-[auto_1fr] gap-6 py-6"
@@ -218,15 +223,15 @@ export default function Page() {
           <div className="flex items-end justify-between mb-10 gap-6 flex-wrap">
             <div>
               <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-ink-muted">
-                Live reports
+                {d.gallery.eyebrow}
               </p>
               <h2 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tightish">
-                Real videos. Real deep-analysis reports.
+                {d.gallery.title}
               </h2>
             </div>
             <p className="text-xs text-ink-dim font-mono">
-              Updated{" "}
-              {new Date(gallery.updated_at).toLocaleString("en-US", {
+              {d.gallery.updated}{" "}
+              {new Date(gallery.updated_at).toLocaleString(LANG_HTML[lang], {
                 month: "short",
                 day: "numeric",
                 hour: "2-digit",
@@ -236,12 +241,13 @@ export default function Page() {
           </div>
 
           {ok.length === 0 ? (
-            <EmptyGallery />
+            <EmptyGallery d={d} />
           ) : (
             <BentoGallery
               entries={ok}
               v1Slugs={v1Slugs}
               v1Previews={v1Previews}
+              d={d}
             />
           )}
         </div>
@@ -256,31 +262,26 @@ export default function Page() {
           <div className="grid grid-cols-1 md:grid-cols-[0.5fr_1fr] gap-10">
             <div>
               <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-ink-muted">
-                Pro launch
+                {d.waitlist.eyebrow}
               </p>
               <h2 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tightish">
-                Email me when Pro opens.
+                {d.waitlist.title}
               </h2>
             </div>
             <div>
               <p className="text-[15px] text-ink-muted leading-relaxed max-w-[58ch]">
-                The MCP is open-source and free today. Pro is the hosted
-                convenience layer — all API keys server-side, unlimited
-                builds, custom domains, deep-analysis with every integration
-                enabled (Ahrefs, Exa, SimilarWeb), 5-language reports,
-                priority queue. Early-bird: <span className="text-ink">$9/mo</span> or{" "}
-                <span className="text-ink">$199 lifetime</span>.
+                {d.waitlist.bodyRich(PriceEm)}
               </p>
               <div className="mt-7 max-w-[520px]">
-                <WaitlistForm />
+                <WaitlistForm d={d.waitlist_form} />
               </div>
               <p className="mt-3 text-xs text-ink-dim">
-                Want to pick a specific tier? See the full{" "}
+                {d.waitlist.pricing_hint_prefix}{" "}
                 <Link
                   href="/pricing#waitlist"
                   className="text-ink-muted hover:text-accent underline underline-offset-2 decoration-[var(--border-strong)]"
                 >
-                  pricing page
+                  {d.waitlist.pricing_hint_link}
                 </Link>
                 .
               </p>
@@ -289,102 +290,12 @@ export default function Page() {
         </div>
       </section>
 
-      <SiteFooter />
+      <SiteFooter d={d} />
     </div>
   );
 }
 
 /* ────────────────────────────────────────────────────────────────────────── */
-
-const STEPS = [
-  {
-    title: "Drop a YouTube URL into Claude Code.",
-    body: "Any business video — interview, founder demo, course landing. ClonePilot fetches the transcript via Supadata with a fallback chain.",
-  },
-  {
-    title: "Claude calls analyze_deep — twelve sections, five languages.",
-    body: "Blueprint, pricing tiers, market trend, competitors, SEO pack, six prioritized risks, 90-day GTM, and a confidence score that tells you which API keys to add for higher fidelity.",
-  },
-  {
-    title: "scaffold + deploy hand back a live Vercel URL.",
-    body: "Next.js 15, Tailwind, Stripe buy buttons, Resend lead capture, and an auto-generated SVG favicon. Median time end-to-end: under two minutes.",
-  },
-];
-
-function SiteNav() {
-  return (
-    <header className="border-b border-strong/60 backdrop-blur-sm sticky top-0 z-30 bg-bg/85">
-      <div className="mx-auto max-w-[1240px] h-14 px-6 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-accent/15 text-accent border border-accent/30">
-            <Lightning size={13} weight="fill" />
-          </span>
-          <span className="text-[15px] font-semibold tracking-tightish text-ink group-hover:text-accent transition">
-            ClonePilot
-          </span>
-        </Link>
-        <nav className="flex items-center gap-1 text-sm">
-          <Link
-            href="/install"
-            className="px-3 py-1.5 rounded-md text-ink-muted hover:text-ink hover:bg-surface transition"
-          >
-            Install
-          </Link>
-          <Link
-            href="/pricing"
-            className="px-3 py-1.5 rounded-md text-ink-muted hover:text-ink hover:bg-surface transition"
-          >
-            Pricing
-          </Link>
-          <Link
-            href="#gallery"
-            className="px-3 py-1.5 rounded-md text-ink-muted hover:text-ink hover:bg-surface transition"
-          >
-            Reports
-          </Link>
-          <a
-            href="https://github.com/a01050398694-commits/clonepilot"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ml-2 inline-flex items-center justify-center h-9 w-9 rounded-md border border-strong text-ink-muted hover:text-ink hover:border-strong transition"
-            aria-label="GitHub"
-          >
-            <GithubLogo size={16} weight="duotone" />
-          </a>
-        </nav>
-      </div>
-    </header>
-  );
-}
-
-function SiteFooter() {
-  return (
-    <footer className="border-t border-strong/60">
-      <div className="mx-auto max-w-[1240px] px-6 py-10 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-6 items-center">
-        <p className="text-xs text-ink-dim font-mono">
-          MIT-licensed · built with ClonePilot · operated from Seoul
-        </p>
-        <nav className="flex flex-wrap gap-5 text-xs text-ink-dim font-mono">
-          <Link href="/" className="hover:text-ink transition">
-            Reports
-          </Link>
-          <Link href="/install" className="hover:text-ink transition">
-            Install
-          </Link>
-          <Link href="/pricing" className="hover:text-ink transition">
-            Pricing
-          </Link>
-          <a
-            href="https://github.com/a01050398694-commits/clonepilot"
-            className="hover:text-ink transition"
-          >
-            GitHub
-          </a>
-        </nav>
-      </div>
-    </footer>
-  );
-}
 
 function Stat({
   label,
@@ -411,12 +322,10 @@ function Stat({
   );
 }
 
-function EmptyGallery() {
+function EmptyGallery({ d }: { d: Dict }) {
   return (
     <div className="rounded-2xl border border-dashed border-strong bg-surface p-10 text-center">
-      <p className="text-ink-muted">
-        Reports are still generating. Refresh in a couple of minutes.
-      </p>
+      <p className="text-ink-muted">{d.gallery.empty}</p>
     </div>
   );
 }
@@ -425,12 +334,13 @@ function BentoGallery({
   entries,
   v1Slugs,
   v1Previews,
+  d,
 }: {
   entries: Entry[];
   v1Slugs: Set<string>;
   v1Previews: Map<string, V1Preview>;
+  d: Dict;
 }) {
-  // Promote v1 entries to a featured slot. v0 entries fill the rest.
   const featured = entries.find((e) => v1Slugs.has(slugify(e.name!)));
   const rest = entries.filter((e) => e !== featured);
 
@@ -440,6 +350,7 @@ function BentoGallery({
         <FeaturedReportCard
           entry={featured}
           preview={v1Previews.get(slugify(featured.name!))!}
+          d={d}
         />
       )}
       {rest.map((e) => (
@@ -448,6 +359,7 @@ function BentoGallery({
           entry={e}
           isV1={v1Slugs.has(slugify(e.name!))}
           preview={v1Previews.get(slugify(e.name!)) ?? null}
+          d={d}
         />
       ))}
     </div>
@@ -457,9 +369,11 @@ function BentoGallery({
 function FeaturedReportCard({
   entry,
   preview,
+  d,
 }: {
   entry: Entry;
   preview: V1Preview;
+  d: Dict;
 }) {
   const vid = videoIdFromUrl(entry.video_url);
   const thumb = vid ? `https://i.ytimg.com/vi/${vid}/maxresdefault.jpg` : null;
@@ -469,7 +383,7 @@ function FeaturedReportCard({
     <article className="group lg:col-span-2 lg:row-span-2 relative rounded-2xl border border-strong bg-surface overflow-hidden flex flex-col hover:border-accent/30 transition shadow-[0_30px_60px_-30px_rgba(0,0,0,0.7)]">
       <span className="absolute top-4 left-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-accent/15 text-accent border border-accent/30 px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.15em]">
         <ChartLineUp size={11} weight="bold" />
-        Full report
+        {d.gallery.badge_full}
       </span>
 
       <Link href={`/demo/${slug}`} className="block relative">
@@ -496,12 +410,12 @@ function FeaturedReportCard({
 
         <div className="mt-5 grid grid-cols-3 gap-px bg-[var(--border)] rounded-lg overflow-hidden border border-strong">
           <MiniStat
-            label="Confidence"
+            label={d.gallery.confidence_label}
             value={`${preview.confidence}/100`}
           />
-          <MiniStat label="5-yr trend" value={preview.trendArrow} />
+          <MiniStat label={d.gallery.trend_label} value={preview.trendArrow} />
           <MiniStat
-            label="Languages"
+            label={d.gallery.languages_label}
             value="5"
           />
         </div>
@@ -509,7 +423,7 @@ function FeaturedReportCard({
         {preview.firstHighRisk && (
           <p className="mt-5 text-xs text-[var(--danger)]/90 leading-relaxed">
             <span className="font-mono uppercase tracking-[0.15em] text-[var(--danger)] mr-2">
-              Top risk
+              {d.gallery.top_risk_label}
             </span>
             {preview.firstHighRisk}
           </p>
@@ -529,7 +443,7 @@ function FeaturedReportCard({
             href={`/demo/${slug}`}
             className="group/btn inline-flex h-10 items-center gap-1.5 rounded-lg bg-ink text-bg px-4 text-sm font-semibold hover:bg-white active:translate-y-[1px] transition"
           >
-            Open report
+            {d.gallery.open_report}
             <ArrowUpRight
               size={13}
               weight="bold"
@@ -546,10 +460,12 @@ function ReportCard({
   entry,
   isV1,
   preview,
+  d,
 }: {
   entry: Entry;
   isV1: boolean;
   preview: V1Preview | null;
+  d: Dict;
 }) {
   const vid = videoIdFromUrl(entry.video_url);
   const thumb = vid ? `https://i.ytimg.com/vi/${vid}/hqdefault.jpg` : null;
@@ -567,10 +483,10 @@ function ReportCard({
         {isV1 ? (
           <>
             <ChartLineUp size={11} weight="bold" />
-            Full report
+            {d.gallery.badge_full}
           </>
         ) : (
-          <>Landing only</>
+          <>{d.gallery.badge_landing}</>
         )}
       </span>
 
@@ -596,15 +512,13 @@ function ReportCard({
       {isV1 && preview ? (
         <div className="px-5 pb-4 mt-auto space-y-3">
           <div className="grid grid-cols-2 gap-px bg-[var(--border)] rounded-lg overflow-hidden border border-strong">
-            <MiniStat label="Confidence" value={`${preview.confidence}/100`} />
-            <MiniStat label="5-yr trend" value={preview.trendArrow} />
+            <MiniStat label={d.gallery.confidence_label} value={`${preview.confidence}/100`} />
+            <MiniStat label={d.gallery.trend_label} value={preview.trendArrow} />
           </div>
         </div>
       ) : (
         <div className="px-5 pb-4 mt-auto">
-          <p className="text-[11px] text-ink-dim font-mono">
-            v0 landing only · no deep report yet
-          </p>
+          <p className="text-[11px] text-ink-dim font-mono">{d.gallery.v0_note}</p>
         </div>
       )}
 
@@ -628,7 +542,7 @@ function ReportCard({
               : "bg-surface-2 text-ink hover:bg-[var(--border-strong)]"
           }`}
         >
-          {isV1 ? "Open report" : "Open demo"}
+          {isV1 ? d.gallery.open_report : d.gallery.open_demo}
           <ArrowUpRight size={12} weight="bold" />
         </Link>
       </div>

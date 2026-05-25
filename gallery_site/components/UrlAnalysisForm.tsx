@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import { ArrowRight, CheckCircle, Warning } from "@phosphor-icons/react";
+import type { Dict } from "@/lib/i18n";
 
 type Status = "idle" | "loading" | "ok" | "err";
 
-export function UrlAnalysisForm() {
+export function UrlAnalysisForm({ d }: { d: Dict["analyze_form"] }) {
   const [youtubeUrl, setUrl] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
@@ -47,19 +48,19 @@ export function UrlAnalysisForm() {
             className="text-accent"
           />
           <p className="text-base font-medium text-ink">
-            Queued{position != null ? ` — position #${position}` : ""}.
+            {d.ok_queued_prefix}
+            {position != null
+              ? d.ok_position_template.replace("{n}", String(position))
+              : ""}
+            .
           </p>
         </div>
         <p className="mt-3 text-sm text-ink-muted leading-relaxed">
-          We will email the deep-analysis report to{" "}
-          <span className="font-mono text-ink">{email}</span> once it finishes.
-          Usually under 24 hours during the manual-batch phase. The live API
-          will drop this to under five minutes.
+          {d.ok_body_prefix}{" "}
+          <span className="font-mono text-ink">{email}</span>{" "}
+          {d.ok_body_suffix}
         </p>
-        <p className="mt-4 text-xs text-ink-dim">
-          Want it instantly? The MCP is open-source — install once and run it
-          inside your Claude Code yourself.
-        </p>
+        <p className="mt-4 text-xs text-ink-dim">{d.ok_byo_hint}</p>
       </div>
     );
   }
@@ -72,7 +73,7 @@ export function UrlAnalysisForm() {
       <div className="flex items-center gap-2 mb-5">
         <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
         <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-ink-muted">
-          Live analysis queue
+          {d.live_badge}
         </p>
       </div>
 
@@ -82,7 +83,7 @@ export function UrlAnalysisForm() {
             htmlFor="ytUrl"
             className="text-xs font-medium text-ink-muted"
           >
-            YouTube business video
+            {d.label_url}
           </label>
           <input
             id="ytUrl"
@@ -90,7 +91,7 @@ export function UrlAnalysisForm() {
             required
             value={youtubeUrl}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://www.youtube.com/watch?v=..."
+            placeholder={d.url_placeholder}
             className="w-full h-11 px-3.5 rounded-lg bg-surface-2 border border-strong outline-none font-mono text-sm text-ink placeholder:text-ink-dim focus:border-accent/60 focus:ring-2 focus:ring-[var(--accent-ring)] transition"
             autoComplete="off"
             spellCheck={false}
@@ -102,7 +103,7 @@ export function UrlAnalysisForm() {
             htmlFor="email"
             className="text-xs font-medium text-ink-muted"
           >
-            Where to send the report
+            {d.label_email}
           </label>
           <input
             id="email"
@@ -110,7 +111,7 @@ export function UrlAnalysisForm() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@startup.com"
+            placeholder={d.email_placeholder}
             className="w-full h-11 px-3.5 rounded-lg bg-surface-2 border border-strong outline-none font-mono text-sm text-ink placeholder:text-ink-dim focus:border-accent/60 focus:ring-2 focus:ring-[var(--accent-ring)] transition"
             autoComplete="email"
           />
@@ -121,7 +122,7 @@ export function UrlAnalysisForm() {
           disabled={status === "loading"}
           className="group w-full h-11 inline-flex items-center justify-center gap-2 rounded-lg bg-accent text-bg font-semibold text-sm hover:bg-accent-strong active:translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
-          {status === "loading" ? "Queuing…" : "Run deep analysis"}
+          {status === "loading" ? d.submitting : d.submit}
           <ArrowRight
             size={16}
             weight="bold"
@@ -137,8 +138,7 @@ export function UrlAnalysisForm() {
         )}
 
         <p className="text-[11px] text-ink-dim leading-relaxed">
-          One free deep-analysis report per email. No card required. We email
-          the report and nothing else.
+          {d.disclaimer}
         </p>
       </div>
     </form>

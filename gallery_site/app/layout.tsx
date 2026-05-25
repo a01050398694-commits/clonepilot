@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@vercel/analytics/react";
+import { getLang } from "@/lib/lang";
+import { LANG_HTML } from "@/lib/i18n";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,10 +26,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const lang = await getLang();
   return (
     <html
-      lang="en"
+      lang={LANG_HTML[lang]}
       className={`${GeistSans.variable} ${GeistMono.variable}`}
     >
       <body className="min-h-[100dvh] font-sans antialiased">

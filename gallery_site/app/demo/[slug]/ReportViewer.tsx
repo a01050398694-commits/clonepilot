@@ -1,117 +1,106 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
 import {
   type DeepAnalysisReport,
-  type Lang,
   type Risk,
   pickLocale,
-  severityClass,
-  SUPPORTED_LANGS,
 } from "@/lib/report";
-import { LangToggle } from "@/components/LangToggle";
-import { RevenueChart } from "@/components/RevenueChart";
+import type { Lang } from "@/lib/i18n";
+import { tReport, type ReportDict } from "@/lib/i18n-report";
 
-const TREND_COPY: Record<string, string> = {
-  rising: "↑ Rising",
-  stable: "→ Stable",
-  declining: "↓ Declining",
-  unknown: "? Unknown",
-};
-
-export function ReportViewer({ report }: { report: DeepAnalysisReport }) {
-  const available = useMemo(
-    () =>
-      SUPPORTED_LANGS.filter(
-        (l) => report.i18n.locales[l] !== undefined,
-      ),
-    [report],
-  );
-  const [lang, setLang] = useState<Lang>(report.i18n.default_lang);
+export function ReportViewer({
+  report,
+  lang,
+}: {
+  report: DeepAnalysisReport;
+  lang: Lang;
+}) {
+  const r = tReport(lang);
   const locale = pickLocale(report, lang);
   const bp = report.blueprint;
   const v = report.source;
   const thumb = `https://i.ytimg.com/vi/${v.video_id}/maxresdefault.jpg`;
   const dq = report.data_quality;
+  const trendCopy: Record<string, string> = {
+    rising: r.trend_rising,
+    stable: r.trend_stable,
+    declining: r.trend_declining,
+    unknown: r.trend_unknown,
+  };
 
   return (
     <main className="mx-auto max-w-5xl px-6 py-12">
       <nav className="mb-8 flex items-center justify-between gap-4">
         <Link
           href="/"
-          className="text-xs font-mono text-zinc-500 hover:text-cyan-400"
+          className="text-xs font-mono text-ink-dim hover:text-accent"
         >
-          ← gallery
+          {r.nav_gallery_back}
         </Link>
-        <LangToggle
-          current={lang}
-          available={available}
-          onChange={setLang}
-        />
       </nav>
 
       <header className="mb-10">
-        <p className="text-cyan-400 font-mono text-xs uppercase tracking-wider mb-3">
-          Deep analysis · v1 · confidence {dq.confidence_0_100}/100
+        <p className="text-accent font-mono text-xs uppercase tracking-wider mb-3">
+          {r.header_eyebrow(dq.confidence_0_100)}
         </p>
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
           {bp.name}
         </h1>
-        <p className="mt-3 text-zinc-300 text-lg leading-relaxed max-w-3xl">
+        <p className="mt-3 text-ink text-lg leading-relaxed max-w-3xl">
           {locale?.tagline ?? bp.tagline}
         </p>
         {locale?.hero && (
-          <p className="mt-4 text-zinc-400 leading-relaxed max-w-3xl">
+          <p className="mt-4 text-ink-muted leading-relaxed max-w-3xl">
             {locale.hero}
           </p>
         )}
         <div className="mt-6 flex flex-wrap gap-3">
           <Link
             href="/install"
-            className="px-5 py-2.5 rounded-md bg-cyan-400 text-zinc-950 font-semibold hover:bg-cyan-300 transition text-sm"
+            className="px-5 py-2.5 rounded-md bg-accent text-bg font-semibold hover:bg-accent-strong transition text-sm"
           >
-            {locale?.cta ?? "Run this in MY Claude Code"} →
+            {locale?.cta ?? r.cta_run_default} →
           </Link>
           <a
             href={v.youtube_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-5 py-2.5 rounded-md border border-zinc-700 hover:border-cyan-400 transition text-sm"
+            className="px-5 py-2.5 rounded-md border border-strong hover:border-accent transition text-sm"
           >
-            ▶ Source video
+            {r.cta_source_video}
           </a>
         </div>
       </header>
 
       <section className="mb-10 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="md:col-span-1 rounded-xl overflow-hidden border border-zinc-800 bg-zinc-950">
+        <div className="md:col-span-1 rounded-xl overflow-hidden border border-strong bg-surface">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={thumb} alt={v.title} className="w-full aspect-video object-cover" />
           <div className="p-3">
-            <p className="text-xs text-zinc-400 line-clamp-2">{v.title}</p>
-            <p className="mt-1 text-[10px] font-mono text-zinc-600">
-              {v.channel} · {Math.round(v.duration_sec / 60)} min · {v.transcript_chars.toLocaleString()} chars
+            <p className="text-xs text-ink-muted line-clamp-2">{v.title}</p>
+            <p className="mt-1 text-[10px] font-mono text-ink-dim">
+              {v.channel} · {r.video_meta(Math.round(v.duration_sec / 60), v.transcript_chars)}
             </p>
           </div>
         </div>
         <div className="md:col-span-2 grid grid-cols-1 gap-3">
-          <InfoRow label="Target" value={bp.target_audience} />
-          <InfoRow label="Problem" value={bp.problem} />
-          <InfoRow label="Solution" value={bp.solution} />
+          <InfoRow label={r.info_target} value={bp.target_audience} />
+          <InfoRow label={r.info_problem} value={bp.problem} />
+          <InfoRow label={r.info_solution} value={bp.solution} />
         </div>
       </section>
 
       {locale?.value_props && (
         <section className="mb-10">
-          <SectionLabel>Value props</SectionLabel>
+          <SectionLabel>{r.section_value_props}</SectionLabel>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {locale.value_props.map((vp, i) => (
               <li
                 key={i}
-                className="p-4 rounded-lg border border-zinc-800 bg-zinc-950 text-sm text-zinc-300 leading-relaxed"
+                className="p-4 rounded-lg border border-strong bg-surface text-sm text-ink leading-relaxed"
               >
-                <span className="text-cyan-400 font-mono mr-2">{String(i + 1).padStart(2, "0")}</span>
+                <span className="text-accent font-mono mr-2">{String(i + 1).padStart(2, "0")}</span>
                 {vp}
               </li>
             ))}
@@ -120,20 +109,20 @@ export function ReportViewer({ report }: { report: DeepAnalysisReport }) {
       )}
 
       <section className="mb-10">
-        <SectionLabel>Pricing tiers extracted</SectionLabel>
+        <SectionLabel>{r.section_pricing_tiers}</SectionLabel>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {bp.pricing_tiers.map((t) => (
             <div
               key={t.name}
-              className="p-4 rounded-lg border border-zinc-800 bg-zinc-950"
+              className="p-4 rounded-lg border border-strong bg-surface"
             >
               <div className="flex justify-between items-baseline mb-3">
                 <span className="font-semibold">{t.name}</span>
-                <span className="font-mono text-cyan-300">
+                <span className="font-mono text-accent">
                   {t.price_usd > 0 ? `$${t.price_usd}` : "free"}
                 </span>
               </div>
-              <ul className="space-y-1 text-xs text-zinc-400">
+              <ul className="space-y-1 text-xs text-ink-muted">
                 {t.features.slice(0, 5).map((f) => (
                   <li key={f}>· {f}</li>
                 ))}
@@ -144,18 +133,23 @@ export function ReportViewer({ report }: { report: DeepAnalysisReport }) {
       </section>
 
       <section className="mb-10">
-        <SectionLabel>Revenue forecast</SectionLabel>
-        <RevenueChart
-          forecast={report.revenue_forecast}
-          emptyHint="Set AHREFS_API_KEY in your .env to unlock TAM/SAM/SOM + 3-scenario ARR. (Trend score alone isn't enough signal — needs search-volume + CPC.)"
-        />
+        <SectionLabel>{r.section_revenue_forecast}</SectionLabel>
+        {report.revenue_forecast ? (
+          <ForecastBlock f={report.revenue_forecast} r={r} />
+        ) : (
+          <p className="text-sm text-ink-dim p-4 rounded-lg border border-dashed border-strong bg-surface/50">
+            {r.forecast_empty_hint}
+          </p>
+        )}
       </section>
 
       <section className="mb-10">
-        <SectionLabel>Competitors</SectionLabel>
+        <SectionLabel>{r.section_competitors}</SectionLabel>
         {report.competitors.length === 0 ? (
-          <p className="text-sm text-zinc-500 p-4 rounded-lg border border-dashed border-zinc-800 bg-zinc-950/50">
-            No competitors fetched. Set <code className="font-mono text-cyan-300">EXA_API_KEY</code> in your .env to scan for 5-8 closest competitors automatically.
+          <p className="text-sm text-ink-dim p-4 rounded-lg border border-dashed border-strong bg-surface/50">
+            {r.competitors_empty_hint_prefix}
+            <code className="font-mono text-accent">EXA_API_KEY</code>
+            {r.competitors_empty_hint_suffix}
           </p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -165,18 +159,18 @@ export function ReportViewer({ report }: { report: DeepAnalysisReport }) {
                 href={c.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-4 rounded-lg border border-zinc-800 bg-zinc-950 hover:border-cyan-400 transition"
+                className="p-4 rounded-lg border border-strong bg-surface hover:border-accent transition"
               >
                 <div className="flex justify-between items-baseline">
                   <span className="font-semibold">{c.name}</span>
                   {c.estimated_traffic != null && (
-                    <span className="text-[10px] font-mono text-zinc-500">
-                      ~{c.estimated_traffic.toLocaleString()}/mo
+                    <span className="text-[10px] font-mono text-ink-dim">
+                      ~{c.estimated_traffic.toLocaleString()}{r.competitor_traffic_suffix}
                     </span>
                   )}
                 </div>
-                <p className="mt-2 text-xs text-zinc-400 leading-relaxed">{c.positioning}</p>
-                <p className="mt-2 text-[10px] font-mono text-cyan-300">{c.pricing_summary}</p>
+                <p className="mt-2 text-xs text-ink-muted leading-relaxed">{c.positioning}</p>
+                <p className="mt-2 text-[10px] font-mono text-accent">{c.pricing_summary}</p>
               </a>
             ))}
           </div>
@@ -184,18 +178,18 @@ export function ReportViewer({ report }: { report: DeepAnalysisReport }) {
       </section>
 
       <section className="mb-10">
-        <SectionLabel>Market trend</SectionLabel>
+        <SectionLabel>{r.section_market_trend}</SectionLabel>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <StatCard
-            label="5-year trend"
-            value={TREND_COPY[report.market.five_year_trend] ?? "—"}
+            label={r.stat_5_year_trend}
+            value={trendCopy[report.market.five_year_trend] ?? "—"}
           />
           <StatCard
-            label="Trend score"
+            label={r.stat_trend_score}
             value={`${report.market.trend_score_0_100}/100`}
           />
           <StatCard
-            label="Global searches/mo"
+            label={r.stat_global_searches}
             value={
               report.market.global_monthly_searches != null
                 ? report.market.global_monthly_searches.toLocaleString()
@@ -203,27 +197,27 @@ export function ReportViewer({ report }: { report: DeepAnalysisReport }) {
             }
           />
         </div>
-        <p className="mt-3 text-xs text-zinc-600 font-mono">
-          seed keyword: <span className="text-cyan-400">{report.market.category_keyword_seed}</span> · sources: {report.market.data_sources.join(", ")}
+        <p className="mt-3 text-xs text-ink-dim font-mono">
+          {r.market_seed_keyword}: <span className="text-accent">{report.market.category_keyword_seed}</span> · {r.market_sources}: {report.market.data_sources.join(", ")}
         </p>
         {report.market.top_keywords.length > 0 && (
-          <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950 overflow-hidden">
+          <div className="mt-4 rounded-xl border border-strong bg-surface overflow-hidden">
             <table className="w-full text-xs">
-              <thead className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 bg-zinc-900/50">
+              <thead className="text-[10px] font-mono uppercase tracking-wider text-ink-dim bg-surface-2/50">
                 <tr>
-                  <th className="text-left p-3">Keyword</th>
-                  <th className="text-right p-3">Searches</th>
-                  <th className="text-right p-3">CPC</th>
-                  <th className="text-right p-3">Difficulty</th>
+                  <th className="text-left p-3">{r.table_keyword}</th>
+                  <th className="text-right p-3">{r.table_searches}</th>
+                  <th className="text-right p-3">{r.table_cpc}</th>
+                  <th className="text-right p-3">{r.table_difficulty}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-900">
+              <tbody className="divide-y divide-[var(--border)]">
                 {report.market.top_keywords.slice(0, 10).map((k) => (
                   <tr key={k.keyword}>
-                    <td className="p-3 text-zinc-300">{k.keyword}</td>
-                    <td className="p-3 text-right font-mono text-cyan-300">{k.monthly_searches?.toLocaleString() ?? "—"}</td>
-                    <td className="p-3 text-right font-mono text-zinc-400">{k.cpc_usd != null ? `$${k.cpc_usd.toFixed(2)}` : "—"}</td>
-                    <td className="p-3 text-right font-mono text-zinc-400">{k.difficulty ?? "—"}</td>
+                    <td className="p-3 text-ink">{k.keyword}</td>
+                    <td className="p-3 text-right font-mono text-accent">{k.monthly_searches?.toLocaleString() ?? "—"}</td>
+                    <td className="p-3 text-right font-mono text-ink-muted">{k.cpc_usd != null ? `$${k.cpc_usd.toFixed(2)}` : "—"}</td>
+                    <td className="p-3 text-right font-mono text-ink-muted">{k.difficulty ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -233,24 +227,24 @@ export function ReportViewer({ report }: { report: DeepAnalysisReport }) {
       </section>
 
       <section className="mb-10">
-        <SectionLabel>SEO starter pack</SectionLabel>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
-          <p className="text-xs font-mono text-zinc-500 mb-2">primary keyword</p>
-          <p className="font-mono text-cyan-300 mb-4">{report.seo_starter_pack.primary_keyword}</p>
-          <p className="text-xs font-mono text-zinc-500 mb-2">suggested titles</p>
-          <ul className="space-y-1 text-sm text-zinc-300 mb-4">
+        <SectionLabel>{r.section_seo_pack}</SectionLabel>
+        <div className="rounded-xl border border-strong bg-surface p-5">
+          <p className="text-xs font-mono text-ink-dim mb-2">{r.seo_primary_keyword}</p>
+          <p className="font-mono text-accent mb-4">{report.seo_starter_pack.primary_keyword}</p>
+          <p className="text-xs font-mono text-ink-dim mb-2">{r.seo_suggested_titles}</p>
+          <ul className="space-y-1 text-sm text-ink mb-4">
             {report.seo_starter_pack.suggested_titles.map((t) => (
               <li key={t}>· {t}</li>
             ))}
           </ul>
-          <p className="text-xs font-mono text-zinc-500 mb-2">meta description</p>
-          <p className="text-sm text-zinc-400 leading-relaxed mb-4">{report.seo_starter_pack.suggested_meta_description}</p>
-          <p className="text-xs font-mono text-zinc-500 mb-2">domain ideas</p>
+          <p className="text-xs font-mono text-ink-dim mb-2">{r.seo_meta_desc}</p>
+          <p className="text-sm text-ink-muted leading-relaxed mb-4">{report.seo_starter_pack.suggested_meta_description}</p>
+          <p className="text-xs font-mono text-ink-dim mb-2">{r.seo_domain_ideas}</p>
           <div className="flex flex-wrap gap-2">
             {report.seo_starter_pack.domain_suggestions.map((d) => (
               <span
                 key={d}
-                className="text-[11px] font-mono px-2 py-1 rounded bg-zinc-900 text-cyan-300"
+                className="text-[11px] font-mono px-2 py-1 rounded bg-surface-2 text-accent"
               >
                 {d}
               </span>
@@ -260,35 +254,35 @@ export function ReportViewer({ report }: { report: DeepAnalysisReport }) {
       </section>
 
       <section className="mb-10">
-        <SectionLabel>Risks ({report.risks.length})</SectionLabel>
+        <SectionLabel>{r.section_risks(report.risks.length)}</SectionLabel>
         <div className="space-y-3">
-          {report.risks.map((r, i) => (
-            <RiskCard key={i} risk={r} />
+          {report.risks.map((risk, i) => (
+            <RiskCard key={i} risk={risk} r={r} />
           ))}
         </div>
       </section>
 
       <section className="mb-10">
-        <SectionLabel>90-day go-to-market</SectionLabel>
+        <SectionLabel>{r.section_gtm}</SectionLabel>
         <ol className="space-y-3">
           {report.go_to_market_90day.map((step, i) => (
             <li
               key={i}
-              className="flex gap-4 p-4 rounded-lg border border-zinc-800 bg-zinc-950"
+              className="flex gap-4 p-4 rounded-lg border border-strong bg-surface"
             >
               <div className="flex-shrink-0 w-16 text-center">
-                <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">day</p>
-                <p className="text-2xl font-bold font-mono text-cyan-400">{step.day}</p>
+                <p className="text-[10px] font-mono uppercase tracking-wider text-ink-dim">{r.gtm_day_label}</p>
+                <p className="text-2xl font-bold font-mono text-accent">{step.day}</p>
               </div>
-              <p className="flex-1 text-sm text-zinc-300 leading-relaxed">{step.action}</p>
+              <p className="flex-1 text-sm text-ink leading-relaxed">{step.action}</p>
             </li>
           ))}
         </ol>
       </section>
 
       <section className="mb-10">
-        <SectionLabel>Data quality</SectionLabel>
-        <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
+        <SectionLabel>{r.section_data_quality}</SectionLabel>
+        <div className="rounded-xl border border-strong bg-surface p-5">
           <div className="flex flex-wrap gap-2 mb-4">
             <SourceBadge ok={dq.trends_called} label="Google Trends" />
             <SourceBadge ok={dq.ahrefs_called} label="Ahrefs" />
@@ -298,59 +292,52 @@ export function ReportViewer({ report }: { report: DeepAnalysisReport }) {
           </div>
           {dq.fallbacks_used.length > 0 && (
             <>
-              <p className="text-xs font-mono text-zinc-500 mb-2">fallbacks used</p>
-              <ul className="space-y-1 text-xs text-zinc-400">
+              <p className="text-xs font-mono text-ink-dim mb-2">{r.dq_fallbacks_label}</p>
+              <ul className="space-y-1 text-xs text-ink-muted">
                 {dq.fallbacks_used.map((f, i) => (
                   <li key={i} className="font-mono">· {f}</li>
                 ))}
               </ul>
             </>
           )}
-          <p className="mt-4 text-xs text-zinc-600">
-            Confidence reflects how many data sources contributed. Add API keys to your .env to raise it toward 100.
+          <p className="mt-4 text-xs text-ink-dim">
+            {r.dq_confidence_explanation}
           </p>
         </div>
       </section>
 
-      <section className="p-7 rounded-xl border border-cyan-500/40 bg-cyan-500/5 mb-10">
-        <p className="text-xs font-mono uppercase tracking-wider text-cyan-400 mb-2">
-          ▶ Build your own
+      <section className="p-7 rounded-xl border border-accent/40 bg-accent/5 mb-10">
+        <p className="text-xs font-mono uppercase tracking-wider text-accent mb-2">
+          {r.bottom_cta_eyebrow}
         </p>
         <h2 className="text-2xl font-bold">
-          Want a deep report like this for your favorite video?
+          {r.bottom_cta_title}
         </h2>
-        <p className="mt-3 text-zinc-300 text-sm leading-relaxed">
-          ClonePilot ships an <code className="font-mono text-cyan-300">analyze_deep</code> MCP tool. Drop it in Claude Code, paste a YouTube URL, get this report + a deployed Next.js site.
+        <p className="mt-3 text-ink text-sm leading-relaxed">
+          {r.bottom_cta_body}
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link
             href="/install"
-            className="px-5 py-2.5 rounded-md bg-cyan-400 text-zinc-950 font-semibold hover:bg-cyan-300 transition"
+            className="px-5 py-2.5 rounded-md bg-accent text-bg font-semibold hover:bg-accent-strong transition"
           >
-            Install free →
+            {r.bottom_cta_install}
           </Link>
           <Link
             href="/pricing"
-            className="px-5 py-2.5 rounded-md border border-zinc-700 hover:border-cyan-400 transition text-sm"
+            className="px-5 py-2.5 rounded-md border border-strong hover:border-accent transition text-sm"
           >
-            See Pro pricing
+            {r.bottom_cta_pricing}
           </Link>
         </div>
       </section>
-
-      <footer className="pt-8 border-t border-zinc-900 text-xs text-zinc-600 font-mono flex flex-wrap gap-4 justify-center">
-        <Link href="/" className="hover:text-cyan-400">gallery</Link>
-        <Link href="/install" className="hover:text-cyan-400">install</Link>
-        <Link href="/pricing" className="hover:text-cyan-400">pricing</Link>
-        <a href="https://github.com/a01050398694-commits/clonepilot" className="hover:text-cyan-400">github</a>
-      </footer>
     </main>
   );
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-xs font-mono uppercase tracking-wider text-zinc-500 mb-4">
+    <h2 className="text-xs font-mono uppercase tracking-wider text-ink-dim mb-4">
       {children}
     </h2>
   );
@@ -358,32 +345,48 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="p-4 rounded-lg border border-zinc-800 bg-zinc-950">
-      <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">{label}</p>
-      <p className="mt-2 text-sm text-zinc-300 leading-relaxed">{value}</p>
+    <div className="p-4 rounded-lg border border-strong bg-surface">
+      <p className="text-[10px] font-mono uppercase tracking-wider text-ink-dim">{label}</p>
+      <p className="mt-2 text-sm text-ink leading-relaxed">{value}</p>
     </div>
   );
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="p-4 rounded-lg border border-zinc-800 bg-zinc-950">
-      <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">{label}</p>
-      <p className="mt-2 text-2xl font-bold font-mono text-cyan-300">{value}</p>
+    <div className="p-4 rounded-lg border border-strong bg-surface">
+      <p className="text-[10px] font-mono uppercase tracking-wider text-ink-dim">{label}</p>
+      <p className="mt-2 text-2xl font-bold font-mono text-accent">{value}</p>
     </div>
   );
 }
 
-function RiskCard({ risk }: { risk: Risk }) {
-  const cls = severityClass(risk.severity);
+function severityCls(s: Risk["severity"]): string {
+  switch (s) {
+    case "high":
+      return "text-[var(--danger)] border-[var(--danger)]/30 bg-[var(--danger)]/5";
+    case "med":
+      return "text-amber-400 border-amber-500/30 bg-amber-500/5";
+    default:
+      return "text-ink-muted border-strong bg-surface/50";
+  }
+}
+
+function severityLabel(s: Risk["severity"], r: ReportDict): string {
+  if (s === "high") return r.risk_high;
+  if (s === "med") return r.risk_med;
+  return r.risk_low;
+}
+
+function RiskCard({ risk, r }: { risk: Risk; r: ReportDict }) {
   return (
-    <div className={`p-4 rounded-lg border ${cls}`}>
+    <div className={`p-4 rounded-lg border ${severityCls(risk.severity)}`}>
       <div className="flex items-baseline gap-3 mb-2">
-        <span className="text-[10px] font-mono uppercase tracking-wider">{risk.severity}</span>
+        <span className="text-[10px] font-mono uppercase tracking-wider">{severityLabel(risk.severity, r)}</span>
       </div>
-      <p className="text-sm text-zinc-200 leading-relaxed">{risk.risk}</p>
-      <p className="mt-3 text-xs text-zinc-400 leading-relaxed">
-        <span className="font-mono text-zinc-500">↳ mitigation: </span>
+      <p className="text-sm text-ink leading-relaxed">{risk.risk}</p>
+      <p className="mt-3 text-xs text-ink-muted leading-relaxed">
+        <span className="font-mono text-ink-dim">{r.risk_mitigation_label} </span>
         {risk.mitigation}
       </p>
     </div>
@@ -395,11 +398,75 @@ function SourceBadge({ ok, label }: { ok: boolean; label: string }) {
     <span
       className={`text-[11px] font-mono px-2.5 py-1 rounded-full border ${
         ok
-          ? "border-cyan-500/50 bg-cyan-500/10 text-cyan-300"
-          : "border-zinc-800 bg-zinc-950 text-zinc-600"
+          ? "border-accent/50 bg-accent/10 text-accent"
+          : "border-strong bg-surface text-ink-dim"
       }`}
     >
       {ok ? "✓" : "○"} {label}
     </span>
+  );
+}
+
+function ForecastBlock({
+  f,
+  r,
+}: {
+  f: NonNullable<DeepAnalysisReport["revenue_forecast"]>;
+  r: ReportDict;
+}) {
+  const scenarioLabel = (k: string) =>
+    k === "conservative"
+      ? r.forecast_scenario_conservative
+      : k === "aggressive"
+        ? r.forecast_scenario_aggressive
+        : r.forecast_scenario_base;
+  const dollarFmt = (n: number) =>
+    n >= 1_000_000
+      ? `$${(n / 1_000_000).toFixed(1)}M`
+      : n >= 1_000
+        ? `$${(n / 1_000).toFixed(0)}k`
+        : `$${n.toLocaleString()}`;
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <StatCard label={r.forecast_tam} value={dollarFmt(f.tam_usd_annual)} />
+        <StatCard label={r.forecast_sam} value={dollarFmt(f.sam_usd_annual)} />
+        <StatCard label={r.forecast_som} value={dollarFmt(f.som_usd_annual_year1)} />
+      </div>
+      <div className="rounded-xl border border-strong bg-surface overflow-hidden">
+        <table className="w-full text-xs">
+          <thead className="text-[10px] font-mono uppercase tracking-wider text-ink-dim bg-surface-2/50">
+            <tr>
+              <th className="text-left p-3">{r.forecast_scenario}</th>
+              <th className="text-right p-3">{r.forecast_signups}</th>
+              <th className="text-right p-3">{r.forecast_paid}</th>
+              <th className="text-right p-3">{r.forecast_arpu}</th>
+              <th className="text-right p-3">{r.forecast_arr}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[var(--border)]">
+            {f.scenarios.map((s) => (
+              <tr key={s.label}>
+                <td className="p-3 text-ink">{scenarioLabel(s.label)}</td>
+                <td className="p-3 text-right font-mono text-ink-muted">{s.monthly_signups.toLocaleString()}</td>
+                <td className="p-3 text-right font-mono text-ink-muted">{s.paid_conversions.toLocaleString()}</td>
+                <td className="p-3 text-right font-mono text-ink-muted">${s.arpu_usd_annual}</td>
+                <td className="p-3 text-right font-mono text-accent">{dollarFmt(s.arr_usd)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {f.assumptions.length > 0 && (
+        <div>
+          <p className="text-xs font-mono text-ink-dim mb-2">{r.forecast_assumptions}</p>
+          <ul className="space-y-1 text-xs text-ink-muted">
+            {f.assumptions.map((a, i) => (
+              <li key={i} className="font-mono">· {a}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }

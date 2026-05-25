@@ -1,19 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import type { PricingDict } from "@/lib/i18n-pricing";
 
-const TIERS = [
-  { value: "pro", label: "Pro · $19/mo (early-bird $9)" },
-  { value: "lifetime", label: "Lifetime · $299 (early-bird $199)" },
-  { value: "either", label: "Either — show me both" },
-];
+export function UpgradeForm({ d }: { d: PricingDict["upgrade_form"] }) {
+  const TIERS = [
+    { value: "pro", label: d.tier_pro },
+    { value: "lifetime", label: d.tier_lifetime },
+    { value: "either", label: d.tier_either },
+  ];
 
-export function UpgradeForm() {
   const [email, setEmail] = useState("");
   const [tier, setTier] = useState("pro");
   const [status, setStatus] = useState<"idle" | "loading" | "ok" | "err">(
     "idle"
   );
+  const [position, setPosition] = useState<number | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
@@ -34,11 +36,7 @@ export function UpgradeForm() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "signup failed");
       setStatus("ok");
-      setMsg(
-        data.position
-          ? `You're #${data.position} on the ${tier} early-bird list.`
-          : "You're in."
-      );
+      setPosition(typeof data.position === "number" ? data.position : null);
     } catch (err: unknown) {
       setStatus("err");
       setMsg(err instanceof Error ? err.message : "Something went wrong.");
@@ -47,15 +45,16 @@ export function UpgradeForm() {
 
   if (status === "ok") {
     return (
-      <div className="p-6 rounded-xl border border-cyan-500/40 bg-cyan-500/5 text-center">
-        <p className="text-cyan-300 font-medium text-lg">
-          You&apos;re on the early-bird list.
+      <div className="p-6 rounded-xl border border-accent/40 bg-accent/5 text-center">
+        <p className="text-accent font-medium text-lg">{d.ok_title}</p>
+        <p className="text-ink-muted text-sm mt-2">
+          {position != null
+            ? d.ok_position_template
+                .replace("{n}", String(position))
+                .replace("{tier}", tier)
+            : d.ok_in}
         </p>
-        {msg && <p className="text-zinc-400 text-sm mt-2">{msg}</p>}
-        <p className="text-zinc-500 text-xs mt-4">
-          We&apos;ll email you the day checkout opens. Early-bird pricing locked
-          in for you.
-        </p>
+        <p className="text-ink-dim text-xs mt-4">{d.ok_hint}</p>
       </div>
     );
   }
@@ -68,8 +67,8 @@ export function UpgradeForm() {
             key={t.value}
             className={`p-3 rounded-md border cursor-pointer text-xs text-center font-mono transition ${
               tier === t.value
-                ? "border-cyan-400 bg-cyan-500/10 text-cyan-300"
-                : "border-zinc-800 hover:border-zinc-700 text-zinc-400"
+                ? "border-accent bg-accent/10 text-accent"
+                : "border-strong hover:border-[var(--border-strong)] text-ink-muted"
             }`}
           >
             <input
@@ -91,20 +90,20 @@ export function UpgradeForm() {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@startup.com"
-          className="flex-1 px-4 py-3 rounded-md bg-zinc-950 border border-zinc-800 focus:border-cyan-400 outline-none font-mono text-sm"
+          placeholder={d.placeholder_email}
+          className="flex-1 px-4 py-3 rounded-md bg-surface-2 border border-strong focus:border-accent outline-none font-mono text-sm"
           autoComplete="email"
         />
         <button
           type="submit"
           disabled={status === "loading"}
-          className="px-6 py-3 rounded-md bg-cyan-400 text-zinc-950 font-semibold hover:bg-cyan-300 disabled:opacity-50 transition"
+          className="px-6 py-3 rounded-md bg-accent text-bg font-semibold hover:bg-accent-strong disabled:opacity-50 transition"
         >
-          {status === "loading" ? "Saving…" : "Lock in early-bird"}
+          {status === "loading" ? d.submitting : d.submit}
         </button>
       </div>
       {status === "err" && (
-        <p className="text-red-400 text-sm">{msg}</p>
+        <p className="text-[var(--danger)] text-sm">{msg}</p>
       )}
     </form>
   );
