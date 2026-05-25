@@ -1,20 +1,33 @@
 # PROGRESS — ClonePilot MCP
 
-_Last updated: 2026-05-25 (Phase 8.1 ✅ + Phase 8.4 ✅ + 청크 5 (OG/Twitter + 카드 보강) ✅ + 청크 6 (Pricing v1 카피) ✅ — 3회 Vercel prod 배포 완료, clonepilot-gallery.vercel.app 풀 라이브)_
+_Last updated: 2026-05-25 (Phase 8.1 ✅ + Phase 8.4 ✅ + 청크 5/6/7 ✅ — **메인 페이지 풀 redesign 라이브** clonepilot-gallery.vercel.app, **사용자 평가 대기 + 데모/install/pricing 폴리시 (청크 7-B) 다음**)_
 
 ## 🟢 새 세션 픽업 — 여기부터 읽으면 끝
 
 ### ⚡ 새 세션 시작 시 (30초)
 
+**글로벌 룰 (`C:\Users\user\.claude\CLAUDE.md` §1 갱신됨 2026-05-25)**:
+- 사용자한테 말할 때 **중학생 이해 수준**. 기술용어 옆에 `(=쉬운말)` 풀이.
+- 매 응답 끝에 **`**다음**: <한 줄 명령>`** 으로 best action 단정 추천. 선택지 나열은 정말 갈림길일 때만.
+
+**현재 상태 핸드오프**:
+
 1. `Read SESSIONS.md` → 너가 Builder인지 Operator인지 확정 (커밋 메시지 prefix가 결정함).
 2. `git pull --rebase origin main` 먼저.
-3. **Builder**: Phase 8.1 ✅. 다음 청크 = **Phase 8.2 Project Pack 생성기**. `src/clonepilot/scaffold/` 갈아엎어서 CLAUDE.md + skills + agents + MCP + BUILD_PLAN + HUMAN_TASKS 폴더 생성하는 로직으로 전환. 추가 보너스: `scripts/seed_gallery.py`에 deep analyze 옵션 추가해서 새 URL → `gallery_site/public/reports/<slug>.json` 자동 시드 (v1 카드 자동 증식).
-4. **Operator**: Phase 8.4 ✅ + 청크 5 ✅ + 청크 6 ✅. 다음 청크 후보 — 우선순위순:
-   - (a) **다국어 SEO 메타 + URL routing** — `/ko/demo/blogflow` 또는 `?lang=ko` SSR 반응 (i18n routing). description/og:locale 교체. 큰 작업 (1-2시간), 글로벌 indie hacker 유입 ROI 큼.
-   - (b) **README + CHANGELOG + WAKEUP 갱신** — v1 deep-report 라이브 사실 외부 공지. awesome-mcp-servers PR 코멘트, X 새 스레드, Show HN 재발사 트리거.
-   - (c) **추가 v1 reports 시드** — Builder 영역 (`uv run python scripts/seed_gallery.py --deep <url>`). PhotoAI도 v1 변환. 시각 자산 늘려 마케팅 효과 ↑.
-   - (d) **opengraph-image.tsx 동적 카드** — 지금은 YouTube 썸네일 사용. Next.js ImageResponse로 브랜드명 + 컨피던스 점수 + risk 1줄을 OG 카드로 동적 생성하면 공유 미리보기 더 풍부. 한국어 폰트 임베드 필요.
-5. **둘 다 보류 액션**: AutoLoop 미설치 (admin PS 1회 `.\scripts\install_scheduler.ps1`), 결제 도메인 (waitlist 모드 영구 — `onboarding@resend.dev` sandbox 유지), 루트 walkthrough PNGs 5개 (사용자 결정 대기 — phase84 스크린샷 8개는 이미 커밋됨).
+3. **사용자 평가 대기 (최우선)**: 청크 7-A (메인 페이지 전면 redesign) 라이브 배포됨. 사용자가 직접 보고 평가 중. 답변 오기 전엔 메인 페이지 추가 수정 금지. 평가 결과:
+   - "좋아" → 즉시 청크 7-B 진입 (데모 페이지 ReportViewer + pricing + install 같은 디자인으로 폴리시)
+   - "별로야" 또는 구체적 피드백 → 메인 페이지 해당 부분만 최소 diff 수정
+4. **Builder**: Phase 8.1 ✅. 다음 청크 = **Phase 8.2 Project Pack 생성기**. `src/clonepilot/scaffold/` 갈아엎어서 CLAUDE.md + skills + agents + MCP + BUILD_PLAN + HUMAN_TASKS 폴더 생성. 추가 보너스: `scripts/seed_gallery.py`에 `--deep` 옵션 추가해서 새 URL → `gallery_site/public/reports/<slug>.json` 자동 시드 (v1 카드 자동 증식).
+5. **Operator 청크 7-B (데모/install/pricing 폴리시)** — 사용자 OK 받으면 즉시:
+   - `gallery_site/app/demo/[slug]/ReportViewer.tsx` — Phosphor 아이콘 + emerald accent + Geist 폰트 (layout.tsx에서 wire됨) 적용. 이모지 (📊 등) 전부 제거. LangToggle 디자인 인라인 칩 → pill nav 형식.
+   - `gallery_site/app/pricing/page.tsx` + `app/install/page.tsx` — 같은 디자인 토큰 적용. cyan-* 클래스 → accent / ink-muted로 교체.
+6. **Operator 청크 7-B 후 후보** (사용자 결정):
+   - (a) **i18n 풀 사이트** (한/영/일/중/스 5종, URL routing `/ko/`). 메뉴/카드/배지/CTA/푸터 모든 텍스트 토글. 메모리 `feedback_clonepilot_ui.md` 참조 — 사용자 강력 요구.
+   - (b) **README + CHANGELOG + WAKEUP 갱신** — v1 redesign 공지. awesome-mcp-servers PR 코멘트, X 새 스레드, Show HN 재발사.
+   - (c) **추가 v1 reports 시드** — Builder 영역 (`uv run python scripts/seed_gallery.py --deep <url>`). PhotoAI 등 v1 변환.
+   - (d) **opengraph-image.tsx 동적 카드** — Next.js ImageResponse로 브랜드명 + confidence 점수 + risk 1줄을 OG 카드 동적 생성. 한국어 폰트 임베드 필요.
+   - (e) **결제 + 실 MCP 백엔드 연결** — Lemon Squeezy + URL 입력 hero의 `/api/analyze-request`를 실제 `analyze_deep` 호출 + Resend로 리포트 발송.
+7. **둘 다 보류 액션**: AutoLoop 미설치 (admin PS 1회 `.\scripts\install_scheduler.ps1`), 결제 도메인 (waitlist 모드 영구 — `onboarding@resend.dev` sandbox 유지), 루트 walkthrough PNGs 5개 (사용자 결정 대기), phase85 스크린샷 2개 (commit 됨).
 
 ### 핵심 방향 전환 (2026-05-24 야간)
 
@@ -279,6 +292,42 @@ URL → BusinessBlueprint → Next.js 랜딩 자동 생성 → Vercel 배포 →
 **신규 GOTCHA #11** 등록 예정: Next.js 15 App Router에서 `lib/`에 `node:fs` import 모듈을 두면 client component가 transitively 끌어와서 `UnhandledSchemeError`. server 전용 util은 별도 `.server.ts` 파일에. 타입/순수함수만 client-safe `.ts`에.
 
 **다음 Operator 청크 후보** (우선순위 적힘): 위 §⚡ "다음 청크 후보" 참조.
+
+---
+
+## Phase 8.4 청크 7-A — 메인 페이지 전면 redesign (2026-05-25)
+
+✅ **라이브 배포 완료** — clonepilot-gallery.vercel.app. 사용자 평가 대기 중.
+
+**이유**: 사용자가 직접 prod 사이트 써보고 "누를 게 없고 영어만 있고 AI 티 난다. URL 입력 칸이 있어야지" 강하게 피드백. 메모리 `feedback_clonepilot_ui.md` 등록. 영어 기준 완성도부터 폴리시 + URL 입력 hero 추가 + 디자인 업그레이드 한 청크에.
+
+**design-taste-frontend 스킬 핵심 룰 적용**:
+- 이모지 ban → `@phosphor-icons/react/dist/ssr` (ArrowUpRight, GithubLogo, TerminalWindow, ChartLineUp, Lightning, CheckCircle, Warning)
+- 시안 ban (AI 클리셰) → emerald-400 단일 accent + Zinc 베이스. CSS vars (`--accent`, `--bg`, `--surface`, `--ink-*`) globals.css에 정의.
+- Inter ban → `geist/font/sans` + `geist/font/mono` (Vercel 공식). layout.tsx에서 CSS vars로 wire.
+- centered hero ban → asymmetric split (`grid-cols-[1.05fr_0.95fr]`) 좌측 텍스트 + 우측 form
+- 3-col 카드 ban → bento 레이아웃 (BlogFlow는 `lg:col-span-2 lg:row-span-2` 큰 카드, PhotoAI는 일반 카드)
+- AI 슬랍 단어 ("Elevate/Seamless/Unleash/Next-Gen") 제거 + 카피 재작성
+
+**산출물**:
+- `gallery_site/app/globals.css` — CSS 디자인 토큰 + grain noise overlay (fixed, pointer-events-none, scroll repaint 없음)
+- `gallery_site/tailwind.config.ts` — fontFamily / colors / letterSpacing 확장
+- `gallery_site/app/layout.tsx` — Geist fonts wire + metadata 카피 갱신
+- `gallery_site/app/page.tsx` 완전 재작성 — SiteNav + asymmetric Hero + 3-step explainer (divider-based, no cards) + bento gallery + Waitlist + SiteFooter
+- `gallery_site/components/UrlAnalysisForm.tsx` 신규 — URL + 이메일 폼, idle/loading/ok/err state, tactile feedback (active translate)
+- `gallery_site/app/WaitlistForm.tsx` — Phosphor 아이콘 + emerald accent 폴리시
+- `gallery_site/app/api/analyze-request/route.ts` 신규 — POST {email, youtubeUrl, source} → 영구 저장 + Resend로 사용자 ack + 운영자 알림. **GOTCHA #12 등록 예정**: Next.js API route에서 `type Request = {...}` 정의하면 Web standard `Request` 가려서 typecheck fail. 항상 `AnalysisRequest` 같은 prefix 이름.
+- `gallery_site/package.json` — `geist` + `@phosphor-icons/react` 추가
+- 스크린샷: `phase85-LIVE-redesign-hero.png` + `phase85-LIVE-redesign-full.png`
+
+**검증**: typecheck/build 0 에러, 13 SSG 페이지 (이전 12 + 신규 /api/analyze-request), Playwright 콘솔 에러 0건.
+
+**아직 안 한 것** (청크 7-B):
+- `gallery_site/app/demo/[slug]/ReportViewer.tsx` — 옛날 cyan + 이모지 그대로. 일관성 깨짐.
+- `gallery_site/app/pricing/page.tsx` — 같음.
+- `gallery_site/app/install/page.tsx` — 같음.
+
+청크 7-B는 사용자 메인 페이지 평가 받고 진행.
 
 ---
 

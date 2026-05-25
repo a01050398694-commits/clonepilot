@@ -1,7 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
 import Link from "next/link";
+import {
+  ArrowUpRight,
+  GithubLogo,
+  TerminalWindow,
+  ChartLineUp,
+  Lightning,
+} from "@phosphor-icons/react/dist/ssr";
 import { WaitlistForm } from "./WaitlistForm";
+import { UrlAnalysisForm } from "@/components/UrlAnalysisForm";
 import { listReportSlugs, loadReport } from "@/lib/report.server";
 
 export const dynamic = "force-static";
@@ -31,13 +39,21 @@ type Gallery = {
 function loadGallery(): Gallery {
   const file = path.join(process.cwd(), "public", "gallery.json");
   if (!fs.existsSync(file)) {
-    return { updated_at: new Date().toISOString(), ok_count: 0, fail_count: 0, entries: [] };
+    return {
+      updated_at: new Date().toISOString(),
+      ok_count: 0,
+      fail_count: 0,
+      entries: [],
+    };
   }
   return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
 function slugify(s: string): string {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
 function videoIdFromUrl(url: string): string | null {
@@ -62,7 +78,7 @@ function buildV1Preview(slug: string): V1Preview | null {
         ? "↓"
         : r.market.five_year_trend === "stable"
           ? "→"
-          : "?";
+          : "—";
   return {
     confidence: r.data_quality.confidence_0_100,
     firstHighRisk: high?.risk.split("—")[0].trim() ?? null,
@@ -81,248 +97,552 @@ export default function Page() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-16">
-      <Link
-        href="/pricing#waitlist"
-        className="mb-10 block rounded-lg border border-cyan-400/30 bg-cyan-400/[0.04] px-4 py-3 text-sm hover:border-cyan-400/60 hover:bg-cyan-400/[0.08] transition"
-      >
-        <span className="font-mono text-[10px] uppercase tracking-wider text-cyan-400 mr-2">
-          v1 · deep analysis live
-        </span>
-        <span className="text-zinc-200">
-          Cards marked <span className="text-cyan-300 font-mono">v1</span> open a full report (revenue forecast, 5 langs, 90-day GTM).
-        </span>{" "}
-        <span className="text-zinc-400">
-          Get notified for the full SaaS factory →
-        </span>
-      </Link>
-      <header className="mb-14 max-w-3xl">
-        <p className="text-cyan-400 font-mono text-xs uppercase tracking-wider mb-3">
-          ClonePilot · MCP server · open source
-        </p>
-        <h1 className="text-5xl md:text-6xl font-bold leading-tight tracking-tight">
-          Paste a YouTube URL.{" "}
-          <span className="text-cyan-400">Get a deployed clone</span> in 2 min.
-        </h1>
-        <p className="mt-6 text-zinc-400 text-lg leading-relaxed">
-          ClonePilot is an MCP server. Drop it into Claude Code, Cursor, or
-          Codex. Paste any business video URL. Get a Next.js landing page,
-          Stripe checkout, email capture, marketing kit, and a live Vercel URL
-          — without writing a line of code yourself.
-        </p>
-        <div className="mt-8 flex flex-wrap gap-3 text-sm">
-          <Link
-            href="/install"
-            className="px-5 py-2.5 rounded-full bg-cyan-400 text-zinc-950 font-semibold hover:bg-cyan-300 transition"
-          >
-            Install free →
-          </Link>
-          <Link
-            href="/pricing"
-            className="px-5 py-2.5 rounded-full border border-zinc-700 hover:border-cyan-400 transition"
-          >
-            See pricing
-          </Link>
-          <a
-            href="https://github.com/a01050398694-commits/clonepilot"
-            className="px-5 py-2.5 rounded-full border border-zinc-700 hover:border-cyan-400 transition"
-          >
-            GitHub →
-          </a>
-        </div>
-        <p className="mt-5 text-xs text-zinc-500 font-mono">
-          {gallery.ok_count} demos live · 1 free build/mo · Pro $19/mo
-        </p>
-      </header>
+    <div className="min-h-[100dvh]">
+      <SiteNav />
 
-      <div className="mb-6 flex items-baseline justify-between">
-        <h2 className="text-2xl font-bold">Live gallery</h2>
-        <p className="text-xs text-zinc-500 font-mono">
-          updated{" "}
-          {new Date(gallery.updated_at).toLocaleString("en-US", {
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </p>
-      </div>
+      {/* ─── HERO ─── */}
+      <section className="mx-auto max-w-[1240px] px-6 pt-16 pb-24 md:pt-24 md:pb-32">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-12 lg:gap-16 items-start">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-strong bg-surface px-3 py-1 text-[11px] font-mono uppercase tracking-[0.18em] text-ink-muted">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent" />
+              Open-source MCP — v0.1
+            </div>
 
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {ok.length === 0 ? (
-          <div className="col-span-full text-zinc-500 text-center py-24 border border-dashed border-zinc-800 rounded-lg">
-            Demos are generating. Refresh in a couple of minutes.
-          </div>
-        ) : (
-          ok.map((e) => {
-            const s = slugify(e.name!);
-            return (
-              <DemoCard
-                key={e.live_url}
-                entry={e}
-                isV1={v1Slugs.has(s)}
-                v1Preview={v1Previews.get(s) ?? null}
+            <h1 className="mt-6 text-[44px] md:text-[64px] leading-[1.02] tracking-tightish font-semibold text-ink">
+              YouTube business video,
+              <br />
+              <span className="text-ink-muted">in.</span>{" "}
+              <span className="text-accent">Deployed site,</span> out.
+            </h1>
+
+            <p className="mt-7 max-w-[58ch] text-[17px] leading-relaxed text-ink-muted">
+              ClonePilot is an open-source MCP for Claude Code, Cursor, and
+              Codex. Paste any business video. Get a Next.js landing page,
+              Stripe checkout, email capture, a deep market report in five
+              languages, and a live Vercel URL.
+            </p>
+
+            <div className="mt-9 flex flex-wrap items-center gap-3">
+              <Link
+                href="/install"
+                className="group inline-flex h-11 items-center gap-2 rounded-lg bg-ink text-bg px-4 text-sm font-semibold hover:bg-white active:translate-y-[1px] transition"
+              >
+                <TerminalWindow size={16} weight="duotone" />
+                Install for free
+              </Link>
+              <Link
+                href="#gallery"
+                className="group inline-flex h-11 items-center gap-2 rounded-lg border border-strong px-4 text-sm font-medium text-ink hover:border-accent/40 hover:text-accent transition"
+              >
+                See live reports
+                <ArrowUpRight
+                  size={14}
+                  weight="bold"
+                  className="transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                />
+              </Link>
+              <a
+                href="https://github.com/a01050398694-commits/clonepilot"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group inline-flex h-11 items-center gap-2 rounded-lg border border-strong px-4 text-sm font-medium text-ink-muted hover:border-strong hover:text-ink transition"
+              >
+                <GithubLogo size={16} weight="duotone" />
+                GitHub
+              </a>
+            </div>
+
+            <dl className="mt-12 grid grid-cols-3 gap-px bg-[var(--border)] rounded-xl overflow-hidden border border-strong">
+              <Stat label="Reports shipped" value={String(v1Previews.size)} />
+              <Stat label="Languages" value="5" />
+              <Stat
+                label="Median build time"
+                value="~2m"
+                accent="emerald"
               />
-            );
-          })
-        )}
-      </section>
+            </dl>
+          </div>
 
-      <section id="waitlist" className="mt-24 max-w-2xl">
-        <p className="text-xs font-mono uppercase tracking-wider text-cyan-400 mb-2">
-          Pro launch · waitlist
-        </p>
-        <h2 className="text-3xl font-bold">
-          Get notified when Pro / Lifetime opens
-        </h2>
-        <p className="mt-3 text-zinc-400 leading-relaxed">
-          Sorting payment processor approvals in Korea. Drop your email and
-          we&apos;ll send the moment checkout opens — early-bird pricing locked
-          in ($9/mo Pro or $199 Lifetime). The MCP itself is open-source and
-          works free today.
-        </p>
-        <div className="mt-6">
-          <WaitlistForm />
+          <div className="lg:pt-2">
+            <UrlAnalysisForm />
+            <p className="mt-4 px-1 text-[11px] text-ink-dim leading-relaxed">
+              Or skip the queue: install the MCP and run{" "}
+              <code className="font-mono text-ink-muted">analyze_deep</code> in
+              your own Claude Code right now.
+            </p>
+          </div>
         </div>
-        <p className="mt-4 text-xs text-zinc-500">
-          Want to pick a specific tier? →{" "}
-          <Link href="/pricing#waitlist" className="text-cyan-400 hover:underline">
-            full pricing waitlist
-          </Link>
-        </p>
       </section>
 
-      <footer className="mt-24 pt-8 border-t border-zinc-900 text-xs text-zinc-600 font-mono flex flex-wrap gap-4">
-        <Link href="/" className="hover:text-cyan-400">gallery</Link>
-        <Link href="/install" className="hover:text-cyan-400">install</Link>
-        <Link href="/pricing" className="hover:text-cyan-400">pricing</Link>
-        <a href="https://github.com/a01050398694-commits/clonepilot" className="hover:text-cyan-400">github</a>
-        <span className="ml-auto">MIT · built with ClonePilot</span>
-      </footer>
-    </main>
+      {/* ─── HOW IT WORKS ─── */}
+      <section className="border-t border-strong">
+        <div className="mx-auto max-w-[1240px] px-6 py-20">
+          <div className="grid grid-cols-1 md:grid-cols-[0.4fr_1fr] gap-10">
+            <div>
+              <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-ink-muted">
+                How it works
+              </p>
+              <h2 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tightish">
+                Three calls. One live site.
+              </h2>
+            </div>
+            <ol className="divide-y divide-[var(--border)] border-y border-strong">
+              {STEPS.map((s, i) => (
+                <li
+                  key={s.title}
+                  className="grid grid-cols-[auto_1fr] gap-6 py-6"
+                >
+                  <span className="w-10 text-right font-mono text-ink-dim text-sm pt-1">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <p className="font-semibold text-ink">{s.title}</p>
+                    <p className="mt-1.5 text-sm text-ink-muted leading-relaxed">
+                      {s.body}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── GALLERY ─── */}
+      <section
+        id="gallery"
+        className="border-t border-strong"
+      >
+        <div className="mx-auto max-w-[1240px] px-6 py-20">
+          <div className="flex items-end justify-between mb-10 gap-6 flex-wrap">
+            <div>
+              <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-ink-muted">
+                Live reports
+              </p>
+              <h2 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tightish">
+                Real videos. Real deep-analysis reports.
+              </h2>
+            </div>
+            <p className="text-xs text-ink-dim font-mono">
+              Updated{" "}
+              {new Date(gallery.updated_at).toLocaleString("en-US", {
+                month: "short",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </p>
+          </div>
+
+          {ok.length === 0 ? (
+            <EmptyGallery />
+          ) : (
+            <BentoGallery
+              entries={ok}
+              v1Slugs={v1Slugs}
+              v1Previews={v1Previews}
+            />
+          )}
+        </div>
+      </section>
+
+      {/* ─── WAITLIST ─── */}
+      <section
+        id="waitlist"
+        className="border-t border-strong"
+      >
+        <div className="mx-auto max-w-[1240px] px-6 py-20">
+          <div className="grid grid-cols-1 md:grid-cols-[0.5fr_1fr] gap-10">
+            <div>
+              <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-ink-muted">
+                Pro launch
+              </p>
+              <h2 className="mt-3 text-3xl md:text-4xl font-semibold tracking-tightish">
+                Email me when Pro opens.
+              </h2>
+            </div>
+            <div>
+              <p className="text-[15px] text-ink-muted leading-relaxed max-w-[58ch]">
+                The MCP is open-source and free today. Pro is the hosted
+                convenience layer — all API keys server-side, unlimited
+                builds, custom domains, deep-analysis with every integration
+                enabled (Ahrefs, Exa, SimilarWeb), 5-language reports,
+                priority queue. Early-bird: <span className="text-ink">$9/mo</span> or{" "}
+                <span className="text-ink">$199 lifetime</span>.
+              </p>
+              <div className="mt-7 max-w-[520px]">
+                <WaitlistForm />
+              </div>
+              <p className="mt-3 text-xs text-ink-dim">
+                Want to pick a specific tier? See the full{" "}
+                <Link
+                  href="/pricing#waitlist"
+                  className="text-ink-muted hover:text-accent underline underline-offset-2 decoration-[var(--border-strong)]"
+                >
+                  pricing page
+                </Link>
+                .
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <SiteFooter />
+    </div>
   );
 }
 
-function DemoCard({
-  entry: e,
+/* ────────────────────────────────────────────────────────────────────────── */
+
+const STEPS = [
+  {
+    title: "Drop a YouTube URL into Claude Code.",
+    body: "Any business video — interview, founder demo, course landing. ClonePilot fetches the transcript via Supadata with a fallback chain.",
+  },
+  {
+    title: "Claude calls analyze_deep — twelve sections, five languages.",
+    body: "Blueprint, pricing tiers, market trend, competitors, SEO pack, six prioritized risks, 90-day GTM, and a confidence score that tells you which API keys to add for higher fidelity.",
+  },
+  {
+    title: "scaffold + deploy hand back a live Vercel URL.",
+    body: "Next.js 15, Tailwind, Stripe buy buttons, Resend lead capture, and an auto-generated SVG favicon. Median time end-to-end: under two minutes.",
+  },
+];
+
+function SiteNav() {
+  return (
+    <header className="border-b border-strong/60 backdrop-blur-sm sticky top-0 z-30 bg-bg/85">
+      <div className="mx-auto max-w-[1240px] h-14 px-6 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2 group">
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-accent/15 text-accent border border-accent/30">
+            <Lightning size={13} weight="fill" />
+          </span>
+          <span className="text-[15px] font-semibold tracking-tightish text-ink group-hover:text-accent transition">
+            ClonePilot
+          </span>
+        </Link>
+        <nav className="flex items-center gap-1 text-sm">
+          <Link
+            href="/install"
+            className="px-3 py-1.5 rounded-md text-ink-muted hover:text-ink hover:bg-surface transition"
+          >
+            Install
+          </Link>
+          <Link
+            href="/pricing"
+            className="px-3 py-1.5 rounded-md text-ink-muted hover:text-ink hover:bg-surface transition"
+          >
+            Pricing
+          </Link>
+          <Link
+            href="#gallery"
+            className="px-3 py-1.5 rounded-md text-ink-muted hover:text-ink hover:bg-surface transition"
+          >
+            Reports
+          </Link>
+          <a
+            href="https://github.com/a01050398694-commits/clonepilot"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-2 inline-flex items-center justify-center h-9 w-9 rounded-md border border-strong text-ink-muted hover:text-ink hover:border-strong transition"
+            aria-label="GitHub"
+          >
+            <GithubLogo size={16} weight="duotone" />
+          </a>
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+function SiteFooter() {
+  return (
+    <footer className="border-t border-strong/60">
+      <div className="mx-auto max-w-[1240px] px-6 py-10 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-6 items-center">
+        <p className="text-xs text-ink-dim font-mono">
+          MIT-licensed · built with ClonePilot · operated from Seoul
+        </p>
+        <nav className="flex flex-wrap gap-5 text-xs text-ink-dim font-mono">
+          <Link href="/" className="hover:text-ink transition">
+            Reports
+          </Link>
+          <Link href="/install" className="hover:text-ink transition">
+            Install
+          </Link>
+          <Link href="/pricing" className="hover:text-ink transition">
+            Pricing
+          </Link>
+          <a
+            href="https://github.com/a01050398694-commits/clonepilot"
+            className="hover:text-ink transition"
+          >
+            GitHub
+          </a>
+        </nav>
+      </div>
+    </footer>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: "emerald";
+}) {
+  return (
+    <div className="bg-bg px-4 py-4">
+      <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-ink-dim">
+        {label}
+      </p>
+      <p
+        className={`mt-1.5 font-mono text-2xl tracking-tightish ${
+          accent === "emerald" ? "text-accent" : "text-ink"
+        }`}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function EmptyGallery() {
+  return (
+    <div className="rounded-2xl border border-dashed border-strong bg-surface p-10 text-center">
+      <p className="text-ink-muted">
+        Reports are still generating. Refresh in a couple of minutes.
+      </p>
+    </div>
+  );
+}
+
+function BentoGallery({
+  entries,
+  v1Slugs,
+  v1Previews,
+}: {
+  entries: Entry[];
+  v1Slugs: Set<string>;
+  v1Previews: Map<string, V1Preview>;
+}) {
+  // Promote v1 entries to a featured slot. v0 entries fill the rest.
+  const featured = entries.find((e) => v1Slugs.has(slugify(e.name!)));
+  const rest = entries.filter((e) => e !== featured);
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      {featured && (
+        <FeaturedReportCard
+          entry={featured}
+          preview={v1Previews.get(slugify(featured.name!))!}
+        />
+      )}
+      {rest.map((e) => (
+        <ReportCard
+          key={e.live_url}
+          entry={e}
+          isV1={v1Slugs.has(slugify(e.name!))}
+          preview={v1Previews.get(slugify(e.name!)) ?? null}
+        />
+      ))}
+    </div>
+  );
+}
+
+function FeaturedReportCard({
+  entry,
+  preview,
+}: {
+  entry: Entry;
+  preview: V1Preview;
+}) {
+  const vid = videoIdFromUrl(entry.video_url);
+  const thumb = vid ? `https://i.ytimg.com/vi/${vid}/maxresdefault.jpg` : null;
+  const slug = slugify(entry.name!);
+
+  return (
+    <article className="group lg:col-span-2 lg:row-span-2 relative rounded-2xl border border-strong bg-surface overflow-hidden flex flex-col hover:border-accent/30 transition shadow-[0_30px_60px_-30px_rgba(0,0,0,0.7)]">
+      <span className="absolute top-4 left-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-accent/15 text-accent border border-accent/30 px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.15em]">
+        <ChartLineUp size={11} weight="bold" />
+        Full report
+      </span>
+
+      <Link href={`/demo/${slug}`} className="block relative">
+        {thumb && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={thumb}
+            alt={entry.name!}
+            className="w-full aspect-[16/9] object-cover opacity-95 group-hover:opacity-100 transition"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/30 to-transparent pointer-events-none" />
+      </Link>
+
+      <div className="p-7 flex-1 flex flex-col">
+        <Link href={`/demo/${slug}`} className="block">
+          <h3 className="text-2xl font-semibold tracking-tightish text-ink group-hover:text-accent transition">
+            {entry.name}
+          </h3>
+          <p className="mt-2 text-[15px] text-ink-muted leading-relaxed line-clamp-2">
+            {entry.tagline}
+          </p>
+        </Link>
+
+        <div className="mt-5 grid grid-cols-3 gap-px bg-[var(--border)] rounded-lg overflow-hidden border border-strong">
+          <MiniStat
+            label="Confidence"
+            value={`${preview.confidence}/100`}
+          />
+          <MiniStat label="5-yr trend" value={preview.trendArrow} />
+          <MiniStat
+            label="Languages"
+            value="5"
+          />
+        </div>
+
+        {preview.firstHighRisk && (
+          <p className="mt-5 text-xs text-[var(--danger)]/90 leading-relaxed">
+            <span className="font-mono uppercase tracking-[0.15em] text-[var(--danger)] mr-2">
+              Top risk
+            </span>
+            {preview.firstHighRisk}
+          </p>
+        )}
+
+        <div className="mt-auto pt-7 flex items-center justify-between gap-4">
+          <a
+            href={`${entry.live_url}?utm_source=gallery&utm_medium=featured`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] font-mono text-ink-dim hover:text-accent transition flex items-center gap-1"
+          >
+            {entry.live_url?.replace("https://", "")}
+            <ArrowUpRight size={11} weight="bold" />
+          </a>
+          <Link
+            href={`/demo/${slug}`}
+            className="group/btn inline-flex h-10 items-center gap-1.5 rounded-lg bg-ink text-bg px-4 text-sm font-semibold hover:bg-white active:translate-y-[1px] transition"
+          >
+            Open report
+            <ArrowUpRight
+              size={13}
+              weight="bold"
+              className="transition group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5"
+            />
+          </Link>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function ReportCard({
+  entry,
   isV1,
-  v1Preview,
+  preview,
 }: {
   entry: Entry;
   isV1: boolean;
-  v1Preview: V1Preview | null;
+  preview: V1Preview | null;
 }) {
-  const vid = videoIdFromUrl(e.video_url);
+  const vid = videoIdFromUrl(entry.video_url);
   const thumb = vid ? `https://i.ytimg.com/vi/${vid}/hqdefault.jpg` : null;
-  const slug = slugify(e.name!);
-  const paidTiers = (e.tiers ?? []).filter((t) => t.price_usd > 0);
+  const slug = slugify(entry.name!);
 
   return (
-    <article className="relative rounded-xl border border-zinc-800 hover:border-cyan-400/60 transition overflow-hidden bg-zinc-950 flex flex-col">
+    <article className="group relative rounded-2xl border border-strong bg-surface overflow-hidden flex flex-col hover:border-accent/30 transition">
       <span
-        className={`absolute top-3 right-3 z-10 text-[10px] font-mono font-semibold uppercase tracking-wider px-2 py-1 rounded-full ${
+        className={`absolute top-3 left-3 z-10 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.15em] ${
           isV1
-            ? "bg-cyan-400 text-zinc-950"
-            : "bg-zinc-900/90 text-zinc-500 border border-zinc-800"
+            ? "bg-accent/15 text-accent border border-accent/30"
+            : "bg-surface-2 text-ink-dim border border-strong"
         }`}
-        title={isV1 ? "v1 deep analysis available" : "v0 landing-only"}
       >
-        {isV1 ? "v1 · 📊 full report" : "v0 · landing"}
+        {isV1 ? (
+          <>
+            <ChartLineUp size={11} weight="bold" />
+            Full report
+          </>
+        ) : (
+          <>Landing only</>
+        )}
       </span>
+
       <Link href={`/demo/${slug}`} className="block">
         {thumb && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={thumb}
-            alt={e.name!}
-            className="w-full aspect-video object-cover opacity-90 hover:opacity-100 transition"
+            alt={entry.name!}
+            className="w-full aspect-[16/9] object-cover opacity-90 group-hover:opacity-100 transition"
           />
         )}
         <div className="p-5">
-          <h3 className="font-semibold text-lg">{e.name}</h3>
-          <p className="text-sm text-zinc-400 mt-1 line-clamp-2">{e.tagline}</p>
+          <h3 className="text-lg font-semibold tracking-tightish text-ink group-hover:text-accent transition">
+            {entry.name}
+          </h3>
+          <p className="mt-1.5 text-sm text-ink-muted leading-relaxed line-clamp-2">
+            {entry.tagline}
+          </p>
         </div>
       </Link>
 
-      <div className="px-5 pb-3 space-y-3 text-xs flex-1">
-        <div>
-          <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-600">
-            📊 Analysis
-          </p>
-          <p className="mt-1 text-zinc-400 line-clamp-2">
-            {e.target ?? "—"}
-          </p>
-          {paidTiers.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1">
-              {paidTiers.slice(0, 3).map((t) => (
-                <span
-                  key={t.name}
-                  className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-900 text-cyan-300 font-mono"
-                >
-                  {t.name} ${t.price_usd}
-                </span>
-              ))}
-            </div>
-          )}
+      {isV1 && preview ? (
+        <div className="px-5 pb-4 mt-auto space-y-3">
+          <div className="grid grid-cols-2 gap-px bg-[var(--border)] rounded-lg overflow-hidden border border-strong">
+            <MiniStat label="Confidence" value={`${preview.confidence}/100`} />
+            <MiniStat label="5-yr trend" value={preview.trendArrow} />
+          </div>
         </div>
+      ) : (
+        <div className="px-5 pb-4 mt-auto">
+          <p className="text-[11px] text-ink-dim font-mono">
+            v0 landing only · no deep report yet
+          </p>
+        </div>
+      )}
 
-        {isV1 && v1Preview ? (
-          <div>
-            <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-600">
-              📊 Deep report
-            </p>
-            <div className="mt-1 flex flex-wrap items-center gap-2">
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
-                confidence {v1Preview.confidence}/100
-              </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-900 text-zinc-400 border border-zinc-800">
-                trend {v1Preview.trendArrow}
-              </span>
-            </div>
-            {v1Preview.firstHighRisk && (
-              <p className="mt-2 text-[11px] text-red-300/80 leading-snug line-clamp-2">
-                <span className="font-mono text-red-400 mr-1">risk·</span>
-                {v1Preview.firstHighRisk}
-              </p>
-            )}
-          </div>
-        ) : (
-          <div>
-            <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-600">
-              🛠 Roadmap (Claude executes)
-            </p>
-            <ol className="mt-1 text-zinc-400 space-y-0.5">
-              <li>1. Next.js landing page</li>
-              <li>2. Stripe {paidTiers.length}-tier checkout</li>
-              <li>3. Email capture + Vercel deploy</li>
-              <li>4. Marketing kit (X / Reddit / HN)</li>
-              <li className="text-zinc-600">+ 4 more steps...</li>
-            </ol>
-          </div>
-        )}
-      </div>
-
-      <div className="px-5 pb-5 mt-2 space-y-2">
+      <div className="px-5 pb-5 pt-1 flex items-center justify-between gap-3">
         <a
-          href={`${e.live_url}?utm_source=gallery&utm_medium=card`}
+          href={`${entry.live_url}?utm_source=gallery&utm_medium=card`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-between text-xs font-mono text-cyan-400 hover:text-cyan-300"
+          className="text-[11px] font-mono text-ink-dim hover:text-accent transition flex items-center gap-1 truncate"
         >
-          <span>⚡ {e.live_url?.replace("https://", "")}</span>
-          <span className="text-zinc-600">{e.elapsed_sec?.toFixed(0)}s</span>
+          <span className="truncate">
+            {entry.live_url?.replace("https://", "")}
+          </span>
+          <ArrowUpRight size={11} weight="bold" className="flex-shrink-0" />
         </a>
         <Link
           href={`/demo/${slug}`}
-          className={`block text-center text-xs font-semibold py-2 rounded-md transition ${
+          className={`inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition active:translate-y-[1px] ${
             isV1
-              ? "bg-cyan-400 text-zinc-950 hover:bg-cyan-300"
-              : "bg-zinc-900 hover:bg-cyan-400 hover:text-zinc-950"
+              ? "bg-accent text-bg hover:bg-accent-strong"
+              : "bg-surface-2 text-ink hover:bg-[var(--border-strong)]"
           }`}
         >
-          {isV1 ? "📊 Full analysis →" : "View roadmap →"}
+          {isV1 ? "Open report" : "Open demo"}
+          <ArrowUpRight size={12} weight="bold" />
         </Link>
       </div>
     </article>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-surface px-3 py-2.5">
+      <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-ink-dim">
+        {label}
+      </p>
+      <p className="mt-1 font-mono text-sm text-ink">{value}</p>
+    </div>
   );
 }
