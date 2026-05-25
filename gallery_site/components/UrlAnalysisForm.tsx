@@ -105,7 +105,15 @@ type Preview = {
 
 type Status = "idle" | "loading" | "ok" | "err";
 
-export function UrlAnalysisForm({ d }: { d: Dict["analyze_form"] }) {
+export function UrlAnalysisForm({
+  d,
+  onResult,
+  onReset,
+}: {
+  d: Dict["analyze_form"];
+  onResult?: () => void;
+  onReset?: () => void;
+}) {
   const [youtubeUrl, setUrl] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -126,6 +134,7 @@ export function UrlAnalysisForm({ d }: { d: Dict["analyze_form"] }) {
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
       setPreview(data.preview as Preview);
       setStatus("ok");
+      onResult?.();
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "Unknown error");
       setStatus("err");
@@ -137,6 +146,7 @@ export function UrlAnalysisForm({ d }: { d: Dict["analyze_form"] }) {
     setPreview(null);
     setErr(null);
     setUrl("");
+    onReset?.();
   }
 
   if (status === "ok" && preview) {
@@ -335,7 +345,21 @@ function PreviewCard({
           <ChartLineUp size={11} weight="bold" />
           {d.live_badge}
         </span>
-        <div className="absolute top-3 right-3 inline-flex items-center gap-0.5 rounded-full border border-strong bg-surface/85 backdrop-blur p-0.5">
+        {translating && (
+          <div className="absolute inset-0 bg-bg/60 backdrop-blur-sm flex items-center justify-center">
+            <p className="text-sm font-mono text-ink animate-pulse">
+              {d.card_translating}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Lang toggle row — visible, labeled */}
+      <div className="px-6 py-3 border-b border-strong/40 bg-surface-2/30 flex items-center justify-between gap-3 flex-wrap">
+        <p className="text-[11px] font-mono uppercase tracking-[0.18em] text-ink-dim">
+          {d.card_translate_label}
+        </p>
+        <div className="inline-flex items-center gap-1 rounded-full border border-strong bg-surface p-1">
           {LANGS.map((l) => {
             const active = l === cardLang;
             const isLoading = translating === l;
@@ -346,7 +370,7 @@ function PreviewCard({
                 onClick={() => pickLang(l)}
                 title={LANG_NAMES[l]}
                 className={[
-                  "px-2 py-0.5 text-[10px] font-mono rounded-full transition",
+                  "px-3 py-1 text-xs font-mono rounded-full transition select-none",
                   active
                     ? "bg-ink text-bg font-semibold"
                     : "text-ink-muted hover:text-ink hover:bg-surface-2",
@@ -358,13 +382,6 @@ function PreviewCard({
             );
           })}
         </div>
-        {translating && (
-          <div className="absolute inset-0 bg-bg/60 backdrop-blur-sm flex items-center justify-center">
-            <p className="text-xs font-mono text-ink animate-pulse">
-              {d.card_translating}
-            </p>
-          </div>
-        )}
       </div>
 
       <div className="divide-y divide-strong/40">

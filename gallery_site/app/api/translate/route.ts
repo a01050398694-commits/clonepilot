@@ -3,7 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { isLang, type Lang } from "@/lib/i18n";
 
 export const runtime = "nodejs";
-export const maxDuration = 30;
+export const maxDuration = 120;
 
 const LANG_NAMES: Record<Lang, string> = {
   en: "English",

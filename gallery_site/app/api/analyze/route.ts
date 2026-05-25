@@ -6,7 +6,7 @@ import { Innertube } from "youtubei.js";
 import googleTrends from "google-trends-api";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const YT_RE =
   /^https?:\/\/(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/|live\/)|youtu\.be\/)([\w-]{11})/;
@@ -614,14 +614,14 @@ export async function POST(req: Request) {
 ${transcriptError ? `\n⚠️  TRANSCRIPT FETCH FAILED: ${transcriptError}\nYou have ONLY title + description below. Cap confidence at 35 and call this out in top_risk.` : `\nTranscript source: ${transcript.source} (${videoMeta.transcript_chars.toLocaleString()} chars total)`}
 `;
 
-    const clip = transcript.text.slice(0, 7_000);
+    const clip = transcript.text.slice(0, 14_000);
     const model =
       process.env.CLONEPILOT_MODEL_BLUEPRINT?.trim() || "claude-sonnet-4-6";
 
     const client = new Anthropic({ apiKey: anthropicKey });
     const resp = await client.messages.create({
       model,
-      max_tokens: 3500,
+      max_tokens: 6000,
       system: SYSTEM_PROMPT,
       tools: [EXTRACT_TOOL],
       tool_choice: { type: "tool", name: EXTRACT_TOOL.name },
