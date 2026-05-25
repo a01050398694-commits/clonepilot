@@ -614,14 +614,14 @@ export async function POST(req: Request) {
 ${transcriptError ? `\n⚠️  TRANSCRIPT FETCH FAILED: ${transcriptError}\nYou have ONLY title + description below. Cap confidence at 35 and call this out in top_risk.` : `\nTranscript source: ${transcript.source} (${videoMeta.transcript_chars.toLocaleString()} chars total)`}
 `;
 
-    const clip = transcript.text.slice(0, 12_000);
+    const clip = transcript.text.slice(0, 7_000);
     const model =
       process.env.CLONEPILOT_MODEL_BLUEPRINT?.trim() || "claude-sonnet-4-6";
 
     const client = new Anthropic({ apiKey: anthropicKey });
     const resp = await client.messages.create({
       model,
-      max_tokens: 6000,
+      max_tokens: 3500,
       system: SYSTEM_PROMPT,
       tools: [EXTRACT_TOOL],
       tool_choice: { type: "tool", name: EXTRACT_TOOL.name },
@@ -639,7 +639,7 @@ TRANSCRIPT (first ${clip.length} chars):
 ${clip}
 ---
 
-Call extract_business_preview with all required fields. Be concrete with numbers, ruthless about funnels, generous with insider tips. Output in English.`,
+Call extract_business_preview now. Be CONCISE — short sentences, no fluff. Required: brand, tagline (≤80 chars), target_audience (≤120), problem (≤120), solution (≤120), business_model, 3-5 red_flags (each ≤150 chars), likely_real_revenue_source (≤200), 3 numeric scores, top_risk (≤200), market_reality (each summary ≤80, 3-4 competitors), revenue_forecast (3 numbers + 3-5 short assumptions), 5 insider_tips (each ≤200), build_path (4-6 steps, stack 5-8 items). Output in English. Aim for 2500 output tokens total.`,
             },
           ],
         },
