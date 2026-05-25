@@ -287,47 +287,38 @@ function PreviewCard({
   onRetry: () => void;
 }) {
   const [cardLang, setCardLang] = useState<Lang>("en");
-  const [translated, setTranslated] = useState<Preview | null>(null);
+  const [translatedByLang, setTranslatedByLang] = useState<
+    Partial<Record<Lang, Preview>>
+  >({ en: rawPreview });
   const [translating, setTranslating] = useState<Lang | null>(null);
 
-  const preview = translated ?? rawPreview;
-  const cacheKey = (lang: Lang) => `cp_translate:${rawPreview.video.id}:${lang}`;
+  const preview: Preview = translatedByLang[cardLang] ?? rawPreview;
 
   async function pickLang(target: Lang) {
-    if (target === cardLang || translating) return;
-    if (target === "en") {
-      setCardLang("en");
-      setTranslated(null);
+    if (target === cardLang) return;
+    if (translatedByLang[target]) {
+      setCardLang(target);
       return;
     }
-    // sessionStorage cache hit
-    try {
-      const cached = sessionStorage.getItem(cacheKey(target));
-      if (cached) {
-        setTranslated(JSON.parse(cached) as Preview);
-        setCardLang(target);
-        return;
-      }
-    } catch {
-      /* sessionStorage unavailable — ignore */
-    }
     setTranslating(target);
+    setCardLang(target);
     try {
       const res = await fetch("/api/translate", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ preview: rawPreview, targetLang: target }),
       });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.translated) {
-        setTranslated(data.translated as Preview);
-        setCardLang(target);
-        try {
-          sessionStorage.setItem(cacheKey(target), JSON.stringify(data.translated));
-        } catch {
-          /* quota or disabled — ignore */
-        }
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.translated) {
+        setTranslatedByLang((prev) => ({
+          ...prev,
+          [target]: data.translated as Preview,
+        }));
+      } else {
+        setCardLang("en");
       }
+    } catch {
+      setCardLang("en");
     } finally {
       setTranslating(null);
     }
