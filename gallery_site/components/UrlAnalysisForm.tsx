@@ -264,6 +264,33 @@ function bmTone(bm: BusinessModel): string {
   return "border-strong bg-surface-2 text-ink-muted";
 }
 
+function cardEdge(bm: BusinessModel): { border: string; shadow: string } {
+  if (bm === "course-funnel" || bm === "affiliate-bait") {
+    return {
+      border: "border-[var(--danger)]/30",
+      shadow: "shadow-[0_30px_80px_-30px_rgba(239,68,68,0.35)]",
+    };
+  }
+  if (bm === "real-product") {
+    return {
+      border: "border-accent/30",
+      shadow: "shadow-[0_30px_80px_-30px_rgba(16,185,129,0.35)]",
+    };
+  }
+  return {
+    border: "border-strong",
+    shadow: "shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)]",
+  };
+}
+
+function gaugeColors(value: number): { bar: string; text: string } {
+  if (value >= 70)
+    return { bar: "rgb(16 185 129)", text: "text-accent" };
+  if (value >= 40)
+    return { bar: "rgb(251 191 36)", text: "text-amber-400" };
+  return { bar: "rgb(239 68 68)", text: "text-[var(--danger)]" };
+}
+
 function fmtNum(n?: number): string {
   if (n == null) return "—";
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -329,7 +356,7 @@ function PreviewCard({
   const m = preview.market_reality;
   const f = preview.revenue_forecast;
   const b = preview.build_path;
-  const thumb = `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`;
+  const thumb = `https://i.ytimg.com/vi/${v.id}/maxresdefault.jpg`;
   const ageYears = v.channel_created_at
     ? (Date.now() - new Date(v.channel_created_at).getTime()) /
       (365 * 24 * 60 * 60 * 1000)
@@ -340,9 +367,10 @@ function PreviewCard({
     f.aggressive_arr_usd,
     1,
   );
+  const edge = cardEdge(preview.business_model);
 
   return (
-    <div className="rounded-2xl border border-strong bg-surface overflow-hidden shadow-[0_30px_60px_-30px_rgba(0,0,0,0.6)]">
+    <div className={`rounded-2xl border bg-surface overflow-hidden ${edge.border} ${edge.shadow}`}>
       {/* ─── HERO ─── */}
       <div className="relative">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -351,11 +379,22 @@ function PreviewCard({
           alt={v.title || preview.brand}
           className="w-full aspect-video object-cover opacity-90"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/30 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/40 to-transparent pointer-events-none" />
         <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-accent/15 text-accent border border-accent/30 px-2.5 py-1 text-[10px] font-mono uppercase tracking-[0.15em]">
           <ChartLineUp size={11} weight="bold" />
           {d.live_badge}
         </span>
+        {/* Big business model stamp */}
+        <div
+          className={`absolute bottom-4 left-4 right-4 sm:right-auto rounded-xl border-2 px-4 py-3 backdrop-blur-md ${bmTone(preview.business_model)}`}
+        >
+          <p className="text-[10px] font-mono uppercase tracking-[0.18em] opacity-90">
+            {d.card_business_model}
+          </p>
+          <p className="mt-1 text-lg sm:text-xl font-bold tracking-tight">
+            {bmLabel(preview.business_model, d)}
+          </p>
+        </div>
         {translating && (
           <div className="absolute inset-0 bg-bg/75 backdrop-blur-sm flex flex-col items-center justify-center gap-3 p-6">
             <Lightning
@@ -407,40 +446,42 @@ function PreviewCard({
       </div>
 
       <div className="divide-y divide-strong/40">
-        {/* Brand + tagline */}
+        {/* Brand + tagline + 3 big circular gauges */}
         <Section>
           <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-ink-dim">
             {d.card_brand}
           </p>
-          <h3 className="mt-1 text-2xl font-semibold tracking-tightish text-ink">
+          <h3 className="mt-1 text-3xl font-bold tracking-tight text-ink">
             {preview.brand}
           </h3>
-          <p className="mt-1 text-sm text-ink-muted leading-relaxed">
+          <p className="mt-2 text-base text-ink-muted leading-relaxed">
             {preview.tagline}
           </p>
 
           <div
-            className={`mt-4 rounded-xl border px-4 py-3 ${bmTone(preview.business_model)}`}
+            className={`mt-5 rounded-xl border px-4 py-3 ${bmTone(preview.business_model)}`}
           >
             <p className="text-[10px] font-mono uppercase tracking-[0.18em] opacity-80">
-              {d.card_business_model}
+              {d.card_real_revenue}
             </p>
-            <p className="mt-1 text-base font-semibold">
-              {bmLabel(preview.business_model, d)}
-            </p>
-            <p className="mt-1 text-xs leading-relaxed opacity-90">
-              <strong>{d.card_real_revenue}:</strong>{" "}
+            <p className="mt-1 text-sm leading-relaxed text-ink">
               {preview.likely_real_revenue_source}
             </p>
           </div>
 
-          <div className="mt-4 grid grid-cols-3 gap-px bg-[var(--border)] rounded-lg overflow-hidden border border-strong">
-            <Gauge
+          <div className="mt-6 grid grid-cols-3 gap-4">
+            <CircleGauge
               label={d.card_clone_feasibility}
               value={preview.clone_feasibility_0_100}
             />
-            <Gauge label={d.card_honesty} value={preview.honesty_score_0_100} />
-            <Gauge label={d.card_confidence} value={preview.confidence_0_100} />
+            <CircleGauge
+              label={d.card_honesty}
+              value={preview.honesty_score_0_100}
+            />
+            <CircleGauge
+              label={d.card_confidence}
+              value={preview.confidence_0_100}
+            />
           </div>
         </Section>
 
@@ -809,6 +850,29 @@ function KStat({ label, value }: { label: string; value: string }) {
         {label}
       </p>
       <p className="mt-1 font-mono text-sm font-semibold text-accent">{value}</p>
+    </div>
+  );
+}
+
+function CircleGauge({ label, value }: { label: string; value: number }) {
+  const { bar, text } = gaugeColors(value);
+  const deg = Math.max(0, Math.min(100, value)) * 3.6;
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div
+        className="relative h-24 w-24 rounded-full"
+        style={{
+          background: `conic-gradient(${bar} ${deg}deg, var(--surface-2, #1a1d24) ${deg}deg 360deg)`,
+        }}
+      >
+        <div className="absolute inset-[6px] rounded-full bg-bg flex items-center justify-center flex-col">
+          <span className={`font-mono text-2xl font-bold ${text}`}>{value}</span>
+          <span className="text-[9px] font-mono text-ink-dim">/100</span>
+        </div>
+      </div>
+      <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-ink-dim text-center leading-tight">
+        {label}
+      </p>
     </div>
   );
 }

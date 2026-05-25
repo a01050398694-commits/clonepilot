@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { YoutubeTranscript } from "youtube-transcript";
 import { Innertube } from "youtubei.js";
+import { ProxyAgent } from "undici";
 // @ts-expect-error google-trends-api ships no types
 import googleTrends from "google-trends-api";
 
@@ -99,7 +100,20 @@ export type AnalyzePreview = {
 /* ─── transcript fetching chain ───────────────────────────────────────── */
 
 async function fetchViaInnertube(videoId: string) {
-  const yt = await Innertube.create({ retrieve_player: false });
+  const proxyUrl = process.env.BRIGHTDATA_PROXY_URL;
+  type CreateOpts = Parameters<typeof Innertube.create>[0];
+  const opts: CreateOpts = { retrieve_player: false };
+  if (proxyUrl) {
+    const dispatcher = new ProxyAgent(proxyUrl);
+    const proxiedFetch = (input: RequestInfo | URL, init?: RequestInit) =>
+      fetch(input as RequestInfo, {
+        ...(init ?? {}),
+        dispatcher,
+      } as RequestInit & { dispatcher: ProxyAgent });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (opts as any).fetch = proxiedFetch;
+  }
+  const yt = await Innertube.create(opts);
   const info = await yt.getInfo(videoId);
   const data = await info.getTranscript();
   type Seg = { snippet?: { text?: string } };
@@ -110,7 +124,7 @@ async function fetchViaInnertube(videoId: string) {
     .filter(Boolean)
     .join(" ");
   if (!text || text.length < 50) throw new Error("innertube empty");
-  return { text, lang: "auto", source: "innertube" };
+  return { text, lang: "auto", source: proxyUrl ? "innertube+proxy" : "innertube" };
 }
 
 async function fetchViaYouTubeTranscript(videoId: string) {
@@ -614,14 +628,14 @@ export async function POST(req: Request) {
 ${transcriptError ? `\n⚠️  TRANSCRIPT FETCH FAILED: ${transcriptError}\nYou have ONLY title + description below. Cap confidence at 35 and call this out in top_risk.` : `\nTranscript source: ${transcript.source} (${videoMeta.transcript_chars.toLocaleString()} chars total)`}
 `;
 
-    const clip = transcript.text.slice(0, 14_000);
+    const clip = transcript.text.slice(0, 18_000);
     const model =
-      process.env.CLONEPILOT_MODEL_BLUEPRINT?.trim() || "claude-sonnet-4-6";
+      process.env.CLONEPILOT_MODEL_BLUEPRINT?.trim() || "claude-opus-4-7";
 
     const client = new Anthropic({ apiKey: anthropicKey });
     const resp = await client.messages.create({
       model,
-      max_tokens: 6000,
+      max_tokens: 8000,
       system: SYSTEM_PROMPT,
       tools: [EXTRACT_TOOL],
       tool_choice: { type: "tool", name: EXTRACT_TOOL.name },
