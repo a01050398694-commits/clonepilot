@@ -185,10 +185,19 @@ export async function POST(req: Request) {
   }
 
   try {
-    const [transcript, meta] = await Promise.all([
-      fetchTranscript(videoId, supaKey),
-      fetchOEmbed(videoId),
-    ]);
+    const meta = await fetchOEmbed(videoId);
+    let transcript: { text: string; lang: string; source: string };
+    let transcriptError: string | null = null;
+    try {
+      transcript = await fetchTranscript(videoId, supaKey);
+    } catch (e) {
+      transcriptError = e instanceof Error ? e.message : "transcript failed";
+      transcript = {
+        text: `(No transcript available. Analyze from title only.)\nTitle: ${meta.title}\nChannel: ${meta.channel}`,
+        lang: "unknown",
+        source: "title-only",
+      };
+    }
 
     const fullChars = transcript.text.length;
     const clip = transcript.text.slice(0, 12_000);
@@ -211,13 +220,15 @@ export async function POST(req: Request) {
 
 Video title: ${meta.title || "(unknown)"}
 Channel: ${meta.channel || "(unknown)"}
+Transcript source: ${transcript.source}
 Transcript language: ${transcript.lang}
+${transcriptError ? `\nNOTE: Transcript fetch failed (${transcriptError}). You are seeing TITLE ONLY. Cap confidence at 35 and explicitly mention this limitation in top_risk.\n` : ""}
 Transcript (first ${clip.length} of ${fullChars} chars):
 ---
 ${clip}
 ---
 
-Call extract_business_preview with your honest take. Keep every field in the SAME LANGUAGE as the transcript so a native speaker can read the card.`,
+Call extract_business_preview with your honest take. Keep every field in the SAME LANGUAGE as the title/transcript so a native speaker can read the card.`,
             },
           ],
         },
