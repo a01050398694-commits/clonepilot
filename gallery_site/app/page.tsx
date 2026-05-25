@@ -9,6 +9,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import { WaitlistForm } from "./WaitlistForm";
 import { HeroSection } from "@/components/HeroSection";
+import { HeroEm, HeroCode, PriceEm } from "@/components/HeroAtoms";
 import { SiteNav, SiteFooter } from "@/components/SiteChrome";
 import { listReportSlugs, loadReport } from "@/lib/report.server";
 import { getLang } from "@/lib/lang";
@@ -83,18 +84,6 @@ function buildV1Preview(slug: string): V1Preview | null {
     firstHighRisk: high?.risk.split("—")[0].trim() ?? null,
     trendArrow: arrow,
   };
-}
-
-function PriceEm({ children }: { children: React.ReactNode }) {
-  return <span className="text-ink">{children}</span>;
-}
-
-function HeroEm({ children }: { children: React.ReactNode }) {
-  return <span className="text-accent">{children}</span>;
-}
-
-function HeroCode({ children }: { children: React.ReactNode }) {
-  return <code className="font-mono text-ink-muted">{children}</code>;
 }
 
 function HeroText({ d, reportsShipped }: { d: Dict; reportsShipped: number }) {
