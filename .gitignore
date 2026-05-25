@@ -51,6 +51,8 @@ _license_test/
 # Gallery site build artifacts
 gallery_site/.next/
 gallery_site/node_modules/
+gallery_site/next-env.d.ts
+gallery_site/tsconfig.tsbuildinfo
 
 # Playwright MCP runtime cache
 .playwright-mcp/

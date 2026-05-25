@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import Link from "next/link";
 import { WaitlistForm } from "./WaitlistForm";
+import { listReportSlugs } from "@/lib/report.server";
 
 export const dynamic = "force-static";
 export const revalidate = 60;
@@ -47,6 +48,7 @@ function videoIdFromUrl(url: string): string | null {
 export default function Page() {
   const gallery = loadGallery();
   const ok = gallery.entries.filter((e) => e.ok && e.live_url && e.name);
+  const v1Slugs = new Set(listReportSlugs());
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-16">
@@ -55,13 +57,13 @@ export default function Page() {
         className="mb-10 block rounded-lg border border-cyan-400/30 bg-cyan-400/[0.04] px-4 py-3 text-sm hover:border-cyan-400/60 hover:bg-cyan-400/[0.08] transition"
       >
         <span className="font-mono text-[10px] uppercase tracking-wider text-cyan-400 mr-2">
-          v1 · coming soon
+          v1 · deep analysis live
         </span>
         <span className="text-zinc-200">
-          Full SaaS factory, not just landing pages.
+          Cards marked <span className="text-cyan-300 font-mono">v1</span> open a full report (revenue forecast, 5 langs, 90-day GTM).
         </span>{" "}
         <span className="text-zinc-400">
-          Join the waitlist to be first →
+          Get notified for the full SaaS factory →
         </span>
       </Link>
       <header className="mb-14 max-w-3xl">
@@ -122,7 +124,13 @@ export default function Page() {
             Demos are generating. Refresh in a couple of minutes.
           </div>
         ) : (
-          ok.map((e) => <DemoCard key={e.live_url} entry={e} />)
+          ok.map((e) => (
+            <DemoCard
+              key={e.live_url}
+              entry={e}
+              isV1={v1Slugs.has(slugify(e.name!))}
+            />
+          ))
         )}
       </section>
 
@@ -161,14 +169,24 @@ export default function Page() {
   );
 }
 
-function DemoCard({ entry: e }: { entry: Entry }) {
+function DemoCard({ entry: e, isV1 }: { entry: Entry; isV1: boolean }) {
   const vid = videoIdFromUrl(e.video_url);
   const thumb = vid ? `https://i.ytimg.com/vi/${vid}/hqdefault.jpg` : null;
   const slug = slugify(e.name!);
   const paidTiers = (e.tiers ?? []).filter((t) => t.price_usd > 0);
 
   return (
-    <article className="rounded-xl border border-zinc-800 hover:border-cyan-400/60 transition overflow-hidden bg-zinc-950 flex flex-col">
+    <article className="relative rounded-xl border border-zinc-800 hover:border-cyan-400/60 transition overflow-hidden bg-zinc-950 flex flex-col">
+      <span
+        className={`absolute top-3 right-3 z-10 text-[10px] font-mono font-semibold uppercase tracking-wider px-2 py-1 rounded-full ${
+          isV1
+            ? "bg-cyan-400 text-zinc-950"
+            : "bg-zinc-900/90 text-zinc-500 border border-zinc-800"
+        }`}
+        title={isV1 ? "v1 deep analysis available" : "v0 landing-only"}
+      >
+        {isV1 ? "v1 · 📊 full report" : "v0 · landing"}
+      </span>
       <Link href={`/demo/${slug}`} className="block">
         {thumb && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -232,9 +250,13 @@ function DemoCard({ entry: e }: { entry: Entry }) {
         </a>
         <Link
           href={`/demo/${slug}`}
-          className="block text-center text-xs font-semibold py-2 rounded-md bg-zinc-900 hover:bg-cyan-400 hover:text-zinc-950 transition"
+          className={`block text-center text-xs font-semibold py-2 rounded-md transition ${
+            isV1
+              ? "bg-cyan-400 text-zinc-950 hover:bg-cyan-300"
+              : "bg-zinc-900 hover:bg-cyan-400 hover:text-zinc-950"
+          }`}
         >
-          View roadmap →
+          {isV1 ? "📊 Full analysis →" : "View roadmap →"}
         </Link>
       </div>
     </article>

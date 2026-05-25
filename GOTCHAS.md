@@ -107,4 +107,14 @@
 
 **Where**: `src/clonepilot/analysis/strategy.py` — `max_tokens=6000`. Apply the same generosity to any other multi-section CJK tool_use call (search for `tool_choice` in the analysis package).
 
+---
+
+## #11 — MUST split server-only utilities into `*.server.ts` in Next.js App Router
+
+**Rule**: When a file under `lib/` (or anywhere imported by both server pages and `"use client"` components) imports `node:fs`, `node:path`, or any other Node-only module, split it into two files: a server-safe `lib/foo.server.ts` (with the Node imports) and a client-safe `lib/foo.ts` (types + pure functions only). Then import `lib/foo.server` ONLY from server components / route handlers.
+
+**Why**: Phase 8.4 first dev-server run threw `Module build failed: UnhandledSchemeError: Reading from "node:fs" is not handled by plugins` on `/demo/[slug]` and `/install` (all 500s). Root cause: `lib/report.ts` had both the `DeepAnalysisReport` types AND `loadReport()` (which uses `fs.readFileSync`). The "use client" `ReportViewer.tsx` imported the types from the same file; webpack saw the `node:fs` import in the dep graph and refused to bundle it into the client chunk. Splitting `loadReport` / `listReportSlugs` into `lib/report.server.ts` immediately fixed all three routes.
+
+**Where**: `gallery_site/lib/report.ts` (types + pure utils, client-safe) vs `gallery_site/lib/report.server.ts` (fs-backed loaders). Same pattern for any future loader util — server-only stuff goes in `*.server.ts`.
+
 

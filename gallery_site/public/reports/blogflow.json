@@ -1,0 +1,271 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-05-24T15:13:39.921799Z",
+  "source": {
+    "youtube_url": "https://www.youtube.com/watch?v=L9LfsOR1YHw",
+    "video_id": "L9LfsOR1YHw",
+    "title": "구글에 글써서 직원 50명 회사 운영하는 92년생",
+    "channel": "찐터뷰",
+    "duration_sec": 2522,
+    "transcript_chars": 23271,
+    "transcript_source": "youtube-transcript-api",
+    "view_count": null,
+    "like_count": null
+  },
+  "blueprint": {
+    "name": "BlogFlow",
+    "tagline": "Write once, earn from 12 platforms with AI-powered blogs.",
+    "target_audience": "Korean side-hustlers, retirees, and stay-at-home individuals who want passive income by publishing AI-written blog content on Naver and Google AdSense.",
+    "problem": "Most people don't know how to turn blog writing into meaningful income across multiple platforms, and manually writing content is too slow and time-consuming to scale.",
+    "solution": "Use an AI-powered content pipeline to publish 3–5 keyword-targeted blog posts per day on Naver and Google Blogger, monetized by AdSense, Naver AdPost, Coupang Partners, and other affiliate networks — all from a single piece of content repurposed across platforms.",
+    "key_features": [
+      "AI writes SEO-optimized posts in under 2 minutes",
+      "One content piece repurposed across Naver, Google, Instagram, YouTube",
+      "Built-in keyword research via Naver Creator Advisor",
+      "Automated scheduled publishing (3–5 posts/day)",
+      "AdSense + Naver AdPost + Coupang Partners monetization",
+      "Custom AI prompts to avoid copyright and hallucinations"
+    ],
+    "pricing_model": "freemium",
+    "pricing_tiers": [
+      {
+        "name": "Free Starter Kit",
+        "price_usd": 0.0,
+        "features": [
+          "PDF beginner guide to Naver blog setup",
+          "Basic keyword research walkthrough",
+          "Manual AI blog writing workflow",
+          "Access to free webinar session",
+          "Naver AdPost monetization setup guide"
+        ]
+      },
+      {
+        "name": "Pro Course",
+        "price_usd": 197.0,
+        "features": [
+          "Full 12-income-stream monetization system",
+          "Custom AI prompt templates (copyright-safe)",
+          "Automated publishing workflow setup",
+          "Access to speaker's real blog examples",
+          "Google AdSense advanced optimization",
+          "Ongoing community support"
+        ]
+      },
+      {
+        "name": "VIP Consulting",
+        "price_usd": 2750.0,
+        "features": [
+          "2-hour 1-on-1 session with founder",
+          "Full audit of your blog and content strategy",
+          "Custom automation setup guidance",
+          "Multi-platform monetization roadmap",
+          "Ongoing email support for 30 days"
+        ]
+      }
+    ],
+    "channels": [
+      "YouTube (interview/educational videos)",
+      "Naver Blog (organic SEO and AdPost)",
+      "Instagram Reels and carousels",
+      "Free webinar / live class funnels",
+      "Facebook content monetization",
+      "Word of mouth from successful students"
+    ],
+    "tech_stack": [
+      "Next.js (course/landing page)",
+      "Supabase (user auth and progress tracking)",
+      "Vercel (hosting)",
+      "Stripe (payment for pro tiers)",
+      "Gemini API or OpenAI API (AI writing tool)",
+      "Naver Blog API (publishing automation)",
+      "Notion (content calendar and SOPs)"
+    ],
+    "differentiation": "Unlike generic blogging courses that focus on a single platform, BlogFlow teaches a proven 12-stream income system (AdSense, Naver, Coupang Partners, Kakao, Instagram, Facebook, YouTube, and more) from an operator who has personally earned over ₩5 billion using the exact same methods.",
+    "cta_primary": "Get free guide",
+    "cta_secondary": "Join free webinar",
+    "social_proof_hint": "Student income screenshots (monthly earnings of ₩500K–₩3M), testimonials from retirees and stay-at-home users earning their first online income, and the founder's own verified tax income certificates showing ₩1.9B–₩5B annual earnings.",
+    "video": {
+      "url": "https://www.youtube.com/watch?v=L9LfsOR1YHw",
+      "video_id": "L9LfsOR1YHw",
+      "title": "구글에 글써서 직원 50명 회사 운영하는 92년생",
+      "channel": "찐터뷰",
+      "duration_sec": 2522
+    }
+  },
+  "market": {
+    "category_keyword_seed": "ai 블로그 자동화 수익",
+    "global_monthly_searches": null,
+    "five_year_trend": "unknown",
+    "trend_score_0_100": 50,
+    "top_keywords": [],
+    "geo_distribution": [],
+    "data_sources": [
+      "google_trends"
+    ]
+  },
+  "competitors": [],
+  "revenue_forecast": null,
+  "seo_starter_pack": {
+    "primary_keyword": "ai 블로그 자동화 수익",
+    "supporting_keywords": [],
+    "suggested_titles": [
+      "ai 블로그 자동화 수익 | BlogFlow",
+      "BlogFlow: ai 블로그 자동화 수익 12플랫폼",
+      "ai 블로그 자동화 수익 — 한 번 쓰고 12곳에서 벌기",
+      "BlogFlow | ai 블로그 자동화 수익 시스템",
+      "ai 블로그 자동화 수익으로 월급 독립 — BlogFlow"
+    ],
+    "suggested_meta_description": "AI 블로그 자동화 수익, 네이버·구글 등 12플랫폼에서 동시에 버세요. 누적 수익 50억 운영자의 검증된 시스템 — 지금 시작하세요!",
+    "domain_suggestions": [
+      "blogflow.ai",
+      "blogflow.so",
+      "blogflow.com",
+      "aiblognow.com",
+      "autoblog12.com"
+    ]
+  },
+  "i18n": {
+    "default_lang": "en",
+    "locales": {
+      "en": {
+        "tagline": "Write Once. Earn From 12 Platforms — On Autopilot.",
+        "hero": "BlogFlow's AI writes 3–5 SEO-optimized blog posts a day, then publishes them across Naver, Google, YouTube, and more — while you sleep. One piece of content becomes 12 streams of passive income through AdSense, Coupang Partners, Naver AdPost, and beyond. Built by a creator who has personally earned over ₩5 billion doing exactly this.",
+        "cta": "Start Earning",
+        "value_props": [
+          "AI drafts a full SEO post in under 2 minutes",
+          "Repurpose one post across 12+ income platforms automatically",
+          "Built-in Naver keyword research — no extra tools needed",
+          "Monetize via AdSense, Naver AdPost, Coupang Partners & more",
+          "Proven by a creator with ₩5B+ in personal earnings"
+        ]
+      },
+      "ko": {
+        "tagline": "하루 글 하나로, 12곳에서 돈 버는 블로그 시스템.",
+        "hero": "BlogFlow의 AI가 하루 3~5개의 SEO 최적화 포스팅을 자동으로 써드립니다. 네이버, 구글, 유튜브에 동시에 올라가고, 애드센스·네이버 애드포스트·쿠팡파트너스까지 수익 채널이 한꺼번에 연결됩니다. 직접 50억 원 이상 벌어본 운영자가 만든, 검증된 방법 그대로입니다.",
+        "cta": "지금 시작하기",
+        "value_props": [
+          "AI가 2분 안에 완성형 SEO 포스팅 작성",
+          "글 하나로 12개 플랫폼 자동 배포",
+          "네이버 크리에이터 어드바이저 키워드 분석 내장",
+          "하루 3~5개 자동 예약 발행으로 꾸준한 수익",
+          "실제 50억 이상 수익을 낸 운영자의 검증된 시스템"
+        ]
+      },
+      "ja": {
+        "tagline": "1つの記事で、12の収益源を。AIが静かに稼ぎ続けます。",
+        "hero": "BlogFlowのAIが、SEOに最適化されたブログ記事を1日3〜5本、わずか2分で仕上げます。NaverからGoogle、YouTubeまで自動投稿され、AdSenseや各種アフィリエイトが着実に収益を積み重ねます。50億ウォン以上の実績を持つ運営者が、信頼できる手法だけを凝縮したサービスです。",
+        "cta": "無料で試してみる",
+        "value_props": [
+          "2分以内にSEO記事を自動生成、すぐに投稿可能",
+          "1記事を12プラットフォームへ自動リパーパス",
+          "Naverキーワードリサーチ機能を標準搭載",
+          "AdSense・アフィリエイトで複数収益を同時運用",
+          "50億ウォン超の実績に裏付けられた、信頼の仕組み"
+        ]
+      },
+      "zh": {
+        "tagline": "一篇文章，同时撬动12个平台的被动收入。",
+        "hero": "BlogFlow 的 AI 每天自动生成 3–5 篇高质量 SEO 文章，同步发布到 Naver、Google、YouTube 等主流平台，让你躺着收广告费和联盟佣金。一次输入，多平台变现，省时省力，真正实现低成本高回报的内容创业。由个人收益超过 50 亿韩元的实战运营者亲自打造。",
+        "cta": "立即开始赚钱",
+        "value_props": [
+          "AI 2分钟生成一篇完整 SEO 文章，效率翻倍",
+          "一篇内容自动分发到12个平台，收益最大化",
+          "内置 Naver 关键词研究，精准流量不花冤枉钱",
+          "AdSense + 联盟电商多渠道同步变现",
+          "实战验证：运营者个人收益突破50亿韩元"
+        ]
+      },
+      "es": {
+        "tagline": "Escribe una vez. Haz que 12 plataformas trabajen para ti.",
+        "hero": "Con BlogFlow, la IA redacta 3 a 5 artículos SEO por día y los publica automáticamente en Naver, Google, YouTube y más — sin que muevas un dedo. Una sola pieza de contenido se convierte en ingresos reales desde AdSense, Coupang Partners, Naver AdPost y otras redes de afiliados. Un sistema probado por un creador que ya ganó más de ₩5 mil millones haciendo exactamente esto.",
+        "cta": "Únete y empieza",
+        "value_props": [
+          "La IA escribe un artículo SEO completo en menos de 2 minutos",
+          "Un contenido, 12 fuentes de ingreso pasivo automáticas",
+          "Investigación de palabras clave de Naver integrada desde el día 1",
+          "Monetización simultánea: AdSense, afiliados y redes de anuncios",
+          "Creado por alguien que ganó +₩5B — no teoría, resultados reales"
+        ]
+      }
+    }
+  },
+  "risks": [
+    {
+      "risk": "Credibility gap — The ₩5B earnings claim is the core hook, but without transparent proof (tax receipts, live dashboard screenshots, verified case studies), Korean audiences — especially Naver-savvy retirees — will dismiss it as another 'guru scam,' killing word-of-mouth and conversion.",
+      "severity": "high",
+      "mitigation": "Publish a dedicated 'Proof Page' on Naver Blog and a YouTube video showing redacted tax documents, real AdSense/Naver AdPost dashboards, and 3 verified student results with names and earnings within Day 1. Pin this as the first comment on every YouTube video and Instagram Reel."
+    },
+    {
+      "risk": "Platform policy risk — Naver, Google AdSense, and Kakao periodically crack down on AI-generated bulk content, which could deindex student blogs, revoke AdSense accounts, or ban Naver blogs en masse, destroying student ROI and triggering refund demands and reputational damage.",
+      "severity": "high",
+      "mitigation": "Build a 'Compliance Module' into BlogFlow's curriculum from Day 1 — teach human-edit ratios, original image insertion, and posting frequency limits. Monitor Naver and Google policy pages weekly; send a dedicated Kakao Channel alert to all students within 24 hours of any policy change."
+    },
+    {
+      "risk": "Low organic discoverability — The seed keyword 'ai 블로그 자동화 수익' has an unknown trend score (50/100) and zero confirmed global search volume data, meaning SEO traction on Naver and Google Korea could be negligible at launch, starving the top of the funnel.",
+      "severity": "high",
+      "mitigation": "Run Naver DataLab and Google Keyword Planner Korea analysis on 20+ adjacent keywords (e.g., '블로그 수익화', '애드센스 승인', '네이버 블로그 돈벌기') by Day 7. Build a Naver Blog content cluster around the top 5 validated keywords and publish 3 SEO-optimized posts per week from Day 14 onward."
+    },
+    {
+      "risk": "High churn / low student completion — Side-hustlers, retirees, and stay-at-home individuals are time-rich but motivation-volatile. If students don't see AdSense or Naver AdPost earnings within 30–45 days, they will abandon the program, leave negative reviews on Naver Cafe and KakaoTalk open chats, and kill organic referral growth.",
+      "severity": "med",
+      "mitigation": "Design a 'First ₩10,000 in 14 Days' fast-win module as the program's opening track. Create a private KakaoTalk community with daily accountability check-ins and weekly live Q&A. Celebrate and screenshot every student's first earning milestone to fuel social proof."
+    },
+    {
+      "risk": "Ad spend efficiency risk — If paid acquisition via YouTube pre-roll or Meta ads is used to drive webinar registrations, CAC could spike quickly in the Korean self-improvement/side-hustle niche (already crowded with 강의 platforms like Class101 and Kmong), eroding margins before organic flywheels are established.",
+      "severity": "med",
+      "mitigation": "Delay paid ads until Day 45, after organic YouTube, Naver Blog, and Instagram Reels have generated at least 50 verifiable student testimonials. Use those testimonials as UGC creative to lower CPM. Cap initial ad spend at ₩500,000/day with a target webinar registration CPA of under ₩3,000."
+    },
+    {
+      "risk": "Competitor entry & copycats — With no competitor data fetched, the niche may appear empty, but Korean info-product copycats on Class101, Kmong, and Naver Smartstore can replicate the '12-stream' positioning within 60–90 days of BlogFlow's public launch, commoditizing the offer.",
+      "severity": "med",
+      "mitigation": "File for trademark on 'BlogFlow' and '12-stream income system' (블로그플로우, 12수익 시스템) by Day 14. Build a moat through the operator's personal brand (face-led YouTube channel, verified earnings) rather than the system alone — a persona cannot be copied, a curriculum can."
+    }
+  ],
+  "go_to_market_90day": [
+    {
+      "day": 1,
+      "action": "Launch 'Proof Page' on Naver Blog with redacted tax documents, live AdSense/Naver AdPost dashboard screenshots, and 3 named student case studies. Simultaneously publish a 15-min YouTube video titled '제가 블로그로 50억 번 방법 전부 공개합니다' with proof assets embedded. Pin proof link in YouTube description and first comment."
+    },
+    {
+      "day": 7,
+      "action": "Complete Naver DataLab + Google Keyword Planner Korea audit on 20 adjacent keywords. Finalize top 5 content pillars (e.g., '애드센스 승인 방법', '네이버 블로그 수익화', 'AI 블로그 자동화'). Set up official BlogFlow Kakao Channel for policy alerts and student updates. Publish first Instagram Reel: '월 100만원 버는 블로그 루틴 공개' with swipe-to-DM CTA."
+    },
+    {
+      "day": 14,
+      "action": "Begin publishing 3 SEO-optimized Naver Blog posts per week targeting validated keywords. File BlogFlow and '12수익 시스템' trademarks with KIPO. Launch a free 60-min Zoom webinar ('AI 블로그로 월 300만원 버는 법') promoted via YouTube community post, Instagram Stories, and a Naver Cafe post in the top 3 '부업/재테크' communities (e.g., 머니로그, 재테크 talk)."
+    },
+    {
+      "day": 30,
+      "action": "Open enrollment for BlogFlow founding cohort (cap: 100 students) at an early-bird price via a dedicated Naver SmartStore or Teachable Korea landing page. Send KakaoTalk broadcast to all webinar attendees. Publish YouTube interview video featuring the first student who hit ₩10,000 in earnings from the fast-win module."
+    },
+    {
+      "day": 45,
+      "action": "Activate paid acquisition: launch Meta (Facebook + Instagram) conversion ads targeting Korean women 35–60 interested in 부업/재테크, using top 3 student testimonial UGC videos as creatives. Set daily cap at ₩500,000 with webinar registration as the conversion event, targeting CPA under ₩3,000. Launch second free webinar cycle to feed the next cohort."
+    },
+    {
+      "day": 60,
+      "action": "Publish a full YouTube documentary-style video (20–30 min): '내 블로그 수익 60일 공개 — 수강생 실제 결과'. Submit BlogFlow for listing on Class101 and Kmong as a secondary distribution channel to capture platform-native buyers. Start a Facebook Group '블로그 수익화 실전 커뮤니티' to build retargeting audiences."
+    },
+    {
+      "day": 75,
+      "action": "Launch a referral program: current students receive ₩30,000 Naver Pay credit per successful new enrollment referral. Promote via KakaoTalk student group and Instagram Stories. Begin producing short-form YouTube Shorts (60 sec) repurposed from webinar highlights to target the 'ai 블로그' and '부업' keyword clusters on YouTube Search."
+    },
+    {
+      "day": 90,
+      "action": "Conduct full 90-day GTM retrospective: measure YouTube subscribers, Naver Blog monthly visitors, webinar conversion rate, CAC from Meta ads, and cohort-1 student earnings data. Publish a public 'BlogFlow 90일 성과 리포트' on Naver Blog and YouTube to build long-term SEO authority and social proof. Open waitlist for Cohort 2 with a scarcity-driven KakaoTalk broadcast."
+    }
+  ],
+  "data_quality": {
+    "ahrefs_called": false,
+    "similarweb_called": false,
+    "trends_called": true,
+    "exa_called": false,
+    "youtube_data_called": true,
+    "fallbacks_used": [
+      "ahrefs: skipped (no key or HTTP failure)",
+      "exa: 0 competitors fetched (no key, no results, or LLM refusal)",
+      "forecast: not computed (no search volume + no ARPU signal)"
+    ],
+    "confidence_0_100": 55
+  }
+}

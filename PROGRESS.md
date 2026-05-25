@@ -1,6 +1,6 @@
 # PROGRESS — ClonePilot MCP
 
-_Last updated: 2026-05-25 (Phase 8.1 Builder ✅ + Operator 청소 ✅ — Phase 8.4 scope 사용자 승인됨, 다음 세션 즉시 진입)_
+_Last updated: 2026-05-25 (Phase 8.1 Builder ✅ + Phase 8.4 Operator ✅ — v1 deep-report viewer 라이브, 다음 청크 후보 적힘)_
 
 ## 🟢 새 세션 픽업 — 여기부터 읽으면 끝
 
@@ -8,15 +8,13 @@ _Last updated: 2026-05-25 (Phase 8.1 Builder ✅ + Operator 청소 ✅ — Phase
 
 1. `Read SESSIONS.md` → 너가 Builder인지 Operator인지 확정 (커밋 메시지 prefix가 결정함).
 2. `git pull --rebase origin main` 먼저.
-3. **Builder**: Phase 8.1 ✅ 끝. 다음 청크 = **Phase 8.2 Project Pack 생성기**. `src/clonepilot/scaffold/` 갈아엎어서 CLAUDE.md + skills + agents + MCP + BUILD_PLAN + HUMAN_TASKS 폴더 생성하는 로직으로 전환.
-4. **Operator**: Phase 8.4 풀 진입 가능. **사용자 OK 받은 스코프 (2026-05-25)**:
-   - (a) `gallery_site/app/demo/[slug]/page.tsx` 풀스크린 리포트 뷰어로 재설계 — blueprint 헤더 → revenue_forecast (TAM/SAM/SOM 차트) → competitors → market trend → SEO → risks + 90-day GTM → data_quality 배지. 빈 섹션은 "set X env key" 안내.
-   - (b) 다국어 토글 (KR/EN/JP/ZH/ES) — 우상단 칩, `?lang=ko` URL, `report.i18n` 에서 hero 카피 오버라이드.
-   - (c) 갤러리 카드 v0/v1 라벨 구분. v1 카드는 "📊 Full analysis →" 버튼.
-   - 산출물: `lib/report.ts` 타입, `components/RevenueChart.tsx`, `components/LangToggle.tsx`, demo page 재작성, 갤러리 시드 갱신, 브라우저 E2E.
-   - 입력 데이터: `e2e_artifacts/deep_analysis_e2e_v2.json` (실 호출 산출물, 12 섹션).
-   - 시간 예상 ~3-4h, 청크 4개로 쪼개기.
-5. **둘 다 보류 액션**: AutoLoop 미설치 (admin PS 1회 `.\scripts\install_scheduler.ps1`), 결제 도메인 (waitlist 모드 영구 — `onboarding@resend.dev` sandbox 유지), 루트 walkthrough PNGs 5개 (커밋 여부 사용자 결정 대기).
+3. **Builder**: Phase 8.1 ✅. 다음 청크 = **Phase 8.2 Project Pack 생성기**. `src/clonepilot/scaffold/` 갈아엎어서 CLAUDE.md + skills + agents + MCP + BUILD_PLAN + HUMAN_TASKS 폴더 생성하는 로직으로 전환. 추가 보너스: `scripts/seed_gallery.py`에 deep analyze 옵션 추가해서 새 URL → `gallery_site/public/reports/<slug>.json` 자동 시드 (v1 카드 자동 증식).
+4. **Operator**: Phase 8.4 ✅. 다음 청크 후보 — 우선순위순:
+   - (i) **Vercel prod 재배포** + 라이브 URL에서 다국어 토글/리포트 뷰어 실 검증. `vercel --prod` 또는 기존 deploy 파이프라인.
+   - (ii) **OG 이미지 자동 생성** (`/demo/[slug]/opengraph-image.tsx`). 리포트 헤더 카드 (브랜드명 + tagline + confidence 점수) → X/HN/Reddit 공유 시 미리보기.
+   - (iii) **갤러리 v1 카드 미리보기 보강** — 카드에 confidence 점수 + 첫 high-severity risk 1줄 + 5-year trend 화살표 노출.
+   - (iv) **언어별 hero 카피 SEO 메타** — `?lang=ko` 시 description/og:locale 교체로 다국어 SEO 가능.
+5. **둘 다 보류 액션**: AutoLoop 미설치 (admin PS 1회 `.\scripts\install_scheduler.ps1`), 결제 도메인 (waitlist 모드 영구 — `onboarding@resend.dev` sandbox 유지), 루트 walkthrough PNGs 5개 + phase84 스크린샷 4개 (커밋 여부 사용자 결정 대기).
 
 ### 핵심 방향 전환 (2026-05-24 야간)
 
@@ -264,6 +262,23 @@ URL → BusinessBlueprint → Next.js 랜딩 자동 생성 → Vercel 배포 →
 4. Vercel 프로젝트는 첫 deploy 시 자동 생성되지만 env vars를 deploy 전에 push하려면 명시적으로 `POST /v9/projects` 먼저 호출해야 함 (409 = 이미 존재, OK). env POST는 409 = 이미 설정, 덮어쓰지 않음.
 5. ~~생성된 Next.js 페이지에 favicon 없음 → 콘솔 404 1건.~~ **Phase 4에서 해결**: `app/icon.svg` 자동 생성 (브랜드명 첫 글자 + 해시 색상). Next.js 15가 자동으로 favicon으로 서빙.
 6. Smithery / PyPI 등록은 본질적으로 OAuth 또는 이메일 인증을 요구함 — 완전 자동화 불가. AI agent 측에선 (1) auth URL을 사용자에게 surface하고 (2) 사용자가 한 번 클릭한 후의 모든 publish 단계는 자동화 가능한 패턴이 한계.
+
+---
+
+## Phase 8.4 Operator 청크 로그 — 2026-05-25
+
+✅ **Phase 8.4 완료** — v1 deep-report viewer 라이브 (dev server + next build 둘 다 0 에러).
+
+- ✅ **청크 1** `gallery_site/lib/report.ts` 풀 `DeepAnalysisReport` 타입 (12 섹션, 16 sub-types). 시드 JSON 복사 (`e2e_artifacts/deep_analysis_e2e_v2.json` → `gallery_site/public/reports/blogflow.json`). server 전용 fs util은 `lib/report.server.ts`로 분리 — client component가 `node:fs` 끌어오는 webpack 에러 회피.
+- ✅ **청크 2** `gallery_site/components/RevenueChart.tsx` (pure SVG, no recharts dep — TAM/SAM/SOM 가로 막대 + 3 시나리오 ARR 카드 + assumptions details). `gallery_site/components/LangToggle.tsx` ("use client" 5-lang 칩, 사용 가능한 locale만 enabled).
+- ✅ **청크 3** `gallery_site/app/demo/[slug]/ReportViewer.tsx` 풀 client 뷰어 — hero(localized) → source video → target/problem/solution → value_props(localized) → pricing_tiers → RevenueChart → competitors → market trend + keywords + geo → SEO pack → risks(severity 색상) → 90-day GTM 타임라인 → data quality 배지. `page.tsx` server wrapper — report 있으면 v1, 없으면 기존 v0 fallback (PhotoAI 등 BC).
+- ✅ **청크 4** 홈 `page.tsx` 카드 v0/v1 배지 추가 (v1은 cyan 강조, "📊 Full analysis →" CTA). 배너 카피 "v1 coming soon" → "v1 · deep analysis live"로 갱신. 브라우저 E2E (Playwright): 갤러리 → /demo/blogflow EN → KR 토글로 한국어 카피 교체 → /demo/photoai v0 fallback. **콘솔 에러 0건**. `next build` 12 static pages 모두 prerender 성공.
+
+**산출물**: 스크린샷 4개 (`phase84-gallery.png`, `phase84-demo-blogflow-en.png`, `phase84-demo-blogflow-kr.png`, `phase84-demo-photoai-v0.png`) — 루트에 untracked.
+
+**신규 GOTCHA #11** 등록 예정: Next.js 15 App Router에서 `lib/`에 `node:fs` import 모듈을 두면 client component가 transitively 끌어와서 `UnhandledSchemeError`. server 전용 util은 별도 `.server.ts` 파일에. 타입/순수함수만 client-safe `.ts`에.
+
+**다음 Operator 청크 후보** (우선순위 적힘): 위 §⚡ "다음 청크 후보" 참조.
 
 ---
 

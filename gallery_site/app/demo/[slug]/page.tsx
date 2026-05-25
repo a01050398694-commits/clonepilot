@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ReportViewer } from "./ReportViewer";
+import { loadReport, listReportSlugs } from "@/lib/report.server";
 
 export const dynamic = "force-static";
 export const revalidate = 60;
@@ -42,9 +44,18 @@ function videoId(url: string): string | null {
 }
 
 export async function generateStaticParams() {
-  return loadGallery()
+  const fromGallery = loadGallery()
     .filter((e) => e.ok && e.name)
     .map((e) => ({ slug: slugify(e.name!) }));
+  const fromReports = listReportSlugs().map((slug) => ({ slug }));
+  const seen = new Set<string>();
+  const merged: { slug: string }[] = [];
+  for (const x of [...fromReports, ...fromGallery]) {
+    if (seen.has(x.slug)) continue;
+    seen.add(x.slug);
+    merged.push(x);
+  }
+  return merged;
 }
 
 export async function generateMetadata({
@@ -53,6 +64,13 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const report = loadReport(slug);
+  if (report) {
+    return {
+      title: `${report.blueprint.name} — deep analysis · ClonePilot`,
+      description: report.blueprint.tagline,
+    };
+  }
   const e = findEntry(slug);
   if (!e) return { title: "Demo not found — ClonePilot" };
   return {
@@ -114,6 +132,12 @@ export default async function DemoPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+
+  const report = loadReport(slug);
+  if (report) {
+    return <ReportViewer report={report} />;
+  }
+
   const e = findEntry(slug);
   if (!e) notFound();
 
@@ -131,7 +155,7 @@ export default async function DemoPage({
 
       <header className="mb-12">
         <p className="text-cyan-400 font-mono text-xs uppercase tracking-wider mb-3">
-          Built from a YouTube URL · {e.elapsed_sec?.toFixed(0)}s · 100% Claude
+          Built from a YouTube URL · {e.elapsed_sec?.toFixed(0)}s · v0 landing-only
         </p>
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
           {e.name}
