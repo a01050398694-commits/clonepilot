@@ -1,33 +1,92 @@
 # PROGRESS — ClonePilot MCP
 
-_Last updated: 2026-05-25 (Phase 8.1 ✅ + Phase 8.4 ✅ + 청크 5/6/7 ✅ — **메인 페이지 풀 redesign 라이브** clonepilot-gallery.vercel.app, **사용자 평가 대기 + 데모/install/pricing 폴리시 (청크 7-B) 다음**)_
+_Last updated: 2026-05-25 (v2 인라인 분석 카드 라이브 — 강의팔이 detector + 다중 API + 5개국 카드 번역 + 시각 업그레이드 + 풀 i18n. 다음 = Supadata 새 키 박으면 transcript 살아남.)_
 
 ## 🟢 새 세션 픽업 — 여기부터 읽으면 끝
 
-### ⚡ 새 세션 시작 시 (30초)
+### ⚡ 30초 컨텍스트
 
-**글로벌 룰 (`C:\Users\user\.claude\CLAUDE.md` §1 갱신됨 2026-05-25)**:
-- 사용자한테 말할 때 **중학생 이해 수준**. 기술용어 옆에 `(=쉬운말)` 풀이.
-- 매 응답 끝에 **`**다음**: <한 줄 명령>`** 으로 best action 단정 추천. 선택지 나열은 정말 갈림길일 때만.
+**라이브 사이트**: https://clonepilot-gallery.vercel.app — URL 넣으면 즉시 deep analysis 카드 (40~60초)
 
-**현재 상태 핸드오프**:
+**오늘 끝낸 큰 마일스톤 4개** (이 세션):
+1. **풀사이트 i18n** — 메인/install/pricing/데모 5개국 토글 (cookie 기반, EN 기본)
+2. **인라인 분석 카드** — URL 입력 → 카드 즉시 표시 (이메일 큐 모드 폐기). `/api/analyze` route.
+3. **강의팔이 detector + 다중 API** — Anthropic + YouTube Data API + Google Trends + HN Algolia + Wikipedia + youtubei.js + youtube-transcript + Supadata. 6 business_model 분류, red_flags, market_reality (TAM/SAM/SOM + 경쟁사), revenue_forecast (3 시나리오), insider_tips, build_path, related_videos.
+4. **카드 시각 업그레이드 + 본문 다국어 토글** — business_model이 카드 전체 톤 결정 (강의팔이 = 빨간 border + shadow), 큰 circular donut gauges 3개, thumbnail 위 큰 stamp, `/api/translate` (Haiku 4.5, ~10초) + Record<Lang,Preview> state로 견고한 카드 lang toggle.
 
-1. `Read SESSIONS.md` → 너가 Builder인지 Operator인지 확정 (커밋 메시지 prefix가 결정함).
-2. `git pull --rebase origin main` 먼저.
-3. **사용자 평가 대기 (최우선)**: 청크 7-A (메인 페이지 전면 redesign) 라이브 배포됨. 사용자가 직접 보고 평가 중. 답변 오기 전엔 메인 페이지 추가 수정 금지. 평가 결과:
-   - "좋아" → 즉시 청크 7-B 진입 (데모 페이지 ReportViewer + pricing + install 같은 디자인으로 폴리시)
-   - "별로야" 또는 구체적 피드백 → 메인 페이지 해당 부분만 최소 diff 수정
-4. **Builder**: Phase 8.1 ✅. 다음 청크 = **Phase 8.2 Project Pack 생성기**. `src/clonepilot/scaffold/` 갈아엎어서 CLAUDE.md + skills + agents + MCP + BUILD_PLAN + HUMAN_TASKS 폴더 생성. 추가 보너스: `scripts/seed_gallery.py`에 `--deep` 옵션 추가해서 새 URL → `gallery_site/public/reports/<slug>.json` 자동 시드 (v1 카드 자동 증식).
-5. **Operator 청크 7-B (데모/install/pricing 폴리시)** — 사용자 OK 받으면 즉시:
-   - `gallery_site/app/demo/[slug]/ReportViewer.tsx` — Phosphor 아이콘 + emerald accent + Geist 폰트 (layout.tsx에서 wire됨) 적용. 이모지 (📊 등) 전부 제거. LangToggle 디자인 인라인 칩 → pill nav 형식.
-   - `gallery_site/app/pricing/page.tsx` + `app/install/page.tsx` — 같은 디자인 토큰 적용. cyan-* 클래스 → accent / ink-muted로 교체.
-6. **Operator 청크 7-B 후 후보** (사용자 결정):
-   - (a) **i18n 풀 사이트** (한/영/일/중/스 5종, URL routing `/ko/`). 메뉴/카드/배지/CTA/푸터 모든 텍스트 토글. 메모리 `feedback_clonepilot_ui.md` 참조 — 사용자 강력 요구.
-   - (b) **README + CHANGELOG + WAKEUP 갱신** — v1 redesign 공지. awesome-mcp-servers PR 코멘트, X 새 스레드, Show HN 재발사.
-   - (c) **추가 v1 reports 시드** — Builder 영역 (`uv run python scripts/seed_gallery.py --deep <url>`). PhotoAI 등 v1 변환.
-   - (d) **opengraph-image.tsx 동적 카드** — Next.js ImageResponse로 브랜드명 + confidence 점수 + risk 1줄을 OG 카드 동적 생성. 한국어 폰트 임베드 필요.
-   - (e) **결제 + 실 MCP 백엔드 연결** — Lemon Squeezy + URL 입력 hero의 `/api/analyze-request`를 실제 `analyze_deep` 호출 + Resend로 리포트 발송.
-7. **둘 다 보류 액션**: AutoLoop 미설치 (admin PS 1회 `.\scripts\install_scheduler.ps1`), 결제 도메인 (waitlist 모드 영구 — `onboarding@resend.dev` sandbox 유지), 루트 walkthrough PNGs 5개 (사용자 결정 대기), phase85 스크린샷 2개 (commit 됨).
+### 새 세션 시작 시 (5초)
+
+1. `git pull --rebase origin main` → 최신 커밋 = `c2135c7` (Sonnet 4.6 reverted from Opus 4.7).
+2. **사용자 마지막 요구 = 분석 완벽성 + 시각적 업그레이드만**. 새 기능 (공유 URL, PDF, history 등) 추가 금지. 이 두 가지만 더 파라고 명시.
+3. **사용자 다음 액션 대기**: Supadata 새 키 발급 (`supadata.ai` 새 이메일 → 무료 100/월). 알려주면 Vercel env에 즉시 박고 같은 영상 재검증.
+
+## ✅ Done (이 세션)
+
+- **Phase 7 청크 8: 풀사이트 i18n** — `gallery_site/lib/i18n.tsx` + `i18n-install.tsx` + `i18n-pricing.tsx` + `i18n-report.tsx` 5개국 사전 + `lib/lang.ts` cookie helper + `app/api/lang/route.ts` + `components/LangToggleGlobal.tsx` + `components/SiteChrome.tsx`. 메인/install/pricing/demo 모두 적용.
+- **Phase 7 청크 9: 인라인 분석 카드** — `app/api/analyze/route.ts` (POST, maxDuration 300s, Sonnet 4.6, max_tokens 5000, transcript clip 14k). UrlAnalysisForm 카드 인라인 표시 + spinner.
+- **Phase 7 청크 10: 강의팔이 detector + 다중 API** — `EXTRACT_TOOL` schema에 12개 새 필드 (business_model 6분류 + red_flags + likely_real_revenue_source + clone_feasibility + honesty + confidence + market_reality + revenue_forecast + insider_tips + build_path). SYSTEM_PROMPT 재작성 (course-seller detector 톤). fetchVideoData/fetchChannelData/fetchRelatedVideos (YouTube Data API), fetchGoogleTrends, fetchHNMentions, fetchWikiExists, fetchViaInnertube/fetchViaYouTubeTranscript/fetchViaPageScrape/fetchViaSupadata transcript chain.
+- **Phase 7 청크 11: 시각 업그레이드** — `bmTone()` + `cardEdge()` + `gaugeColors()` 함수. business_model이 카드 wrapper border/shadow 톤 결정. `CircleGauge` 컴포넌트 (conic-gradient 큰 원형 progress). thumbnail 위에 큰 business_model stamp.
+- **Phase 7 청크 12: 카드 다국어 토글** — `app/api/translate/route.ts` (Haiku 4.5, maxDuration 120s, ~10초 응답). `translatedByLang: Record<Lang, Preview>` state (React batching 버그 fix). thumbnail 아래 visible toggle row + "Translate this card:" label + sessionStorage cache + 강화 spinner UI.
+- **Phase 7 청크 13: HeroSection slot-based** — `components/HeroSection.tsx` + `components/HeroAtoms.tsx` (HeroEm/HeroCode/PriceEm client components). 카드 떴을 때 hero text 사라지고 카드가 1100px wide. RSC serialization safe (함수 prop 금지).
+- **Vercel 환경변수 박음**: `ANTHROPIC_API_KEY`, `SUPADATA_API_KEY`, `YOUTUBE_API_KEY`, `CLONEPILOT_MODEL_BLUEPRINT=claude-sonnet-4-6`, `BRIGHTDATA_PROXY_URL` (있지만 outbound proxy 차단됨, 무용).
+
+## 🔄 Remaining (우선순위 순)
+
+1. **사용자가 Supadata 새 키 발급 후 알리기** — Vercel env에 즉시 박고 prod에서 같은 영상 (`L9LfsOR1YHw`) 재검증 → transcript_chars 큰 숫자 + confidence 70+ 확인.
+2. **추가 시각 폴리시** (사용자 요구 = 시각적 업그레이드 더):
+   - TAM/SAM/SOM을 중첩 사각형 funnel 다이어그램으로
+   - build_path를 vertical timeline UI (connector line + dot)
+   - revenue forecast 3 시나리오 비교 더 시각적 (현재는 단순 가로 bar)
+   - 카드 등장 시 stagger fade-in animation
+3. **분석 깊이 더** — transcript 살아나면 prompt 한 번 더 sharpen (영상 본문 인용 기반 더 구체적 insight).
+
+## 🚧 Blockers
+
+- **Transcript fetch 못 살림**: Vercel serverless가 outbound proxy fetch 거부함. 시도한 것 다 fail:
+  - youtubei.js (Innertube) — Vercel iad1 IP 차단
+  - youtube-transcript npm — "Transcript is disabled" 응답
+  - YouTube 페이지 직접 page-scrape + captionTracks regex — `fetch failed`
+  - Bright Data Korean residential proxy via undici.fetch + dispatcher — `fetch failed`
+  - Supadata — 키 한도 초과 (사용자가 새 키 발급해야 풀림)
+  - 가장 빠른 해결책 = **사용자 Supadata 새 키 발급 (1분)**. 다음 옵션 = Whisper STT (audio 다운 + 전사, 복잡함).
+- **Opus 4.7 너무 느림**: 분석 호출 2분+ 걸려서 Sonnet 4.6으로 reverted. 더 정확하면서 빠른 방법 없음 (현재 결정).
+
+## 📝 Notes for Next Session
+
+- **사용자 명시 룰**: "기능적인 거 개발하지 마. 분석 완벽성 + 시각적 업그레이드만." → 공유 URL, PDF, 비교, history, OG 이미지 등 신규 기능 제안 X. 두 가지에만 집중.
+- **사용자 마지막 통증**:
+  1. 분석이 정확해야 함 (transcript 살리는 게 핵심. confidence 30 → 70+)
+  2. 카드 시각이 더 강력해야 함 (현재 라이브한 큰 circular gauges + tone color는 OK, 더 추가 폴리시 환영)
+- **카드 lang toggle 버그 fix 교훈**: `translated ?? rawPreview` derived state는 React batching에서 reliable 안 함. **`Record<Lang, Preview>` map + setState((prev) => ...)** 패턴이 100% trigger 보장. GOTCHAS.md 등록 가치.
+- **HeroSection slot pattern**: server→client에 함수 prop 직렬화 fail. Dict 통째 전달 X. children/slot ReactNode 또는 string field만. (이미 GOTCHAS.md에 비슷한 항목 있음)
+- **모델 선택**: 분석 = Sonnet 4.6 (Opus 4.7 reverted, 2분+ 느림). 번역 = Haiku 4.5 (10초, Sonnet 30~50초 vs).
+- **루트에 untracked PNG 24개** (screenshots 다 prod 검증용). 다음 세션 시작 시 정리 또는 `.gitignore` 추가 결정.
+- **루트 walkthrough PNG 5개**는 여전히 사용자 결정 대기 (commit? 삭제?).
+- **AutoLoop 미설치** (`scripts/install_scheduler.ps1` admin PS 1회 필요).
+
+## ⚙️ Phase 8 계획 (이전 세션부터)
+
+| # | Task | 상태 |
+|---|---|---|
+| 8.1 | Deep analysis engine (Python MCP) | ✅ 완료 (이전 세션, Builder) |
+| 8.2 | Project Pack 생성기 (CLAUDE.md + skills + BUILD_PLAN + HUMAN_TASKS) | ⏸ Builder 영역 (대기) |
+| 8.3 | Human-task tracker | ⏸ Builder 영역 |
+| 8.4 | 갤러리 = 분석리포트 뷰어로 개조 | ✅ 완료 (이전 세션, Operator) |
+| 8.5 | E2E 검증 | ⏸ |
+| 8.6 (신규) | 인라인 분석 카드 (web SaaS 모드) | ✅ 완료 (이 세션, Operator) |
+
+**Builder는 휴면 상태**. Operator만 이 세션에서 작업. Builder 작업 (Phase 8.2 Project Pack 생성기)은 사용자 결정 대기.
+
+## 📁 작업 환경 — 2 세션 병렬
+
+`SESSIONS.md` 가 단일 출처(SoT). 두 세션 책임 분리 + 복붙 프롬프트 + 워크플로 거기. 새 세션은 첫 메시지로 `Read SESSIONS.md`.
+
+요약:
+- **세션 A "Builder"** — `src/clonepilot/**` 소유. Phase 8.1 → 8.2 → 8.3 → 8.5 본체 엔진.
+- **세션 B "Operator"** — `gallery_site/**`, `docs/**` 소유. Phase 8.4 + 8.6 + 운영.
+- **백그라운드** — `run_forever.ps1` — 24/7 자동 데모 양산 (선택).
+
+커밋 메시지 첫 단어 = `Builder:` 또는 `Operator:`. 매 커밋 전 `git pull --rebase`.
 
 ### 핵심 방향 전환 (2026-05-24 야간)
 
