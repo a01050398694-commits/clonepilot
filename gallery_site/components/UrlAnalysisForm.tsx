@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   ArrowsClockwise,
@@ -119,6 +119,11 @@ export function UrlAnalysisForm({
   const [preview, setPreview] = useState<Preview | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (status === "ok") onResult?.();
+    else if (status === "idle") onReset?.();
+  }, [status, onResult, onReset]);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!youtubeUrl.trim()) return;
@@ -134,7 +139,6 @@ export function UrlAnalysisForm({
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
       setPreview(data.preview as Preview);
       setStatus("ok");
-      onResult?.();
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "Unknown error");
       setStatus("err");
@@ -146,7 +150,6 @@ export function UrlAnalysisForm({
     setPreview(null);
     setErr(null);
     setUrl("");
-    onReset?.();
   }
 
   if (status === "ok" && preview) {
