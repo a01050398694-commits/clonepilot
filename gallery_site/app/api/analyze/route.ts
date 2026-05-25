@@ -687,14 +687,14 @@ export async function POST(req: Request) {
 ${transcriptError ? `\n⚠️  TRANSCRIPT FETCH FAILED: ${transcriptError}\nYou have ONLY title + description below. Cap confidence at 35 and call this out in top_risk.` : `\nTranscript source: ${transcript.source} (${videoMeta.transcript_chars.toLocaleString()} chars total)`}
 `;
 
-    const clip = transcript.text.slice(0, 18_000);
+    const clip = transcript.text.slice(0, 14_000);
     const model =
-      process.env.CLONEPILOT_MODEL_BLUEPRINT?.trim() || "claude-opus-4-7";
+      process.env.CLONEPILOT_MODEL_BLUEPRINT?.trim() || "claude-sonnet-4-6";
 
     const client = new Anthropic({ apiKey: anthropicKey });
     const resp = await client.messages.create({
       model,
-      max_tokens: 8000,
+      max_tokens: 5000,
       system: SYSTEM_PROMPT,
       tools: [EXTRACT_TOOL],
       tool_choice: { type: "tool", name: EXTRACT_TOOL.name },
