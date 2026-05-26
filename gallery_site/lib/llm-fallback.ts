@@ -319,7 +319,9 @@ export async function callGroqJson<T>(opts: {
     ],
     response_format: { type: "json_object" },
     temperature: 0.4,
-    max_tokens: 16_384,
+    // Groq TPM budget counts input + RESERVED max_tokens. 70b free tier =
+    // 12k TPM. Our input is ~2.5k, so 8k output leaves headroom.
+    max_tokens: 8_000,
   };
   const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
