@@ -120,6 +120,103 @@ function isTransientStatus(err: unknown): boolean {
   return /\b(429|500|502|503|504)\b/.test(m) || /UNAVAILABLE|RESOURCE_EXHAUSTED/.test(m);
 }
 
+async function singleGeminiText(
+  apiKey: string,
+  model: string,
+  system: string,
+  userText: string,
+  responseMimeType?: string,
+): Promise<{ text: string; model: string }> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const body = {
+    systemInstruction: { parts: [{ text: system }] },
+    contents: [{ role: "user", parts: [{ text: userText }] }],
+    generationConfig: {
+      temperature: 0.4,
+      maxOutputTokens: 8192,
+      ...(responseMimeType ? { responseMimeType } : {}),
+    },
+  };
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(180_000),
+  });
+  if (!r.ok) {
+    const text = await r.text().catch(() => "");
+    const err = new Error(`gemini ${r.status}: ${text.slice(0, 300)}`);
+    (err as Error & { status?: number }).status = r.status;
+    throw err;
+  }
+  type Resp = {
+    candidates?: Array<{
+      content?: { parts?: Array<{ text?: string }> };
+      finishReason?: string;
+    }>;
+  };
+  const j = (await r.json()) as Resp;
+  const text =
+    j.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
+  if (!text) {
+    throw new Error(
+      `gemini returned empty text (finish=${j.candidates?.[0]?.finishReason ?? "?"})`,
+    );
+  }
+  return { text, model };
+}
+
+/** Strip ```json fences and parse. */
+function parseJsonLoose<T>(s: string): T {
+  const fence = /```(?:json)?\s*([\s\S]*?)```/i.exec(s);
+  const body = (fence?.[1] ?? s).trim();
+  return JSON.parse(body) as T;
+}
+
+/** Return parsed JSON via Gemini's response_mime_type=application/json mode.
+ * Useful when the target schema is too loose for function-calling. */
+export async function callGeminiJson<T>(opts: {
+  apiKey: string;
+  model?: string;
+  system: string;
+  userText: string;
+}): Promise<{ ok: true; value: T; model: string }> {
+  const primary = opts.model ?? "gemini-2.5-flash";
+  const secondary =
+    primary === "gemini-2.5-flash" ? "gemini-2.0-flash-exp" : "gemini-2.5-flash";
+
+  const tryWithRetry = async (model: string) => {
+    try {
+      return await singleGeminiText(
+        opts.apiKey,
+        model,
+        opts.system,
+        opts.userText,
+        "application/json",
+      );
+    } catch (err) {
+      if (!isTransientStatus(err)) throw err;
+      await new Promise((r) => setTimeout(r, 2500));
+      return singleGeminiText(
+        opts.apiKey,
+        model,
+        opts.system,
+        opts.userText,
+        "application/json",
+      );
+    }
+  };
+
+  let res;
+  try {
+    res = await tryWithRetry(primary);
+  } catch (err) {
+    if (!isTransientStatus(err)) throw err;
+    res = await tryWithRetry(secondary);
+  }
+  return { ok: true, value: parseJsonLoose<T>(res.text), model: res.model };
+}
+
 /** Try primary model, on transient error retry once after backoff, then try secondary model. */
 export async function callGeminiTool<T>(opts: {
   apiKey: string;

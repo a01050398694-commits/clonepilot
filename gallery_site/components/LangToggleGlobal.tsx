@@ -30,7 +30,7 @@ export function LangToggleGlobal({ current }: { current: Lang }) {
     <div
       role="group"
       aria-label="Language"
-      className="inline-flex items-center gap-0.5 rounded-full border border-strong bg-surface p-0.5"
+      className="inline-flex items-center gap-0.5 rounded-lg border border-strong bg-surface p-[3px]"
     >
       {LANGS.map((lang) => {
         const active = lang === current;
@@ -43,12 +43,13 @@ export function LangToggleGlobal({ current }: { current: Lang }) {
             onClick={() => pick(lang)}
             title={LANG_NAMES[lang]}
             className={[
-              "px-2.5 py-1 text-[11px] font-mono rounded-full transition select-none",
+              "px-3 py-1.5 text-[12px] font-mono rounded-md transition select-none",
               active
-                ? "bg-ink text-bg font-semibold"
+                ? "text-bg font-semibold"
                 : "text-ink-muted hover:text-ink hover:bg-surface-2",
               isPending ? "opacity-40 cursor-wait" : "",
             ].join(" ")}
+            style={active ? { background: "var(--brand)" } : undefined}
           >
             {LANG_LABELS[lang]}
           </button>

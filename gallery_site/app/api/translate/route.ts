@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { isLang, type Lang } from "@/lib/i18n";
-import { callGeminiTool, isAnthropicBudgetError } from "@/lib/llm-fallback";
+import { callGeminiJson, isAnthropicBudgetError } from "@/lib/llm-fallback";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -159,15 +159,18 @@ Call return_translated_preview now with the full translated object.`;
         "[/api/translate] Anthropic budget hit, fall back to Gemini",
         err instanceof Error ? err.message : err,
       );
-      const g = await callGeminiTool<{ translated?: unknown }>({
+      // Gemini doesn't respect Anthropic's loose `type: "object"` schema in
+      // function calling — it returns `{}`. So fall back to JSON-mode plain
+      // generation: ask for the translated JSON directly, then parse.
+      const g = await callGeminiJson<Record<string, unknown>>({
         apiKey: geminiKey,
         model:
-          process.env.CLONEPILOT_MODEL_FALLBACK?.trim() || "gemini-2.0-flash",
-        system: "You are a professional translator. Follow the user instructions exactly.",
-        userText,
-        tool: TRANSLATE_TOOL,
+          process.env.CLONEPILOT_MODEL_FALLBACK?.trim() || "gemini-2.5-flash",
+        system:
+          "You are a professional translator. Output ONLY valid JSON matching the input shape. No markdown, no commentary.",
+        userText: userText + "\n\nRespond with ONLY the translated JSON object (no `translated` wrapper, just the object itself).",
       });
-      result = g.args.translated;
+      result = g.value;
     }
     if (!result) {
       return NextResponse.json({ error: "empty translated" }, { status: 502 });

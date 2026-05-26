@@ -47,24 +47,30 @@
   --danger: var(--text);
   --warn: var(--text-muted);
 
-  /* Brand point (singular warm amber, Linear/Anthropic-style) */
-  --brand: #e0a458;
-  --brand-soft: rgba(224, 164, 88, 0.10);
+  /* Brand point — saturated coral / sunset orange (Anthropic-warmth, more presence) */
+  --brand:        #ff7a3d;
+  --brand-2:      #ff9c5a;
+  --brand-soft:   rgba(255, 122, 61, 0.14);
+  --brand-glow:   rgba(255, 122, 61, 0.35);
+  --brand-ring:   rgba(255, 122, 61, 0.5);
 
-  /* Section semantic colors — desaturated, Stripe-docs feel.
-   * Only used as 1px left rail + eyebrow text + icon stroke.
-   * Never paint full backgrounds with these.
+  /* Section semantic colors — vivid enough to feel alive on dark.
+   * Applied to: 2px left rail + eyebrow text + icon + key emphasis.
    */
-  --sec-amber:  #d6a35a;  /* verdict — bottom line */
-  --sec-red:    #d46a6a;  /* funnel ladder · red flags · top risk */
-  --sec-blue:   #6f9ed8;  /* market reality */
-  --sec-green:  #74c08f;  /* revenue forecast · green flags */
-  --sec-yellow: #d8c25d;  /* insider tips */
-  --sec-cyan:   #6cc7d4;  /* build path */
-  --sec-violet: #a07ed4;  /* external footprint */
-  --sec-orange: #d6925a;  /* description forensics */
-  --sec-gray:   #8a8a8a;  /* comments · related videos · raw signals */
+  --sec-amber:  #ffb24d;  /* verdict — bottom line */
+  --sec-red:    #ff6b6b;  /* funnel ladder · red flags · top risk */
+  --sec-blue:   #5fa0ff;  /* market reality */
+  --sec-green:  #4dd599;  /* revenue forecast · green flags */
+  --sec-yellow: #ffd84d;  /* insider tips */
+  --sec-cyan:   #4ad6e3;  /* build path */
+  --sec-violet: #b78eff;  /* external footprint */
+  --sec-orange: #ff9447;  /* description forensics */
+  --sec-gray:   #a3a3a3;  /* comments · related videos · raw signals */
 }
+
+/* Typography upgrade — bumped one size everywhere */
+html { font-size: 17px; }
+@media (max-width: 768px) { html { font-size: 16px; } }
 
 html, body {
   background: var(--bg);
@@ -97,10 +103,18 @@ body::before {
   mix-blend-mode: overlay;
 }
 
-/* Sharp focus ring */
+/* Sharp focus ring — brand-colored */
 *:focus-visible {
-  outline: 1px solid var(--text);
+  outline: 2px solid var(--brand);
   outline-offset: 2px;
+}
+
+/* Glow utility for primary CTAs and active states */
+.brand-glow {
+  box-shadow: 0 0 0 1px var(--brand-ring), 0 8px 24px -8px var(--brand-glow);
+}
+.brand-glow-soft {
+  box-shadow: 0 0 0 1px var(--brand-ring);
 }
 
 /* Mono numerals everywhere a number appears */

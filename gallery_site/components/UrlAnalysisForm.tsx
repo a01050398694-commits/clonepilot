@@ -227,17 +227,17 @@ export function UrlAnalysisForm({
     <form
       onSubmit={onSubmit}
       className="border border-strong bg-surface"
-      style={{ borderRadius: 2 }}
+      style={{ borderRadius: 8 }}
     >
       {/* terminal-style header bar */}
-      <div className="flex items-center justify-between px-5 h-9 border-b border-strong bg-surface-2">
+      <div className="flex items-center justify-between px-5 h-10 border-b border-strong bg-surface-2" style={{ borderTopLeftRadius: 7, borderTopRightRadius: 7 }}>
         <div className="flex items-center gap-2">
-          <span className="inline-block h-1.5 w-1.5 rounded-full breathe" style={{ background: "var(--brand)" }} />
-          <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-muted">
+          <span className="inline-block h-2 w-2 rounded-full breathe" style={{ background: "var(--brand)" }} />
+          <p className="text-[11px] font-mono uppercase tracking-wider2 text-ink-muted font-semibold">
             {d.live_badge}
           </p>
         </div>
-        <p className="text-[10px] font-mono tracking-wider text-ink-dim">
+        <p className="text-[11px] font-mono tracking-wider text-ink-dim">
           /analyze
         </p>
       </div>
@@ -246,7 +246,7 @@ export function UrlAnalysisForm({
         <div className="grid gap-2">
           <label
             htmlFor="ytUrl"
-            className="text-[10px] font-mono uppercase tracking-wider2 text-ink-muted"
+            className="text-[12px] font-mono uppercase tracking-wider2 text-ink-muted font-semibold"
           >
             &gt; {d.label_url}
           </label>
@@ -257,8 +257,8 @@ export function UrlAnalysisForm({
             value={youtubeUrl}
             onChange={(e) => setUrl(e.target.value)}
             placeholder={d.url_placeholder}
-            className="w-full h-11 px-3 border border-strong bg-bg outline-none font-mono text-sm text-ink placeholder:text-ink-dim focus:border-bright transition"
-            style={{ borderRadius: 2 }}
+            className="w-full h-12 px-4 border border-strong bg-bg outline-none font-mono text-[15px] text-ink placeholder:text-ink-dim focus:border-bright transition"
+            style={{ borderRadius: 6 }}
             autoComplete="off"
             spellCheck={false}
           />
@@ -266,12 +266,12 @@ export function UrlAnalysisForm({
 
         <button
           type="submit"
-          className="group w-full h-11 inline-flex items-center justify-center gap-2 bg-ink text-bg font-mono uppercase tracking-wider text-xs hover:bg-white active:translate-y-[1px] transition"
-          style={{ borderRadius: 2 }}
+          className="group w-full h-12 inline-flex items-center justify-center gap-2 text-bg font-semibold text-sm hover:brightness-110 active:translate-y-[1px] transition brand-glow"
+          style={{ background: "var(--brand)", borderRadius: 6 }}
         >
           <span>{d.submit}</span>
           <ArrowRight
-            size={14}
+            size={16}
             weight="bold"
             className="transition group-hover:translate-x-0.5"
           />
@@ -428,10 +428,10 @@ function fmtUSD(n: number): string {
 }
 
 function gaugeShade(value: number): string {
-  // Monochrome shading by value: high = white, mid = gray, low = dim gray.
-  if (value >= 70) return "#ffffff";
-  if (value >= 40) return "#a0a0a0";
-  return "#5a5a5a";
+  // Traffic-light coloring: green = good, amber = mid, red = bad.
+  if (value >= 70) return "var(--sec-green)";
+  if (value >= 40) return "var(--sec-amber)";
+  return "var(--sec-red)";
 }
 
 /* ─── PreviewCard ──────────────────────────────────────────────────── */
@@ -578,14 +578,14 @@ function PreviewCard({
         )}
       </div>
 
-      {/* ─── LANG TOGGLE row ─── */}
-      <div className="px-5 py-3 border-b border-strong bg-surface-2/40 flex items-center justify-between gap-3 flex-wrap">
-        <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim">
+      {/* ─── LANG TOGGLE row — big, prominent, coral active ─── */}
+      <div className="px-5 py-4 border-b border-strong bg-surface-2/40 flex items-center justify-between gap-4 flex-wrap">
+        <p className="text-[12px] font-mono uppercase tracking-wider2 text-ink-muted">
           &gt; {d.card_translate_label}
         </p>
         <div
-          className="inline-flex items-center border border-strong bg-bg p-0.5"
-          style={{ borderRadius: 2 }}
+          className="inline-flex items-center border border-strong bg-bg p-[3px]"
+          style={{ borderRadius: 8 }}
         >
           {CARD_LANGS.map((l) => {
             const active = l === cardLang;
@@ -597,13 +597,16 @@ function PreviewCard({
                 onClick={() => pickLang(l)}
                 title={CARD_LANG_NAMES[l]}
                 className={[
-                  "px-2.5 py-1 text-[11px] font-mono uppercase tracking-wider transition select-none",
+                  "px-3.5 py-1.5 text-[13px] font-mono uppercase tracking-wider transition select-none",
                   active
-                    ? "bg-ink text-bg"
+                    ? "text-bg font-semibold"
                     : "text-ink-muted hover:text-ink hover:bg-surface-2",
                   isLoading ? "opacity-40 cursor-wait" : "",
                 ].join(" ")}
-                style={{ borderRadius: 1 }}
+                style={{
+                  borderRadius: 5,
+                  ...(active ? { background: "var(--brand)" } : {}),
+                }}
               >
                 {CARD_LANG_LABELS[l]}
               </button>
@@ -633,21 +636,22 @@ function PreviewCard({
           </p>
 
           <div
-            className="mt-6 border px-4 py-4 relative overflow-hidden"
+            className="mt-6 border-l-[3px] border px-5 py-5 relative overflow-hidden"
             style={{
-              borderRadius: 2,
-              borderColor: "color-mix(in oklab, var(--sec-amber) 35%, var(--border-strong))",
-              background: "color-mix(in oklab, var(--sec-amber) 6%, var(--surface))",
+              borderRadius: 6,
+              borderLeftColor: "var(--sec-amber)",
+              borderColor: "color-mix(in oklab, var(--sec-amber) 25%, var(--border-strong))",
+              background: "color-mix(in oklab, var(--sec-amber) 8%, var(--surface))",
             }}
           >
             <p
-              className="text-[10px] font-mono uppercase tracking-wider2 flex items-center gap-1.5"
+              className="text-[12px] font-mono uppercase tracking-wider2 flex items-center gap-2 font-semibold"
               style={{ color: "var(--sec-amber)" }}
             >
-              <FileText size={11} weight="bold" />
+              <FileText size={13} weight="bold" />
               {cl.section_verdict}
             </p>
-            <p className="mt-2 text-[15px] text-ink leading-relaxed">
+            <p className="mt-3 text-[16px] text-ink leading-relaxed">
               {preview.one_paragraph_verdict}
             </p>
           </div>
@@ -1073,36 +1077,46 @@ function PreviewCard({
           </div>
         </Section>
 
-        {/* 16 — CTA */}
-        <div className="px-6 py-7 stripe-danger">
-          <div className="flex flex-wrap items-center justify-between gap-4">
+        {/* 16 — CTA — coral hero block */}
+        <div
+          className="px-6 py-8 relative overflow-hidden"
+          style={{
+            background:
+              "linear-gradient(135deg, color-mix(in oklab, var(--brand) 18%, transparent), color-mix(in oklab, var(--brand) 4%, transparent))",
+            borderTop: "1px solid color-mix(in oklab, var(--brand) 30%, var(--border-strong))",
+          }}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-5">
             <div>
-              <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim flex items-center gap-1.5">
-                <Lightning size={11} weight="bold" />
+              <p
+                className="text-[12px] font-mono uppercase tracking-wider2 flex items-center gap-2 font-semibold"
+                style={{ color: "var(--brand)" }}
+              >
+                <Lightning size={13} weight="bold" />
                 {d.section_clone_cta}
               </p>
-              <h4 className="mt-2 text-lg font-semibold text-ink font-mono">
+              <h4 className="mt-3 text-2xl font-semibold text-ink tracking-tight">
                 {d.clone_cta_title}
               </h4>
-              <p className="mt-1 text-xs text-ink-muted leading-relaxed max-w-[60ch]">
+              <p className="mt-2 text-sm text-ink-muted leading-relaxed max-w-[60ch]">
                 {d.clone_cta_body}
               </p>
             </div>
             <div className="flex flex-wrap gap-2 flex-shrink-0">
               <Link
                 href="/install"
-                className="inline-flex h-10 items-center gap-2 bg-ink text-bg px-4 text-xs font-mono uppercase tracking-wider hover:bg-white active:translate-y-[1px] transition"
-                style={{ borderRadius: 2 }}
+                className="inline-flex h-11 items-center gap-2 text-bg px-5 text-sm font-semibold hover:brightness-110 active:translate-y-[1px] transition brand-glow"
+                style={{ background: "var(--brand)", borderRadius: 6 }}
               >
                 {d.clone_cta_btn}
               </Link>
               <button
                 type="button"
                 onClick={onRetry}
-                className="inline-flex h-10 items-center gap-2 border border-strong px-4 text-xs font-mono uppercase tracking-wider text-ink-muted hover:text-ink hover:border-bright transition"
-                style={{ borderRadius: 2 }}
+                className="inline-flex h-11 items-center gap-2 border border-strong px-4 text-sm font-medium text-ink-muted hover:text-ink hover:border-bright transition"
+                style={{ borderRadius: 6 }}
               >
-                <ArrowsClockwise size={12} weight="bold" />
+                <ArrowsClockwise size={14} weight="bold" />
                 {d.card_retry}
               </button>
             </div>
@@ -1162,13 +1176,13 @@ function Section({
       {toneColor && (
         <span
           aria-hidden
-          className="absolute left-0 top-6 bottom-6 w-px"
-          style={{ background: toneColor, opacity: 0.55 }}
+          className="absolute left-0 top-6 bottom-6 w-[2px]"
+          style={{ background: toneColor, opacity: 0.75 }}
         />
       )}
       {eyebrow && (
         <p
-          className="text-[10px] font-mono uppercase tracking-wider2 mb-3 flex items-center gap-1.5"
+          className="text-[11px] font-mono uppercase tracking-wider2 mb-4 flex items-center gap-1.5 font-semibold"
           style={{ color: toneColor ?? "var(--text-dim)" }}
         >
           {icon}
@@ -1224,26 +1238,28 @@ function CircleGauge({
   value: number;
   inverted?: boolean;
 }) {
-  // For "inverted" gauges (where lower is better — e.g. bot inflation),
-  // shade by (100 - value) but still display the raw value.
   const shadeValue = inverted ? 100 - value : value;
   const ringColor = gaugeShade(shadeValue);
   const deg = Math.max(0, Math.min(100, value)) * 3.6;
   return (
-    <div className="flex flex-col items-center gap-1.5">
+    <div className="flex flex-col items-center gap-2">
       <div
-        className="relative h-20 w-20 rounded-full"
+        className="relative h-24 w-24 rounded-full"
         style={{
           background: `conic-gradient(${ringColor} ${deg}deg, var(--surface-2) ${deg}deg 360deg)`,
         }}
       >
-        <div className="absolute inset-[5px] rounded-full bg-bg flex items-center justify-center flex-col">
-          <span className="font-mono text-xl font-bold text-ink tabnums">
+        <div className="absolute inset-[6px] rounded-full bg-bg flex items-center justify-center flex-col">
+          <span
+            className="font-mono text-2xl font-bold tabnums"
+            style={{ color: ringColor }}
+          >
             {value}
           </span>
+          <span className="text-[10px] font-mono text-ink-dim tabnums">/100</span>
         </div>
       </div>
-      <p className="text-[9px] font-mono uppercase tracking-wider2 text-ink-dim text-center leading-tight max-w-[8ch]">
+      <p className="text-[11px] font-mono uppercase tracking-wider2 text-ink-muted text-center leading-tight max-w-[10ch] font-semibold">
         {label}
       </p>
     </div>

@@ -94,11 +94,11 @@ function HeroText({ d, reportsShipped }: { d: Dict; reportsShipped: number }) {
         {d.hero.badge}
       </div>
 
-      <h1 className="mt-6 text-[44px] md:text-[64px] leading-[1.02] tracking-tightish font-semibold text-ink">
+      <h1 className="mt-6 text-[52px] md:text-[80px] leading-[0.98] tracking-tightish font-semibold text-ink">
         {d.hero.titleRich(HeroEm)}
       </h1>
 
-      <p className="mt-7 max-w-[58ch] text-[17px] leading-relaxed text-ink-muted">
+      <p className="mt-7 max-w-[58ch] text-[19px] leading-relaxed text-ink-muted">
         {d.hero.subtitle}
       </p>
 
