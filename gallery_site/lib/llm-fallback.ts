@@ -183,7 +183,7 @@ export async function callGeminiJson<T>(opts: {
 }): Promise<{ ok: true; value: T; model: string }> {
   const primary = opts.model ?? "gemini-2.5-flash";
   const secondary =
-    primary === "gemini-2.5-flash" ? "gemini-2.0-flash-exp" : "gemini-2.5-flash";
+    primary === "gemini-2.5-flash" ? "gemini-2.0-flash" : "gemini-2.5-flash";
 
   const tryWithRetry = async (model: string) => {
     try {
@@ -217,7 +217,15 @@ export async function callGeminiJson<T>(opts: {
   return { ok: true, value: parseJsonLoose<T>(res.text), model: res.model };
 }
 
-/** Try primary model, on transient error retry once after backoff, then try secondary model. */
+function isMalformedFC(err: unknown): boolean {
+  const m = err instanceof Error ? err.message : "";
+  return /MALFORMED_FUNCTION_CALL|no function call/i.test(m);
+}
+
+/** Try primary model, on transient error retry once after backoff, then try
+ * secondary model. On MALFORMED_FUNCTION_CALL (Gemini fails to emit valid
+ * function args), fall back to JSON-mode plain generation with the same
+ * schema described in the prompt. */
 export async function callGeminiTool<T>(opts: {
   apiKey: string;
   model?: string;
@@ -227,7 +235,7 @@ export async function callGeminiTool<T>(opts: {
 }): Promise<GeminiResult<T>> {
   const primary = opts.model ?? "gemini-2.5-flash";
   const secondary =
-    primary === "gemini-2.5-flash" ? "gemini-2.0-flash-exp" : "gemini-2.5-flash";
+    primary === "gemini-2.5-flash" ? "gemini-2.0-flash" : "gemini-2.5-flash";
 
   const tryWithRetry = async (
     model: string,
@@ -257,8 +265,36 @@ export async function callGeminiTool<T>(opts: {
     const res = await tryWithRetry(primary);
     return { ok: true, args: res.args, model: res.model };
   } catch (err) {
-    if (!isTransientStatus(err)) throw err;
-    const res = await tryWithRetry(secondary);
-    return { ok: true, args: res.args, model: res.model };
+    // Transient → retry on secondary model
+    if (isTransientStatus(err)) {
+      try {
+        const res = await tryWithRetry(secondary);
+        return { ok: true, args: res.args, model: res.model };
+      } catch (err2) {
+        if (!isMalformedFC(err2)) throw err2;
+        // continue to JSON mode below
+      }
+    } else if (!isMalformedFC(err)) {
+      throw err;
+    }
+
+    // MALFORMED_FUNCTION_CALL fallback — ask Gemini to return the args
+    // object directly via JSON mode. The tool's input_schema describes the
+    // shape; we embed it in the prompt so the model knows the contract.
+    console.error("[llm-fallback] Gemini function call failed, falling back to JSON mode");
+    const schemaHint = JSON.stringify(opts.tool.input_schema);
+    const jsonPrompt = `${opts.userText}
+
+IMPORTANT — your output MUST be a single JSON object matching this schema (no markdown, no commentary, JUST the JSON):
+${schemaHint}
+
+Return the JSON object now.`;
+    const res = await callGeminiJson<T>({
+      apiKey: opts.apiKey,
+      model: secondary,
+      system: opts.system,
+      userText: jsonPrompt,
+    });
+    return { ok: true, args: res.value, model: res.model };
   }
 }
