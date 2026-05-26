@@ -54,6 +54,19 @@ export type CardLabels = {
   observed_in_video: string;
   inferred_from_genre: string;
   one_paragraph_intro: string;
+
+  /* course distilled */
+  section_course_distilled: string;
+  course_lesson_chunks: string;
+  course_frameworks: string;
+  course_tactics: string;
+  course_left_out: string;
+  course_if_apply: string;
+  course_quality: string;
+  course_reading: string;
+  course_key: string;
+  course_example: string;
+  course_use_when: string;
 };
 
 const EN: CardLabels = {
@@ -92,6 +105,17 @@ const EN: CardLabels = {
   observed_in_video: "observed",
   inferred_from_genre: "inferred",
   one_paragraph_intro: "Read this before you spend money or months",
+  section_course_distilled: "What this video actually teaches",
+  course_lesson_chunks: "Lessons",
+  course_frameworks: "Frameworks",
+  course_tactics: "Specific tactics",
+  course_left_out: "What they didn't show you",
+  course_if_apply: "If you actually do this",
+  course_quality: "Lesson quality",
+  course_reading: "min read",
+  course_key: "why",
+  course_example: "example",
+  course_use_when: "use when",
 };
 
 const KO: CardLabels = {
@@ -130,6 +154,17 @@ const KO: CardLabels = {
   observed_in_video: "관찰",
   inferred_from_genre: "추정",
   one_paragraph_intro: "돈이나 시간을 쓰기 전에 이거 한 번 읽어",
+  section_course_distilled: "이 영상이 진짜 가르치는 것",
+  course_lesson_chunks: "강의 챕터",
+  course_frameworks: "프레임워크",
+  course_tactics: "구체 전술",
+  course_left_out: "영상이 안 보여준 것",
+  course_if_apply: "이대로 따라했을 때",
+  course_quality: "강의 알맹이",
+  course_reading: "분 읽기",
+  course_key: "왜 중요",
+  course_example: "예시",
+  course_use_when: "쓰는 시점",
 };
 
 const JA: CardLabels = {
@@ -168,6 +203,17 @@ const JA: CardLabels = {
   observed_in_video: "観測",
   inferred_from_genre: "推定",
   one_paragraph_intro: "金や時間を投下する前に、これだけ読んでくれ",
+  section_course_distilled: "この動画が本当に教えていること",
+  course_lesson_chunks: "レッスン",
+  course_frameworks: "フレームワーク",
+  course_tactics: "具体的な戦術",
+  course_left_out: "彼らが見せなかったこと",
+  course_if_apply: "実際にやってみたら",
+  course_quality: "中身の質",
+  course_reading: "分で読める",
+  course_key: "なぜ重要",
+  course_example: "例",
+  course_use_when: "使う場面",
 };
 
 const ZH: CardLabels = {
@@ -206,6 +252,17 @@ const ZH: CardLabels = {
   observed_in_video: "已观察",
   inferred_from_genre: "推断",
   one_paragraph_intro: "在你花钱花时间之前,先看这段",
+  section_course_distilled: "这个视频真正在教什么",
+  course_lesson_chunks: "课程章节",
+  course_frameworks: "框架",
+  course_tactics: "具体战术",
+  course_left_out: "他们没告诉你的",
+  course_if_apply: "如果你真照着做",
+  course_quality: "课程含金量",
+  course_reading: "分钟阅读",
+  course_key: "为什么重要",
+  course_example: "例子",
+  course_use_when: "什么时候用",
 };
 
 const ES: CardLabels = {
@@ -244,6 +301,17 @@ const ES: CardLabels = {
   observed_in_video: "observado",
   inferred_from_genre: "inferido",
   one_paragraph_intro: "Léelo antes de gastar dinero o meses",
+  section_course_distilled: "Lo que este vídeo realmente enseña",
+  course_lesson_chunks: "Lecciones",
+  course_frameworks: "Frameworks",
+  course_tactics: "Tácticas concretas",
+  course_left_out: "Lo que no te mostraron",
+  course_if_apply: "Si realmente lo aplicas",
+  course_quality: "Calidad de la lección",
+  course_reading: "min de lectura",
+  course_key: "por qué",
+  course_example: "ejemplo",
+  course_use_when: "cuándo usar",
 };
 
 export const CARD_LABELS: Record<Lang, CardLabels> = {

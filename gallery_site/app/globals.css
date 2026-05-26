@@ -72,6 +72,13 @@
 html { font-size: 17px; }
 @media (max-width: 768px) { html { font-size: 16px; } }
 
+/* CJK / Korean — word-level break instead of breaking mid-word.
+ * Tailwind v3 does not ship `break-keep`, so define it ourselves. */
+.break-keep {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
 html, body {
   background: var(--bg);
   color: var(--text);

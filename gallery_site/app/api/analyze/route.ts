@@ -11,7 +11,7 @@ import {
   rateLimitCheck,
   clientIp,
 } from "@/lib/analyze-cache";
-import { callGeminiTool, isAnthropicBudgetError } from "@/lib/llm-fallback";
+import { callGeminiTool, shouldFallbackFromAnthropic } from "@/lib/llm-fallback";
 import {
   fetchTopComments,
   analyzeCommentStats,
@@ -129,6 +129,30 @@ export type MoneyFlow = {
   notes: string;
 };
 
+export type LessonChunk = {
+  headline: string;
+  teaching: string;
+  example_or_quote: string;
+  why_it_matters: string;
+};
+
+export type Framework = {
+  name: string;
+  steps: string[];
+  use_when: string;
+};
+
+export type CourseDistilled = {
+  one_line_summary: string;
+  lesson_chunks: LessonChunk[];
+  frameworks_taught: Framework[];
+  specific_tactics: string[];
+  what_creator_left_out: string[];
+  if_you_apply_this: string;
+  course_quality_0_100: number;
+  reading_time_minutes: number;
+};
+
 export type CommentStats = {
   total: number;
   avg_length: number;
@@ -164,6 +188,7 @@ export type AnalyzePreview = {
   execution_sequence: ExecutionStep[];
   marketing_playbook: MarketingChannel[];
   money_flow: MoneyFlow[];
+  course_distilled: CourseDistilled;
   one_paragraph_verdict: string;
   video: VideoMeta;
   signals: SignalBlock;
@@ -699,6 +724,113 @@ const EXTRACT_TOOL: Anthropic.Tool = {
         },
         description: "5+ revenue sources breaking down where ALL the money actually comes from. MANDATORY. The TRUE breakdown — not what the video claims.",
       },
+      course_distilled: {
+        type: "object",
+        description:
+          "Distill the video AS IF it were a paid course. The reader should be able to read this section and feel like they 'took the course' in 3 minutes. MANDATORY — never empty even if transcript is weak.",
+        properties: {
+          one_line_summary: {
+            type: "string",
+            description:
+              "If the video had to be summarized as a one-line lesson hook (like a course landing page subtitle), what is it? ≤120 chars.",
+          },
+          lesson_chunks: {
+            type: "array",
+            description:
+              "5-8 distinct lessons the video actually teaches, in the order the creator presents them. Like chapter notes from someone who watched it on 2x and took notes. MANDATORY — never empty.",
+            items: {
+              type: "object",
+              properties: {
+                headline: {
+                  type: "string",
+                  description: "The lesson title — punchy and specific. ≤80 chars.",
+                },
+                teaching: {
+                  type: "string",
+                  description:
+                    "The core idea taught, in 2-3 sentences. Write it as if YOU are the teacher reteaching it to the reader. Concrete and actionable. ≤400 chars.",
+                },
+                example_or_quote: {
+                  type: "string",
+                  description:
+                    "A specific example, number, or near-quote the creator uses to illustrate this lesson. If the transcript is weak, infer a plausible illustration. ≤220 chars.",
+                },
+                why_it_matters: {
+                  type: "string",
+                  description:
+                    "Why this lesson is important for someone trying to clone the business. ≤180 chars.",
+                },
+              },
+              required: ["headline", "teaching", "example_or_quote", "why_it_matters"],
+            },
+          },
+          frameworks_taught: {
+            type: "array",
+            description:
+              "Named frameworks / step-by-step systems the creator teaches. 1-4 frameworks. Empty array only if the video is purely anecdotal.",
+            items: {
+              type: "object",
+              properties: {
+                name: {
+                  type: "string",
+                  description:
+                    "The framework name (creator's own if any — e.g. 'Hook → Story → Offer', '4-Quadrant Lead Magnet'). ≤70 chars.",
+                },
+                steps: {
+                  type: "array",
+                  items: { type: "string" },
+                  description: "3-7 sequential steps. Each ≤140 chars.",
+                },
+                use_when: {
+                  type: "string",
+                  description: "When to apply this framework. ≤180 chars.",
+                },
+              },
+              required: ["name", "steps", "use_when"],
+            },
+          },
+          specific_tactics: {
+            type: "array",
+            items: { type: "string" },
+            description:
+              "5-10 SPECIFIC tactics with concrete details — exact tool names, prices, link types, percentages, scripts. NO 'be consistent' fluff. E.g. 'Run TikTok Spark Ads at $30/day for first 7 days; pause anything under 2% CTR.' Each ≤220 chars.",
+          },
+          what_creator_left_out: {
+            type: "array",
+            items: { type: "string" },
+            description:
+              "3-5 important things the creator did NOT show you that you NEED to know to actually pull this off. Could be hidden costs, real timeline, tools they actually use vs what they show, etc. Each ≤200 chars.",
+          },
+          if_you_apply_this: {
+            type: "string",
+            description:
+              "Realistic 6-month outcome if a normal solo operator follows EVERY tactic in this video exactly. Specific numbers, e.g. '~$2,000/mo by month 6 IF you publish 3x/week and survive the first 90 days of zero traction.' ≤300 chars.",
+          },
+          course_quality_0_100: {
+            type: "integer",
+            minimum: 0,
+            maximum: 100,
+            description:
+              "How useful is what the video teaches if you ignore the funnel? 0 = pure fluff. 100 = could be a $500 paid course. Separate from honesty_score.",
+          },
+          reading_time_minutes: {
+            type: "integer",
+            minimum: 1,
+            maximum: 15,
+            description: "Approx minutes to read this entire distilled lesson block.",
+          },
+        },
+        required: [
+          "one_line_summary",
+          "lesson_chunks",
+          "frameworks_taught",
+          "specific_tactics",
+          "what_creator_left_out",
+          "if_you_apply_this",
+          "course_quality_0_100",
+          "reading_time_minutes",
+        ],
+      },
       insider_tips: {
         type: "array",
         items: { type: "string" },
@@ -765,20 +897,31 @@ const EXTRACT_TOOL: Anthropic.Tool = {
       "execution_sequence",
       "marketing_playbook",
       "money_flow",
+      "course_distilled",
       "one_paragraph_verdict",
     ],
   },
 };
 
-const SYSTEM_PROMPT = `You are ClonePilot — a brutally honest market analyst that reverse-engineers YouTube business videos so a solo operator does NOT waste months on the wrong idea.
+const SYSTEM_PROMPT = `You are ClonePilot — a brutally honest analyst + master teacher. You watch a YouTube business video and produce TWO things in one report:
 
-YOU ARE NOT SUMMARIZING THE VIDEO. The reader can watch the video. They want:
+PART A — REVERSE ENGINEER THE BUSINESS (so the reader does NOT waste months on a fake idea):
 1. Is this business REAL or am I being sold a dream?
 2. If I clone the idea, what's a realistic year-1 revenue I'd actually make?
 3. Where does the money really come from — product, course, ads, coaching, affiliates?
 4. What did the creator NOT show that I need to know?
 5. Why do people actually pay this creator (the psychological mechanism), and what real value do they get?
 6. Concretely, how many weeks and dollars to clone this?
+
+PART B — DISTILL THE VIDEO AS IF IT WERE A PAID COURSE (the user's #1 request):
+The viewer wants to skip the 45-min video and read a 3-min "I took the course" digest. You must extract:
+- The CORE LESSONS the creator actually teaches, in their order — like chapter notes. 5-8 chunks, each with a headline, the teaching (re-taught by YOU as a clear teacher), an example/quote, and why it matters to the cloner.
+- Any NAMED FRAMEWORKS or step-by-step systems (1-4 of them) with their actual steps.
+- 5-10 SPECIFIC TACTICS — exact tools, prices, scripts, percentages. No "be consistent" fluff.
+- 3-5 things the creator LEFT OUT that you need to know to actually pull this off.
+- A 6-month realistic outcome forecast if you follow this video to the letter.
+
+The course_distilled section is NOT a summary. You are TEACHING the lesson to the reader. Write as a teacher would: clear, direct, no padding. The reader should close the report feeling they actually learned what the video teaches — including the parts the creator obscured.
 
 COURSE-FUNNEL PATTERNS (auto-detect using ALL supplied signals):
 - "월 X천만원 / I made $X" with no verifiable third-party proof
@@ -834,7 +977,16 @@ YOU MUST PRODUCE A COMPLETE REPORT EVERY TIME. NO EXCEPTIONS.
 PLAYBOOK STYLE:
 - execution_sequence reads like a step-by-step "hack the business" plan. Week 1: do X for Y hours, success factor is Z. Week 2: do A. Etc.
 - marketing_playbook reads like an internal Slack from someone who has run this business. "Drop $500 into r/Entrepreneur ads, expect ~30 signups, CAC $17, this works because that sub trusts personal-brand content."
-- money_flow reads like a leaked P&L. Where every dollar comes from, not what they marketed.`;
+- money_flow reads like a leaked P&L. Where every dollar comes from, not what they marketed.
+
+COURSE_DISTILLED STYLE (NEW — read this carefully):
+- Treat the video like a $500 paid course you just took. Your job is to be the TA who hands the student a perfect study guide so they don't need to rewatch.
+- lesson_chunks: 5-8 chunks. Each headline = punchy lesson title ("Why your first 10 customers can't come from cold ads"). teaching = you, the TA, RE-TEACHING the lesson clearly in 2-3 sentences — not paraphrasing the creator, not "the creator says X". Just teach it. example_or_quote = a real example, number, or near-quote the creator used. If transcript is weak, INFER a plausible example based on the genre. why_it_matters = practical relevance to the cloner.
+- frameworks_taught: only if the video actually has named systems. If the creator says "the 3-step lead magnet method", capture it. If purely anecdotal, empty.
+- specific_tactics: this is where you write GOLD — exact playbook moves. "Run TikTok Spark Ads at $30/day for 7 days, pause anything below 2% CTR." "Use Notion + Tally for first MVP, switch to Webflow only after $5k MRR." NO generic advice — only things an operator could literally execute Monday morning.
+- what_creator_left_out: the hidden costs, the timeline reality (creator says "3 weeks", real founders take 5 months), the tools they really use vs what they show, the unpaid hours, the failed iterations.
+- if_you_apply_this: realistic forecast. e.g. "Following every step exactly, expect ~$500-2000 MRR by month 6 IF you publish 3x/week AND survive the first 90 days of zero traction. ~70% of people quit by month 3."
+- course_quality_0_100: separate from honesty. A scammy funnel can still teach real tactics (high quality, low honesty). A boring real-product video can have low course_quality but high honesty.`;
 
 /* ─── main POST handler ────────────────────────────────────────────────── */
 
@@ -1093,11 +1245,22 @@ Call extract_business_preview now. Output English. Be concise but punchy — ope
     let providerUsed = "anthropic";
     let modelUsed = model;
 
+    const geminiKey =
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_AI_API_KEY ||
+      process.env.NEXT_PUBLIC_GOOGLE_AI_KEY ||
+      "";
+    const geminiPrimary =
+      process.env.CLONEPILOT_GEMINI_PRIMARY?.trim() === "1" && Boolean(geminiKey);
+
     try {
+      if (geminiPrimary) {
+        throw new Error("gemini-primary: skipping anthropic");
+      }
       const client = new Anthropic({ apiKey: anthropicKey });
       const resp = await client.messages.create({
         model,
-        max_tokens: 10_000,
+        max_tokens: 16_000,
         system: SYSTEM_PROMPT,
         tools: [EXTRACT_TOOL],
         tool_choice: { type: "tool", name: EXTRACT_TOOL.name },
@@ -1109,17 +1272,14 @@ Call extract_business_preview now. Output English. Be concise but punchy — ope
       }
       args = toolUse.input as ExtractArgs;
     } catch (err) {
-      // If Anthropic hit an account-wide budget cap, fall back to Gemini.
-      const geminiKey =
-        process.env.GEMINI_API_KEY ||
-        process.env.GOOGLE_AI_API_KEY ||
-        process.env.NEXT_PUBLIC_GOOGLE_AI_KEY ||
-        "";
-      if (!isAnthropicBudgetError(err) || !geminiKey) {
+      const isPrimarySkip =
+        err instanceof Error && err.message.startsWith("gemini-primary:");
+      if (!isPrimarySkip && (!shouldFallbackFromAnthropic(err) || !geminiKey)) {
         throw err;
       }
+      if (!geminiKey) throw err;
       console.error(
-        "[/api/analyze] Anthropic budget hit, falling back to Gemini",
+        "[/api/analyze] Anthropic failed, falling back to Gemini —",
         err instanceof Error ? err.message : err,
       );
       const g = await callGeminiTool<ExtractArgs>({

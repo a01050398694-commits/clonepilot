@@ -88,6 +88,27 @@ type MoneyFlow = {
   monthly_estimate_usd: number;
   notes: string;
 };
+type LessonChunk = {
+  headline: string;
+  teaching: string;
+  example_or_quote: string;
+  why_it_matters: string;
+};
+type Framework = {
+  name: string;
+  steps: string[];
+  use_when: string;
+};
+type CourseDistilled = {
+  one_line_summary: string;
+  lesson_chunks: LessonChunk[];
+  frameworks_taught: Framework[];
+  specific_tactics: string[];
+  what_creator_left_out: string[];
+  if_you_apply_this: string;
+  course_quality_0_100: number;
+  reading_time_minutes: number;
+};
 type FunnelLink = {
   url: string;
   domain: string;
@@ -144,6 +165,7 @@ type Preview = {
   execution_sequence: ExecutionStep[];
   marketing_playbook: MarketingChannel[];
   money_flow: MoneyFlow[];
+  course_distilled?: CourseDistilled;
   one_paragraph_verdict: string;
   video: {
     id: string;
@@ -627,17 +649,17 @@ function PreviewCard({
           >
             {d.card_brand}
           </p>
-          <h2 className="text-4xl sm:text-5xl font-bold tracking-tightest text-ink leading-[1.05]">
+          <h2 className="text-4xl sm:text-5xl font-bold tracking-tight text-ink leading-[1.1] break-keep">
             {preview.brand}
           </h2>
-          <p className="mt-4 text-lg text-ink-muted leading-relaxed">
+          <p className="mt-5 text-[17px] text-ink-muted leading-[1.7] break-keep max-w-[68ch]">
             {preview.tagline}
           </p>
 
           <div
-            className="mt-6 border-l-[3px] border px-5 py-5 relative overflow-hidden"
+            className="mt-7 border-l-[3px] border px-6 py-6 relative overflow-hidden"
             style={{
-              borderRadius: 6,
+              borderRadius: 8,
               borderLeftColor: "var(--sec-amber)",
               borderColor: "color-mix(in oklab, var(--sec-amber) 25%, var(--border-strong))",
               background: "color-mix(in oklab, var(--sec-amber) 8%, var(--surface))",
@@ -650,11 +672,29 @@ function PreviewCard({
               <FileText size={13} weight="bold" />
               {cl.section_verdict}
             </p>
-            <p className="mt-3 text-[16px] text-ink leading-relaxed">
+            <p className="mt-4 text-[17px] text-ink leading-[1.8] break-keep max-w-[72ch]">
               {preview.one_paragraph_verdict}
             </p>
           </div>
         </Section>
+
+        {/* 01.5 — COURSE DISTILLED — "take the course in 3 min" */}
+        {preview.course_distilled && (
+          <CourseDistilledSection
+            d={preview.course_distilled}
+            label={cl.section_course_distilled ?? "What this video teaches"}
+            chunkLabel={cl.course_lesson_chunks ?? "Lessons"}
+            frameworksLabel={cl.course_frameworks ?? "Frameworks"}
+            tacticsLabel={cl.course_tactics ?? "Specific tactics"}
+            leftOutLabel={cl.course_left_out ?? "What they didn't show you"}
+            applyLabel={cl.course_if_apply ?? "If you actually do this"}
+            qualityLabel={cl.course_quality ?? "Lesson quality"}
+            readingLabel={cl.course_reading ?? "min read"}
+            keyLabel={cl.course_key ?? "key"}
+            exampleLabel={cl.course_example ?? "example"}
+            useWhenLabel={cl.course_use_when ?? "use when"}
+          />
+        )}
 
         {/* 02 — three strips: real revenue · why buyers pay · honest value */}
         <Section i={1} tone="amber">
@@ -730,7 +770,7 @@ function PreviewCard({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-[var(--border)] border border-strong" style={{ borderRadius: 2 }}>
                 {m.top_competitors.map((c) => (
                   <div key={c.name} className="bg-surface p-3">
-                    <p className="text-sm font-semibold text-ink font-mono">
+                    <p className="text-[14px] font-semibold text-ink font-mono">
                       {c.name}
                     </p>
                     {c.url_hint && (
@@ -738,7 +778,7 @@ function PreviewCard({
                         {c.url_hint}
                       </p>
                     )}
-                    <p className="text-xs text-ink-muted mt-1 leading-relaxed">
+                    <p className="text-[13px] text-ink-muted mt-2 leading-[1.7] break-keep">
                       {c.why_relevant}
                     </p>
                   </div>
@@ -813,10 +853,10 @@ function PreviewCard({
             icon={<Lightbulb size={16} weight="duotone" />}
             tone="yellow"
           >
-            <ol className="space-y-2">
+            <ol className="space-y-3">
               {preview.insider_tips.map((tip, i) => (
-                <li key={i} className="text-sm text-ink leading-relaxed flex gap-3">
-                  <span className="font-mono text-ink-dim flex-shrink-0 w-8 text-right">
+                <li key={i} className="text-[15px] text-ink leading-[1.75] flex gap-3 break-keep max-w-[74ch]">
+                  <span className="font-mono text-ink-dim flex-shrink-0 w-8 text-right pt-0.5">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span className="flex-1">{tip}</span>
@@ -862,11 +902,11 @@ function PreviewCard({
                       {step.how_long_hours}h
                     </span>
                   </div>
-                  <p className="text-sm text-ink-muted leading-relaxed">
+                  <p className="text-[15px] text-ink leading-[1.75] break-keep max-w-[68ch]">
                     {step.what_you_do}
                   </p>
-                  <p className="mt-2 text-[12px] text-ink-dim leading-relaxed">
-                    <span className="font-mono uppercase tracking-wider mr-1.5">key</span>
+                  <p className="mt-3 text-[13px] text-ink-muted leading-[1.7] break-keep max-w-[68ch]">
+                    <span className="font-mono uppercase tracking-wider mr-1.5 text-ink-dim">key</span>
                     {step.critical_success_factor}
                   </p>
                 </li>
@@ -903,7 +943,7 @@ function PreviewCard({
                       CAC ${ch.expected_cac_usd}
                     </span>
                   </div>
-                  <p className="text-sm text-ink leading-relaxed">{ch.exact_tactic}</p>
+                  <p className="text-[15px] text-ink leading-[1.75] break-keep">{ch.exact_tactic}</p>
                   <div className="mt-3 flex items-baseline gap-3 text-[11px] font-mono">
                     <span className="text-ink-dim">
                       <span className="tabnums" style={{ color: "var(--sec-green)" }}>
@@ -912,7 +952,7 @@ function PreviewCard({
                       signups/mo
                     </span>
                   </div>
-                  <p className="mt-2 text-[12px] text-ink-muted leading-relaxed italic">
+                  <p className="mt-3 text-[13px] text-ink-muted leading-[1.7] break-keep italic">
                     {ch.why_this_works}
                   </p>
                 </div>
@@ -1199,7 +1239,7 @@ function PreviewCard({
           icon={<Warning size={16} weight="duotone" />}
           tone="red"
         >
-          <p className="text-sm text-ink leading-relaxed">{preview.top_risk}</p>
+          <p className="text-[15.5px] text-ink leading-[1.8] break-keep max-w-[72ch]">{preview.top_risk}</p>
         </Section>
 
         {/* 15 — RAW SIGNALS CHIPS */}
@@ -1343,22 +1383,22 @@ function Section({
 
 function StripCol({ label, body }: { label: string; body: string }) {
   return (
-    <div className="bg-surface p-4">
-      <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim">
+    <div className="bg-surface p-5">
+      <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim font-semibold">
         {label}
       </p>
-      <p className="mt-2 text-sm text-ink leading-relaxed">{body}</p>
+      <p className="mt-3 text-[15px] text-ink leading-[1.75] break-keep">{body}</p>
     </div>
   );
 }
 
 function Cell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-surface p-3">
-      <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim">
+    <div className="bg-surface p-4">
+      <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim font-semibold">
         {label}
       </p>
-      <p className="mt-1 text-xs text-ink leading-relaxed">{value}</p>
+      <p className="mt-2 text-[13.5px] text-ink leading-[1.7] break-keep">{value}</p>
     </div>
   );
 }
@@ -1530,8 +1570,8 @@ function FlagPanel({
       </p>
       <ul className="space-y-1.5">
         {flags.map((f, i) => (
-          <li key={i} className="text-xs text-ink leading-relaxed flex gap-2">
-            <span className="font-mono text-ink-muted flex-shrink-0">{bullet}</span>
+          <li key={i} className="text-[14px] text-ink leading-[1.7] flex gap-2.5 break-keep">
+            <span className="font-mono text-ink-muted flex-shrink-0 mt-0.5">{bullet}</span>
             <span>{f}</span>
           </li>
         ))}
@@ -1633,6 +1673,272 @@ function CardLangDropdown({
               </button>
             );
           })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── COURSE DISTILLED — the user's #1 request ─────────────────────── */
+
+function CourseDistilledSection({
+  d,
+  label,
+  chunkLabel,
+  frameworksLabel,
+  tacticsLabel,
+  leftOutLabel,
+  applyLabel,
+  qualityLabel,
+  readingLabel,
+  keyLabel,
+  exampleLabel,
+  useWhenLabel,
+}: {
+  d: CourseDistilled;
+  label: string;
+  chunkLabel: string;
+  frameworksLabel: string;
+  tacticsLabel: string;
+  leftOutLabel: string;
+  applyLabel: string;
+  qualityLabel: string;
+  readingLabel: string;
+  keyLabel: string;
+  exampleLabel: string;
+  useWhenLabel: string;
+}) {
+  const tone = "var(--sec-cyan)";
+  return (
+    <div className="px-8 py-12 md:px-12 fade-up relative" style={{ ["--i" as string]: 1 }}>
+      <div className="flex items-center gap-3 mb-3">
+        <span
+          className="inline-flex h-7 w-7 items-center justify-center"
+          style={{
+            color: tone,
+            background: `color-mix(in oklab, ${tone} 14%, transparent)`,
+            borderRadius: 6,
+          }}
+        >
+          <Lightbulb size={16} weight="duotone" />
+        </span>
+        <h3
+          className="text-[24px] md:text-[28px] font-semibold tracking-tight leading-none break-keep"
+          style={{ color: tone }}
+        >
+          {label}
+        </h3>
+      </div>
+
+      {/* meta strip */}
+      <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 mb-6 text-[12px] font-mono text-ink-dim">
+        <span>
+          <span className="uppercase tracking-wider2 mr-1.5">{qualityLabel}</span>
+          <span className="font-semibold tabnums" style={{ color: tone }}>
+            {d.course_quality_0_100}/100
+          </span>
+        </span>
+        <span>
+          <span className="uppercase tracking-wider2 mr-1.5">{readingLabel}</span>
+          <span className="font-semibold tabnums text-ink-muted">
+            ~{d.reading_time_minutes} min
+          </span>
+        </span>
+      </div>
+
+      <p className="text-[18px] text-ink leading-[1.7] mb-7 break-keep max-w-[72ch] font-medium">
+        {d.one_line_summary}
+      </p>
+
+      {/* LESSON CHUNKS */}
+      {d.lesson_chunks.length > 0 && (
+        <div className="mb-9">
+          <p
+            className="text-[11px] font-mono uppercase tracking-wider2 mb-4 font-semibold"
+            style={{ color: tone }}
+          >
+            {chunkLabel} · {d.lesson_chunks.length}
+          </p>
+          <ol className="space-y-4">
+            {d.lesson_chunks.map((c, i) => (
+              <li
+                key={i}
+                className="border border-strong overflow-hidden"
+                style={{
+                  borderRadius: 10,
+                  background: "color-mix(in oklab, var(--sec-cyan) 3%, var(--surface))",
+                  borderLeft: `3px solid ${tone}`,
+                }}
+              >
+                <div className="px-5 py-5 md:px-7 md:py-6">
+                  <div className="flex items-baseline gap-3 mb-3">
+                    <span
+                      className="font-mono text-[11px] uppercase tracking-wider2 font-semibold tabnums flex-shrink-0"
+                      style={{ color: tone }}
+                    >
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <h4 className="text-[18px] md:text-[19px] font-semibold text-ink leading-[1.35] tracking-tight break-keep">
+                      {c.headline}
+                    </h4>
+                  </div>
+                  <p className="text-[15px] text-ink leading-[1.75] mb-4 break-keep max-w-[72ch]">
+                    {c.teaching}
+                  </p>
+                  {c.example_or_quote && (
+                    <p
+                      className="text-[13.5px] text-ink-muted leading-[1.7] mb-3 pl-3 border-l-2 break-keep max-w-[68ch]"
+                      style={{ borderColor: "var(--border-strong)" }}
+                    >
+                      <span className="font-mono text-[10px] uppercase tracking-wider2 mr-2 text-ink-dim">
+                        {exampleLabel}
+                      </span>
+                      {c.example_or_quote}
+                    </p>
+                  )}
+                  {c.why_it_matters && (
+                    <p className="text-[13px] text-ink-dim leading-[1.7] break-keep max-w-[68ch]">
+                      <span className="font-mono text-[10px] uppercase tracking-wider2 mr-2">
+                        {keyLabel}
+                      </span>
+                      {c.why_it_matters}
+                    </p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {/* FRAMEWORKS */}
+      {d.frameworks_taught.length > 0 && (
+        <div className="mb-9">
+          <p
+            className="text-[11px] font-mono uppercase tracking-wider2 mb-4 font-semibold"
+            style={{ color: tone }}
+          >
+            {frameworksLabel} · {d.frameworks_taught.length}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {d.frameworks_taught.map((f, i) => (
+              <div
+                key={i}
+                className="border border-strong p-5 md:p-6"
+                style={{
+                  borderRadius: 10,
+                  background: "color-mix(in oklab, var(--sec-cyan) 4%, var(--surface))",
+                }}
+              >
+                <h4 className="text-[16px] font-semibold text-ink leading-[1.4] mb-3 tracking-tight break-keep">
+                  {f.name}
+                </h4>
+                <ol className="space-y-2 mb-4">
+                  {f.steps.map((step, j) => (
+                    <li
+                      key={j}
+                      className="flex items-start gap-3 text-[14px] text-ink leading-[1.7] break-keep"
+                    >
+                      <span
+                        className="font-mono text-[11px] mt-0.5 flex-shrink-0 tabnums font-semibold"
+                        style={{ color: tone }}
+                      >
+                        {String(j + 1).padStart(2, "0")}
+                      </span>
+                      <span>{step}</span>
+                    </li>
+                  ))}
+                </ol>
+                <p className="text-[12px] text-ink-muted leading-[1.7] break-keep">
+                  <span className="font-mono text-[10px] uppercase tracking-wider2 mr-2">
+                    {useWhenLabel}
+                  </span>
+                  {f.use_when}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* SPECIFIC TACTICS — the "operator gold" */}
+      {d.specific_tactics.length > 0 && (
+        <div className="mb-9">
+          <p
+            className="text-[11px] font-mono uppercase tracking-wider2 mb-4 font-semibold"
+            style={{ color: tone }}
+          >
+            {tacticsLabel} · {d.specific_tactics.length}
+          </p>
+          <ul className="space-y-3">
+            {d.specific_tactics.map((t, i) => (
+              <li
+                key={i}
+                className="flex items-start gap-3.5 text-[15px] text-ink leading-[1.75] break-keep max-w-[74ch]"
+              >
+                <span
+                  className="font-mono text-[11px] mt-1 flex-shrink-0 tabnums font-semibold"
+                  style={{ color: tone }}
+                >
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span>{t}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* WHAT CREATOR LEFT OUT — the "skull" */}
+      {d.what_creator_left_out.length > 0 && (
+        <div
+          className="mb-7 p-6 md:p-7 border border-strong"
+          style={{
+            borderRadius: 10,
+            background: "color-mix(in oklab, var(--sec-red) 5%, var(--surface))",
+            borderLeft: "3px solid var(--sec-red)",
+          }}
+        >
+          <p
+            className="text-[11px] font-mono uppercase tracking-wider2 mb-3 font-semibold flex items-center gap-2"
+            style={{ color: "var(--sec-red)" }}
+          >
+            <Skull size={13} weight="duotone" />
+            {leftOutLabel}
+          </p>
+          <ul className="space-y-2.5">
+            {d.what_creator_left_out.map((t, i) => (
+              <li
+                key={i}
+                className="flex items-start gap-3 text-[14.5px] text-ink leading-[1.75] break-keep max-w-[72ch]"
+              >
+                <span className="font-mono text-ink-dim mt-1 flex-shrink-0">▸</span>
+                <span>{t}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* IF YOU APPLY THIS — outcome forecast */}
+      {d.if_you_apply_this && (
+        <div
+          className="p-6 md:p-7 border border-strong"
+          style={{
+            borderRadius: 10,
+            background: "color-mix(in oklab, var(--sec-amber) 6%, var(--surface))",
+            borderLeft: "3px solid var(--sec-amber)",
+          }}
+        >
+          <p
+            className="text-[11px] font-mono uppercase tracking-wider2 mb-3 font-semibold"
+            style={{ color: "var(--sec-amber)" }}
+          >
+            {applyLabel}
+          </p>
+          <p className="text-[15.5px] text-ink leading-[1.75] break-keep max-w-[72ch]">
+            {d.if_you_apply_this}
+          </p>
         </div>
       )}
     </div>

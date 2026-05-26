@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { isLang, type Lang } from "@/lib/i18n";
-import { callGeminiJson, isAnthropicBudgetError } from "@/lib/llm-fallback";
+import { callGeminiJson, shouldFallbackFromAnthropic } from "@/lib/llm-fallback";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -125,18 +125,32 @@ DO NOT TRANSLATE:
 DO TRANSLATE every sentence and phrase a human reads: brand description, tagline, target_audience, problem, solution, red_flags[*], green_flags[*], likely_real_revenue_source, why_buyers_pay, honest_value_for_buyer, top_risk, market_reality.* (all 4 string fields), market_reality.top_competitors[*].why_relevant, revenue_forecast.assumptions[*], insider_tips[*], build_path.steps[*].title, funnel_ladder[*].label, one_paragraph_verdict.
 
 Input JSON (some fields may be absent — translate only present ones; keep schema identical):
-${JSON.stringify(slimmed).slice(0, 18_000)}
+${JSON.stringify(slimmed).slice(0, 40_000)}
 
 Call return_translated_preview now with the full translated object.`;
   })();
 
+  // If env says Gemini-primary, skip Anthropic entirely (faster + cheaper while
+  // Anthropic account is over the budget cap).
+  const geminiKey =
+    process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_AI_API_KEY ||
+    process.env.NEXT_PUBLIC_GOOGLE_AI_KEY ||
+    "";
+  const geminiPrimary =
+    process.env.CLONEPILOT_GEMINI_PRIMARY?.trim() === "1" && Boolean(geminiKey);
+
   try {
     let result: unknown;
     try {
+      if (geminiPrimary) {
+        // Skip Anthropic, go straight to Gemini JSON mode.
+        throw new Error("gemini-primary: skipping anthropic");
+      }
       const client = new Anthropic({ apiKey });
       const resp = await client.messages.create({
         model,
-        max_tokens: 8000,
+        max_tokens: 16_000,
         tools: [TRANSLATE_TOOL],
         tool_choice: { type: "tool", name: TRANSLATE_TOOL.name },
         messages: [{ role: "user", content: [{ type: "text", text: userText }] }],
@@ -147,16 +161,14 @@ Call return_translated_preview now with the full translated object.`;
       }
       result = (toolUse.input as { translated?: unknown }).translated;
     } catch (err) {
-      const geminiKey =
-        process.env.GEMINI_API_KEY ||
-        process.env.GOOGLE_AI_API_KEY ||
-        process.env.NEXT_PUBLIC_GOOGLE_AI_KEY ||
-        "";
-      if (!isAnthropicBudgetError(err) || !geminiKey) {
+      const isPrimarySkip =
+        err instanceof Error && err.message.startsWith("gemini-primary:");
+      if (!isPrimarySkip && (!shouldFallbackFromAnthropic(err) || !geminiKey)) {
         throw err;
       }
+      if (!geminiKey) throw err;
       console.error(
-        "[/api/translate] Anthropic budget hit, fall back to Gemini",
+        "[/api/translate] Anthropic failed, falling back to Gemini —",
         err instanceof Error ? err.message : err,
       );
       // Gemini doesn't respect Anthropic's loose `type: "object"` schema in

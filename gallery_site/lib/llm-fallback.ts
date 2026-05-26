@@ -19,6 +19,34 @@ export function isAnthropicBudgetError(err: unknown): boolean {
   );
 }
 
+/**
+ * Triggers Gemini fallback for ANY Anthropic failure that's recoverable on
+ * a different provider — budget caps, transient 5XX, overloaded, network
+ * errors. We don't fall back on real auth errors (401 = bad key) because
+ * those need human action.
+ */
+export function shouldFallbackFromAnthropic(err: unknown): boolean {
+  if (isAnthropicBudgetError(err)) return true;
+  const m = err instanceof Error ? err.message : "";
+  // Real auth errors — bad key, missing key — don't fall back
+  if (/\b401\b/.test(m) || /authentication|invalid_api_key/i.test(m))
+    return false;
+  // Everything else — overloaded (529), server errors, timeouts, network — try Gemini
+  if (
+    /overloaded|rate_?limit|server_error|timeout|fetch failed|ECONNRESET|ETIMEDOUT|abort|ENOTFOUND/i.test(
+      m,
+    )
+  )
+    return true;
+  if (/\b5\d\d\b/.test(m)) return true;
+  if (/\b429\b/.test(m)) return true;
+  // Schema validation / tool_use failures — also worth retrying on Gemini
+  if (/tool_use|no tool_use|did not return/i.test(m)) return true;
+  // Empty / malformed responses
+  if (/empty|malformed|did not respond/i.test(m)) return true;
+  return false;
+}
+
 /* ─── Anthropic tool schema → Gemini function declaration ──────────── */
 
 type JSchema = Record<string, unknown>;
@@ -79,7 +107,7 @@ async function singleGeminiCall<T>(
     },
     generationConfig: {
       temperature: 0.4,
-      maxOutputTokens: 8192,
+      maxOutputTokens: 32_768,
     },
   };
   const r = await fetch(url, {
@@ -133,7 +161,7 @@ async function singleGeminiText(
     contents: [{ role: "user", parts: [{ text: userText }] }],
     generationConfig: {
       temperature: 0.4,
-      maxOutputTokens: 8192,
+      maxOutputTokens: 32_768,
       ...(responseMimeType ? { responseMimeType } : {}),
     },
   };
