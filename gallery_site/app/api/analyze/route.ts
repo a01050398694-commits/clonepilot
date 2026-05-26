@@ -994,36 +994,62 @@ COURSE_DISTILLED STYLE (NEW — read this carefully — THIS IS THE USER'S #1 RE
 - course_quality_0_100: separate from honesty. A scammy funnel can still teach real tactics (high quality, low honesty). A boring real-product video can have low course_quality but high honesty.`;
 
 /**
- * Compact system prompt for Groq fallback. Same intent but ~70% shorter so
- * the request fits inside Groq's free-tier ~12k TPM limit.
+ * Compact system prompt for Groq fallback. Embeds a TIGHT schema description
+ * so we can leave the JSON schema OUT of the user prompt — that's the only
+ * way to fit inside Groq's 12k TPM free-tier budget for long videos.
  */
-const SYSTEM_PROMPT_GROQ = `You are ClonePilot — brutally honest market analyst + master teacher. Two jobs in one report:
+const SYSTEM_PROMPT_GROQ = `You are ClonePilot — brutally honest analyst + master teacher. Output a single JSON object only. No markdown fences. No commentary.
 
-A) REVERSE-ENGINEER THE BUSINESS:
-- Real product or get-rich-quick funnel?
-- Realistic year-1 revenue if cloned (USD, concrete numbers)
-- Where the money REALLY comes from
-- Why buyers pay anyway (sunk-cost, identity, FOMO, accountability, etc.)
-- Honest value the buyer gets vs hype
+JOB A — reverse-engineer the business (real product or funnel? realistic year-1 revenue if cloned? where the money really comes from? why buyers pay anyway? honest value buyer gets).
 
-B) DISTILL THE VIDEO LIKE A PAID COURSE — the user's #1 request:
-- 5-8 lesson_chunks: punchy headline + YOUR re-teaching of the idea (not paraphrase) + example/quote + why_it_matters
-- 1-4 named frameworks with steps + use_when
-- 5-10 specific_tactics: exact tools/prices/scripts. NO "be consistent" fluff
-- 3-5 what_creator_left_out: hidden costs / real timeline / tools they actually use
-- if_you_apply_this: realistic 6-month outcome with concrete numbers
-- course_quality_0_100 separate from honesty
+JOB B — distill the video like a paid course (the user's #1 request). 5-8 lesson chunks (each with headline + YOUR re-teaching + example + why it matters). 1-4 named frameworks. 5-10 specific tactics (exact tools/prices/scripts, NO fluff). 3-5 things the creator hid. realistic 6-month outcome.
 
-NON-NEGOTIABLE OUTPUT RULES:
-- Output English. Operator-level not corporate.
-- NEVER return "unclear" / "need more data". Infer from genre if signals weak.
-- ALL required fields present, every array non-empty (use the minimum count specified).
-- Numbers concrete in USD.
-- one_paragraph_verdict reads like a friend over coffee, direct, no hedging.
-- business_model: never "unclear" unless the URL isn't a business video.
-- execution_sequence ≥7 steps, marketing_playbook ≥4, money_flow ≥5, insider_tips =5.
-- funnel_ladder: 3-5 rungs if business_model is funnel-ish; is_observed=false for inferred ones.
-- course_distilled.lesson_chunks ≥5 always.`;
+REQUIRED JSON SHAPE (omit nothing):
+{
+  "brand": string,
+  "tagline": string (≤80ch),
+  "target_audience": string (≤120ch),
+  "problem": string (≤120ch),
+  "solution": string (≤120ch),
+  "business_model": "real-product"|"course-funnel"|"affiliate-bait"|"personal-brand"|"consulting-front"|"unclear",
+  "red_flags": string[] (≥1, each ≤180ch),
+  "green_flags": string[] (≥1, each ≤180ch),
+  "likely_real_revenue_source": string (≤220ch),
+  "why_buyers_pay": string (≤220ch),
+  "honest_value_for_buyer": string (≤220ch),
+  "clone_feasibility_0_100": int 0-100,
+  "honesty_score_0_100": int 0-100,
+  "confidence_0_100": int 0-100,
+  "bot_inflation_0_100": int 0-100,
+  "real_proof_score_0_100": int 0-100,
+  "hype_vs_reality_0_100": int 0-100,
+  "top_risk": string (≤220ch),
+  "market_reality": { "tam_summary": str, "sam_summary": str, "som_year1_summary": str, "trend_summary": str, "top_competitors": [{"name": str, "url_hint": str?, "why_relevant": str}] },
+  "revenue_forecast": { "conservative_arr_usd": int, "base_arr_usd": int, "aggressive_arr_usd": int, "assumptions": string[] },
+  "funnel_ladder": [{"label": str, "price_usd_estimate": int, "is_observed": bool}] (3-5 rungs if funnel-ish, else []),
+  "insider_tips": string[] (=5, each ≤220ch),
+  "build_path": { "steps": [{"title": str, "weeks": int}], "total_weeks": int, "estimated_one_time_cost_usd": int, "estimated_monthly_cost_usd": int, "stack": string[] },
+  "execution_sequence": [{"week": int, "title": str, "what_you_do": str, "how_long_hours": int, "critical_success_factor": str}] (≥7 steps),
+  "marketing_playbook": [{"channel": str, "exact_tactic": str, "expected_cac_usd": int, "expected_signups_per_month": int, "why_this_works": str}] (≥4),
+  "money_flow": [{"source": str, "share_pct": int, "monthly_estimate_usd": int, "notes": str}] (≥5, share_pct roughly sums to 100),
+  "course_distilled": {
+    "one_line_summary": string (≤120ch),
+    "lesson_chunks": [{"headline": str, "teaching": str, "example_or_quote": str, "why_it_matters": str}] (≥5),
+    "frameworks_taught": [{"name": str, "steps": string[], "use_when": str}] (1-4 if any),
+    "specific_tactics": string[] (≥5, exact playbook moves),
+    "what_creator_left_out": string[] (≥3),
+    "if_you_apply_this": string (≤300ch, concrete numbers),
+    "course_quality_0_100": int,
+    "reading_time_minutes": int 1-15
+  },
+  "one_paragraph_verdict": string (≤900ch, friend-over-coffee tone)
+}
+
+RULES:
+- Output English. Operator tone, not corporate. USD numbers concrete.
+- NEVER "unclear" / "need more data" — infer from genre when signals weak.
+- Every array non-empty (use minimum count above). business_model never "unclear" unless URL isn't a business video.
+- one_paragraph_verdict reads like a friend telling you over coffee — direct, no hedging, specific advice.`;
 
 /* ─── main POST handler ────────────────────────────────────────────────── */
 
@@ -1335,28 +1361,26 @@ Call extract_business_preview now. Output English. Be concise but punchy — ope
           "[/api/analyze] Gemini exhausted, trying Groq —",
           geminiErr instanceof Error ? geminiErr.message : geminiErr,
         );
-        const groqClip = transcript.text.slice(0, 5_500);
+        const groqClip = transcript.text.slice(0, 4_500);
         const groqComments = topComments
-          .slice(0, 5)
-          .map((c) => `(${c.likes}♥) ${c.text.replace(/\s+/g, " ").slice(0, 80)}`)
+          .slice(0, 4)
+          .map((c) => `(${c.likes}♥) ${c.text.replace(/\s+/g, " ").slice(0, 70)}`)
           .join(" | ");
         const groqGrounding = `VIDEO: ${videoMeta.title} | channel "${videoMeta.channel}" (subs ${fmtNum(videoMeta.channel_subscribers)}, age ${channelAgeYears?.toFixed(1) ?? "?"}y) | views ${fmtNum(videoMeta.view_count)}
-DESCRIPTION (first 500ch): ${desc.slice(0, 500).replace(/\n/g, " | ")}
-FUNNEL LINKS: ${descFindings.funnel_links.slice(0, 5).map((l) => l.domain).join(", ") || "none"} | PRICES: ${descFindings.price_mentions_usd.slice(0, 5).join(", ") || "none"} | COURSE KW: ${descFindings.course_keyword_hits.slice(0, 5).join(", ") || "none"}
-TRENDS: ${trendsLine} | HN: ${hnCount} | WIKI: ${wikiFound ? "yes" : "no"} | REDDIT: ${reddit.count}
-COMMENT BOT-RATIO: ${commentStats.bot_ratio_0_100}/100 | emoji-only ${commentStats.emoji_only_ratio}% | praise ${commentStats.generic_praise_ratio}%
+DESCRIPTION (first 400ch): ${desc.slice(0, 400).replace(/\n/g, " | ")}
+LINKS: ${descFindings.funnel_links.slice(0, 4).map((l) => l.domain).join(", ") || "none"} | PRICES: ${descFindings.price_mentions_usd.slice(0, 4).join(", ") || "none"} | COURSE KW: ${descFindings.course_keyword_hits.slice(0, 4).join(", ") || "none"}
+TRENDS: ${trendsLine.slice(0, 200)} | HN: ${hnCount} | WIKI: ${wikiFound ? "yes" : "no"} | REDDIT: ${reddit.count}
+COMMENT BOT: ${commentStats.bot_ratio_0_100}/100 | emoji ${commentStats.emoji_only_ratio}% | praise ${commentStats.generic_praise_ratio}%
 TOP COMMENTS: ${groqComments || "(none)"}
-${transcriptError ? "(transcript fetch failed — cap confidence at 35)" : ""}`;
-        const schemaHint = JSON.stringify(EXTRACT_TOOL.input_schema);
-        const groqUser = `Analyze this YouTube business video. Reverse-engineer the business AND distill the lessons as if it were a paid course.
+${transcriptError ? "(transcript missing — cap confidence at 35)" : ""}`;
+        // NO schema JSON in prompt — it blows the TPM budget. Schema is
+        // described compactly in SYSTEM_PROMPT_GROQ instead.
+        const groqUser = `Analyze this YouTube business video. Output ONLY the JSON object described in the system prompt.
 
 ${groqGrounding}
 
 TRANSCRIPT (${groqClip.length} chars):
-${groqClip}
-
-Output a single JSON object matching this exact schema (no markdown fences, no commentary, just the JSON):
-${schemaHint}`;
+${groqClip}`;
         const gr = await callGroqJson<ExtractArgs>({
           system: SYSTEM_PROMPT_GROQ,
           userText: groqUser,

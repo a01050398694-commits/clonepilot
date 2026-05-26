@@ -307,10 +307,10 @@ export async function callGroqJson<T>(opts: {
 }): Promise<{ ok: true; value: T; model: string }> {
   const apiKey = (opts.apiKey ?? process.env.GROQ_API_KEY ?? "").trim();
   if (!apiKey) throw new Error("No GROQ_API_KEY configured");
-  // Default to the 8B instant model — its free tier has 30k TPM and 128k
-  // context, vs llama-3.3-70b-versatile's painful 12k TPM cap. Quality is
-  // slightly lower but we're in emergency fallback land here.
-  const model = opts.model ?? "llama-3.1-8b-instant";
+  // llama-3.3-70b-versatile (12k TPM, 32k context) — slightly tighter quota
+  // than 8b-instant (6k TPM) and much smarter at producing well-formed JSON.
+  // We keep prompt input under ~4k tokens so we fit comfortably.
+  const model = opts.model ?? "llama-3.3-70b-versatile";
   const body = {
     model,
     messages: [
