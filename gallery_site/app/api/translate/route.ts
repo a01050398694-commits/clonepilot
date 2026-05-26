@@ -122,7 +122,26 @@ DO NOT TRANSLATE:
 - Stack item names (Next.js, Supabase, Stripe, Tailwind, etc.)
 - Brand names (keep as-is unless they have an obvious native spelling)
 
-DO TRANSLATE every sentence and phrase a human reads: brand description, tagline, target_audience, problem, solution, red_flags[*], green_flags[*], likely_real_revenue_source, why_buyers_pay, honest_value_for_buyer, top_risk, market_reality.* (all 4 string fields), market_reality.top_competitors[*].why_relevant, revenue_forecast.assumptions[*], insider_tips[*], build_path.steps[*].title, funnel_ladder[*].label, one_paragraph_verdict.
+DO TRANSLATE every sentence and phrase a human reads:
+- brand description, tagline, target_audience, problem, solution
+- red_flags[*], green_flags[*]
+- likely_real_revenue_source, why_buyers_pay, honest_value_for_buyer
+- top_risk, one_paragraph_verdict
+- market_reality.* (all 4 string fields), market_reality.top_competitors[*].why_relevant
+- revenue_forecast.assumptions[*]
+- insider_tips[*]
+- build_path.steps[*].title
+- funnel_ladder[*].label
+- execution_sequence[*].title, .what_you_do, .critical_success_factor
+- marketing_playbook[*].channel, .exact_tactic, .why_this_works
+- money_flow[*].source, .notes
+- course_distilled.one_line_summary, .if_you_apply_this
+- course_distilled.lesson_chunks[*].headline, .teaching, .example_or_quote, .why_it_matters
+- course_distilled.frameworks_taught[*].name, .steps[*], .use_when
+- course_distilled.specific_tactics[*]
+- course_distilled.what_creator_left_out[*]
+
+The course_distilled fields are CRITICAL — the user wants the video re-taught in their language. Translate them with maximum care. Do not skip any.
 
 Input JSON (some fields may be absent — translate only present ones; keep schema identical):
 ${JSON.stringify(slimmed).slice(0, 40_000)}

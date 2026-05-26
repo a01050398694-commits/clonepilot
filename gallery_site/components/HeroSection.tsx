@@ -68,6 +68,25 @@ export function HeroSection({
                 : "w-full max-w-[680px] mt-12"
             }
           >
+            {!hasResult && (
+              <div className="mb-5 flex justify-center">
+                <span
+                  className="inline-flex items-center gap-2 px-3 py-1 border text-[11px] font-mono uppercase tracking-wider2 font-semibold"
+                  style={{
+                    color: "var(--brand)",
+                    borderColor: "color-mix(in oklab, var(--brand) 40%, transparent)",
+                    background: "color-mix(in oklab, var(--brand) 8%, transparent)",
+                    borderRadius: 999,
+                  }}
+                >
+                  <span
+                    className="inline-block h-1.5 w-1.5 rounded-full breathe"
+                    style={{ background: "var(--brand)" }}
+                  />
+                  Free during beta — no signup
+                </span>
+              </div>
+            )}
             <UrlAnalysisForm
               d={formDict}
               lang={lang}
