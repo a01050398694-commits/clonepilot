@@ -12,7 +12,7 @@ import {
   clientIp,
 } from "@/lib/analyze-cache";
 import {
-  callGeminiTool,
+  callGeminiJson,
   callGroqJson,
   geminiKeys,
   shouldFallbackFromAnthropic,
@@ -1433,13 +1433,31 @@ Call extract_business_preview now. Output English. Be concise but punchy — ope
         err instanceof Error ? err.message : err,
       );
       try {
-        const g = await callGeminiTool<ExtractArgs>({
+        // Gemini path — use JSON mode + the compact SYSTEM_PROMPT_GROQ which
+        // embeds the schema in plain text. Avoids Gemini's function-calling
+        // schema-validation quirks on our deeply-nested EXTRACT_TOOL schema.
+        // We also send the LEAN user text (same as Groq) so input stays small.
+        const geminiClip = transcript.text.slice(0, 10_000);
+        const geminiUser = `Analyze this YouTube business video. Output ONLY the JSON object described in the system prompt.
+
+VIDEO: ${videoMeta.title} | channel "${videoMeta.channel}" (subs ${fmtNum(videoMeta.channel_subscribers)}, age ${channelAgeYears?.toFixed(1) ?? "?"}y) | views ${fmtNum(videoMeta.view_count)} | likes ${fmtNum(videoMeta.like_count)}
+DESCRIPTION (first 1000ch): ${desc.slice(0, 1000).replace(/\n/g, " | ")}
+LINKS: ${descFindings.funnel_links.slice(0, 8).map((l) => `${l.domain}${l.is_course_hint ? "*" : ""}`).join(", ") || "none"}
+PRICES IN DESC: ${descFindings.price_mentions_usd.slice(0, 8).join(", ") || "none"}
+COURSE KEYWORDS: ${descFindings.course_keyword_hits.join(", ") || "none"}
+TRENDS: ${trendsLine} | HN: ${hnCount} | WIKI: ${wikiFound ? "yes" : "no"} | REDDIT: ${reddit.count}
+COMMENTS: bot ${commentStats.bot_ratio_0_100}/100 | emoji ${commentStats.emoji_only_ratio}% | praise ${commentStats.generic_praise_ratio}% | total ${commentStats.total}
+TOP COMMENTS: ${topComments.slice(0, 8).map((c) => `(${c.likes}♥) ${c.text.replace(/\s+/g, " ").slice(0, 100)}`).join(" | ") || "(none)"}
+${transcriptError ? "(transcript fetch failed — cap confidence at 35)" : ""}
+
+TRANSCRIPT (${geminiClip.length} chars):
+${geminiClip}`;
+        const g = await callGeminiJson<ExtractArgs>({
           model: process.env.CLONEPILOT_MODEL_FALLBACK?.trim() || "gemini-2.5-flash",
-          system: SYSTEM_PROMPT,
-          userText,
-          tool: EXTRACT_TOOL,
+          system: SYSTEM_PROMPT_GROQ,
+          userText: geminiUser,
         });
-        args = g.args;
+        args = g.value;
         providerUsed = "gemini";
         modelUsed = g.model;
       } catch (geminiErr) {
