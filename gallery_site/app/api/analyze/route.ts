@@ -11,6 +11,7 @@ import {
   rateLimitCheck,
   clientIp,
 } from "@/lib/analyze-cache";
+import { callGeminiTool, isAnthropicBudgetError } from "@/lib/llm-fallback";
 import {
   fetchTopComments,
   analyzeCommentStats,
@@ -979,20 +980,7 @@ ${transcriptError ? `\n!! TRANSCRIPT FETCH FAILED: ${transcriptError}\nYou have 
       process.env.CLONEPILOT_MODEL_BLUEPRINT?.trim() ||
       "claude-haiku-4-5-20251001";
 
-    const client = new Anthropic({ apiKey: anthropicKey });
-    const resp = await client.messages.create({
-      model,
-      max_tokens: 6500,
-      system: SYSTEM_PROMPT,
-      tools: [EXTRACT_TOOL],
-      tool_choice: { type: "tool", name: EXTRACT_TOOL.name },
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: `Analyze this YouTube business video. Reverse-engineer the business, NOT the video.
+    const userText = `Analyze this YouTube business video. Reverse-engineer the business, NOT the video.
 
 ${groundingBlock}
 
@@ -1001,21 +989,9 @@ TRANSCRIPT (first ${clip.length} chars):
 ${clip}
 ---
 
-Call extract_business_preview now. Output English. Be concise but punchy — operator-level not corporate. Required fields all present.`,
-            },
-          ],
-        },
-      ],
-    });
+Call extract_business_preview now. Output English. Be concise but punchy — operator-level not corporate. Required fields all present.`;
 
-    const toolUse = resp.content.find((c) => c.type === "tool_use");
-    if (!toolUse || toolUse.type !== "tool_use") {
-      return NextResponse.json(
-        { error: "Anthropic did not return tool_use." },
-        { status: 502 },
-      );
-    }
-    const args = toolUse.input as Omit<
+    type ExtractArgs = Omit<
       AnalyzePreview,
       | "video"
       | "signals"
@@ -1023,6 +999,51 @@ Call extract_business_preview now. Output English. Be concise but punchy — ope
       | "description_findings"
       | "comment_stats"
     >;
+
+    let args: ExtractArgs;
+    let providerUsed = "anthropic";
+    let modelUsed = model;
+
+    try {
+      const client = new Anthropic({ apiKey: anthropicKey });
+      const resp = await client.messages.create({
+        model,
+        max_tokens: 6500,
+        system: SYSTEM_PROMPT,
+        tools: [EXTRACT_TOOL],
+        tool_choice: { type: "tool", name: EXTRACT_TOOL.name },
+        messages: [{ role: "user", content: [{ type: "text", text: userText }] }],
+      });
+      const toolUse = resp.content.find((c) => c.type === "tool_use");
+      if (!toolUse || toolUse.type !== "tool_use") {
+        throw new Error("Anthropic did not return tool_use.");
+      }
+      args = toolUse.input as ExtractArgs;
+    } catch (err) {
+      // If Anthropic hit an account-wide budget cap, fall back to Gemini.
+      const geminiKey =
+        process.env.GEMINI_API_KEY ||
+        process.env.GOOGLE_AI_API_KEY ||
+        process.env.NEXT_PUBLIC_GOOGLE_AI_KEY ||
+        "";
+      if (!isAnthropicBudgetError(err) || !geminiKey) {
+        throw err;
+      }
+      console.error(
+        "[/api/analyze] Anthropic budget hit, falling back to Gemini",
+        err instanceof Error ? err.message : err,
+      );
+      const g = await callGeminiTool<ExtractArgs>({
+        apiKey: geminiKey,
+        model: process.env.CLONEPILOT_MODEL_FALLBACK?.trim() || "gemini-2.0-flash",
+        system: SYSTEM_PROMPT,
+        userText,
+        tool: EXTRACT_TOOL,
+      });
+      args = g.args;
+      providerUsed = "gemini";
+      modelUsed = g.model;
+    }
     const preview: AnalyzePreview = {
       ...args,
       video: videoMeta,
@@ -1040,12 +1061,15 @@ Call extract_business_preview now. Output English. Be concise but punchy — ope
       _debug: {
         transcript_source: transcript.source,
         transcript_error: transcriptError,
-        model_used: model,
+        provider_used: providerUsed,
+        model_used: modelUsed,
         source: "fresh",
       },
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "unknown error";
+    // Surface stack to Vercel runtime logs for future debugging.
+    console.error("[/api/analyze] failed", err);
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

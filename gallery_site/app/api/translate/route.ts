@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { isLang, type Lang } from "@/lib/i18n";
+import { callGeminiTool, isAnthropicBudgetError } from "@/lib/llm-fallback";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -106,20 +107,8 @@ export async function POST(req: Request) {
     process.env.CLONEPILOT_MODEL_TRANSLATE?.trim() ||
     "claude-haiku-4-5-20251001";
 
-  try {
-    const client = new Anthropic({ apiKey });
-    const resp = await client.messages.create({
-      model,
-      max_tokens: 8000,
-      tools: [TRANSLATE_TOOL],
-      tool_choice: { type: "tool", name: TRANSLATE_TOOL.name },
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "text",
-              text: `Translate this business-analysis JSON into ${LANG_NAMES[lang]}.
+  const userText = (() => {
+    return `Translate this business-analysis JSON into ${LANG_NAMES[lang]}.
 
 TONE & STYLE (MANDATORY):
 ${NATIVE_TONE_HINT[lang]}
@@ -138,18 +127,48 @@ DO TRANSLATE every sentence and phrase a human reads: brand description, tagline
 Input JSON (some fields may be absent — translate only present ones; keep schema identical):
 ${JSON.stringify(slimmed).slice(0, 18_000)}
 
-Call return_translated_preview now with the full translated object.`,
-            },
-          ],
-        },
-      ],
-    });
+Call return_translated_preview now with the full translated object.`;
+  })();
 
-    const toolUse = resp.content.find((c) => c.type === "tool_use");
-    if (!toolUse || toolUse.type !== "tool_use") {
-      return NextResponse.json({ error: "no tool_use" }, { status: 502 });
+  try {
+    let result: unknown;
+    try {
+      const client = new Anthropic({ apiKey });
+      const resp = await client.messages.create({
+        model,
+        max_tokens: 8000,
+        tools: [TRANSLATE_TOOL],
+        tool_choice: { type: "tool", name: TRANSLATE_TOOL.name },
+        messages: [{ role: "user", content: [{ type: "text", text: userText }] }],
+      });
+      const toolUse = resp.content.find((c) => c.type === "tool_use");
+      if (!toolUse || toolUse.type !== "tool_use") {
+        throw new Error("no tool_use");
+      }
+      result = (toolUse.input as { translated?: unknown }).translated;
+    } catch (err) {
+      const geminiKey =
+        process.env.GEMINI_API_KEY ||
+        process.env.GOOGLE_AI_API_KEY ||
+        process.env.NEXT_PUBLIC_GOOGLE_AI_KEY ||
+        "";
+      if (!isAnthropicBudgetError(err) || !geminiKey) {
+        throw err;
+      }
+      console.error(
+        "[/api/translate] Anthropic budget hit, fall back to Gemini",
+        err instanceof Error ? err.message : err,
+      );
+      const g = await callGeminiTool<{ translated?: unknown }>({
+        apiKey: geminiKey,
+        model:
+          process.env.CLONEPILOT_MODEL_FALLBACK?.trim() || "gemini-2.0-flash",
+        system: "You are a professional translator. Follow the user instructions exactly.",
+        userText,
+        tool: TRANSLATE_TOOL,
+      });
+      result = g.args.translated;
     }
-    const result = (toolUse.input as { translated?: unknown }).translated;
     if (!result) {
       return NextResponse.json({ error: "empty translated" }, { status: 502 });
     }
