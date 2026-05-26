@@ -106,6 +106,29 @@ export type FunnelStep = {
   is_observed: boolean;
 };
 
+export type ExecutionStep = {
+  week: number;
+  title: string;
+  what_you_do: string;
+  how_long_hours: number;
+  critical_success_factor: string;
+};
+
+export type MarketingChannel = {
+  channel: string;
+  exact_tactic: string;
+  expected_cac_usd: number;
+  expected_signups_per_month: number;
+  why_this_works: string;
+};
+
+export type MoneyFlow = {
+  source: string;
+  share_pct: number;
+  monthly_estimate_usd: number;
+  notes: string;
+};
+
 export type CommentStats = {
   total: number;
   avg_length: number;
@@ -138,6 +161,9 @@ export type AnalyzePreview = {
   funnel_ladder: FunnelStep[];
   insider_tips: string[];
   build_path: BuildPath;
+  execution_sequence: ExecutionStep[];
+  marketing_playbook: MarketingChannel[];
+  money_flow: MoneyFlow[];
   one_paragraph_verdict: string;
   video: VideoMeta;
   signals: SignalBlock;
@@ -629,6 +655,50 @@ const EXTRACT_TOOL: Anthropic.Tool = {
         description:
           "3-5 rungs in ascending price order. Example: [Free YT, $19 ebook, $497 course, $2,000 coaching, $10,000 mastermind]. If business_model is not a funnel type, return [].",
       },
+      execution_sequence: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            week: { type: "integer", description: "Week number from start (1, 2, ...)" },
+            title: { type: "string", description: "Short milestone label." },
+            what_you_do: { type: "string", description: "Exact action — concrete, like a checklist line." },
+            how_long_hours: { type: "integer", description: "Approx work-hours this step costs." },
+            critical_success_factor: { type: "string", description: "The ONE thing that makes this step succeed or fail." },
+          },
+          required: ["week", "title", "what_you_do", "how_long_hours", "critical_success_factor"],
+        },
+        description: "7-12 step playbook from zero to first paying customer. MANDATORY — never empty. If unsure, use generic-but-specific moves for this business genre.",
+      },
+      marketing_playbook: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            channel: { type: "string", description: "Concrete channel name. E.g. 'Reddit r/Entrepreneur', 'Google Ads — long-tail blog SEO', 'Twitter cold DM', 'Instagram reels'." },
+            exact_tactic: { type: "string", description: "EXACT play — one short paragraph any operator can copy." },
+            expected_cac_usd: { type: "integer", description: "Realistic CAC for this channel in this niche." },
+            expected_signups_per_month: { type: "integer", description: "Realistic signups/month if executed at average competence." },
+            why_this_works: { type: "string", description: "Why this channel fits THIS business specifically." },
+          },
+          required: ["channel", "exact_tactic", "expected_cac_usd", "expected_signups_per_month", "why_this_works"],
+        },
+        description: "4-6 marketing channels with exact tactics. MANDATORY — never empty. Pick the channels most likely to ACTUALLY work for this specific business type, not generic 'do SEO'.",
+      },
+      money_flow: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            source: { type: "string", description: "Revenue source. E.g. 'Pro subscription $19/mo', 'Course $497 one-time', 'Affiliate commission Coupang', 'YouTube AdSense'." },
+            share_pct: { type: "integer", description: "Estimated share of total revenue (0-100). All sources should roughly sum to 100." },
+            monthly_estimate_usd: { type: "integer", description: "Estimated monthly $ from this source at base-case." },
+            notes: { type: "string", description: "Why this source contributes this share — 1 sentence." },
+          },
+          required: ["source", "share_pct", "monthly_estimate_usd", "notes"],
+        },
+        description: "5+ revenue sources breaking down where ALL the money actually comes from. MANDATORY. The TRUE breakdown — not what the video claims.",
+      },
       insider_tips: {
         type: "array",
         items: { type: "string" },
@@ -692,6 +762,9 @@ const EXTRACT_TOOL: Anthropic.Tool = {
       "funnel_ladder",
       "insider_tips",
       "build_path",
+      "execution_sequence",
+      "marketing_playbook",
+      "money_flow",
       "one_paragraph_verdict",
     ],
   },
@@ -741,11 +814,27 @@ Even bad courses sell. Reasons people pay $500-$10k:
 - Aspiration purchase (signaling)
 Distinguish these from genuine educational value.
 
-OUTPUT RULES:
+OUTPUT RULES (NON-NEGOTIABLE):
 - Default language: English. UI translation is separate.
 - Numbers concrete (e.g., "$24,000 ARR" not "modest revenue"). USD only.
 - Operator-level non-obvious tips. No generic startup advice.
-- one_paragraph_verdict reads like a friend over coffee — direct, no hedging, no corporate fluff.`;
+- one_paragraph_verdict reads like a friend over coffee — direct, no hedging, no corporate fluff.
+
+YOU MUST PRODUCE A COMPLETE REPORT EVERY TIME. NO EXCEPTIONS.
+- "Unclear" / "cannot determine" / "need more data" is BANNED. The user sees this and feels cheated.
+- If transcript is missing or weak, INFER aggressively from title + description + channel signals + your training data. Use the business genre to fill plausible details.
+- business_model: NEVER "unclear" unless the URL is literally not a business video. Pick the closest match.
+- execution_sequence: ALWAYS 7-12 steps. Even for vague videos, give a generic-but-specific playbook (e.g. "build MVP in 2 weeks with X stack, test pricing on N customers, double down on the channel that converts").
+- marketing_playbook: ALWAYS 4-6 channels. Use what is KNOWN to work for this business genre.
+- money_flow: ALWAYS 5+ sources summing roughly to 100%. If the video only mentions one source, break it down further (subscriptions vs annual vs upsells, etc).
+- funnel_ladder: If business_model is course-funnel / consulting-front / affiliate-bait / personal-brand, ALWAYS produce 3-5 rungs even if not directly observed. Mark is_observed=false for inferred rungs.
+- insider_tips: ALWAYS 5 tips operator-level. Never generic.
+- red_flags + green_flags: If transcript is weak, infer from channel velocity, subs, age, comment stats, description patterns.
+
+PLAYBOOK STYLE:
+- execution_sequence reads like a step-by-step "hack the business" plan. Week 1: do X for Y hours, success factor is Z. Week 2: do A. Etc.
+- marketing_playbook reads like an internal Slack from someone who has run this business. "Drop $500 into r/Entrepreneur ads, expect ~30 signups, CAC $17, this works because that sub trusts personal-brand content."
+- money_flow reads like a leaked P&L. Where every dollar comes from, not what they marketed.`;
 
 /* ─── main POST handler ────────────────────────────────────────────────── */
 
@@ -1008,7 +1097,7 @@ Call extract_business_preview now. Output English. Be concise but punchy — ope
       const client = new Anthropic({ apiKey: anthropicKey });
       const resp = await client.messages.create({
         model,
-        max_tokens: 6500,
+        max_tokens: 10_000,
         system: SYSTEM_PROMPT,
         tools: [EXTRACT_TOOL],
         tool_choice: { type: "tool", name: EXTRACT_TOOL.name },

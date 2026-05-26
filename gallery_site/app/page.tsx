@@ -89,30 +89,36 @@ function buildV1Preview(slug: string): V1Preview | null {
 function HeroText({ d, reportsShipped }: { d: Dict; reportsShipped: number }) {
   return (
     <>
-      <div className="inline-flex items-center gap-2 rounded-full border border-strong bg-surface px-3 py-1 text-[11px] font-mono uppercase tracking-[0.18em] text-ink-muted">
-        <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: "var(--brand)" }} />
+      <div
+        className="inline-flex items-center gap-2 rounded-full border bg-surface px-3.5 py-1.5 text-[11px] font-mono uppercase tracking-[0.18em]"
+        style={{
+          borderColor: "color-mix(in oklab, var(--brand) 35%, var(--border-strong))",
+          color: "var(--brand)",
+        }}
+      >
+        <span className="inline-block h-1.5 w-1.5 rounded-full breathe" style={{ background: "var(--brand)" }} />
         {d.hero.badge}
       </div>
 
-      <h1 className="mt-6 text-[52px] md:text-[80px] leading-[0.98] tracking-tightish font-semibold text-ink">
+      <h1 className="mt-7 text-[56px] md:text-[88px] leading-[0.95] tracking-tightest font-semibold text-ink">
         {d.hero.titleRich(HeroEm)}
       </h1>
 
-      <p className="mt-7 max-w-[58ch] text-[19px] leading-relaxed text-ink-muted">
+      <p className="mt-7 max-w-[64ch] text-[18px] md:text-[20px] leading-relaxed text-ink-muted mx-auto">
         {d.hero.subtitle}
       </p>
 
-      <div className="mt-9 flex flex-wrap items-center gap-3">
+      <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
         <Link
           href="/install"
-          className="group inline-flex h-11 items-center gap-2 rounded-lg bg-ink text-bg px-4 text-sm font-semibold hover:bg-white active:translate-y-[1px] transition"
+          className="group inline-flex h-11 items-center gap-2 rounded-lg border border-strong px-4 text-sm font-medium text-ink hover:border-bright hover:bg-surface transition"
         >
           <TerminalWindow size={16} weight="duotone" />
           {d.hero.cta_install}
         </Link>
         <Link
           href="#gallery"
-          className="group inline-flex h-11 items-center gap-2 rounded-lg border border-strong px-4 text-sm font-medium text-ink hover:border-accent/40 hover:text-accent transition"
+          className="group inline-flex h-11 items-center gap-2 rounded-lg border border-strong px-4 text-sm font-medium text-ink-muted hover:text-ink hover:border-bright transition"
         >
           {d.hero.cta_see_reports}
           <ArrowUpRight
@@ -125,22 +131,12 @@ function HeroText({ d, reportsShipped }: { d: Dict; reportsShipped: number }) {
           href="https://github.com/a01050398694-commits/clonepilot"
           target="_blank"
           rel="noopener noreferrer"
-          className="group inline-flex h-11 items-center gap-2 rounded-lg border border-strong px-4 text-sm font-medium text-ink-muted hover:border-strong hover:text-ink transition"
+          className="group inline-flex h-11 items-center gap-2 rounded-lg border border-strong px-4 text-sm font-medium text-ink-muted hover:text-ink hover:border-bright transition"
         >
           <GithubLogo size={16} weight="duotone" />
           {d.hero.cta_github}
         </a>
       </div>
-
-      <dl className="mt-12 grid grid-cols-3 gap-px bg-[var(--border)] rounded-xl overflow-hidden border border-strong">
-        <Stat label={d.hero.stat_reports_label} value={String(reportsShipped)} />
-        <Stat label={d.hero.stat_languages_label} value="5" />
-        <Stat
-          label={d.hero.stat_build_time_label}
-          value={d.hero.stat_build_time_value}
-          accent="emerald"
-        />
-      </dl>
     </>
   );
 }

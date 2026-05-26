@@ -68,6 +68,26 @@ type FunnelStep = {
   price_usd_estimate: number;
   is_observed: boolean;
 };
+type ExecutionStep = {
+  week: number;
+  title: string;
+  what_you_do: string;
+  how_long_hours: number;
+  critical_success_factor: string;
+};
+type MarketingChannel = {
+  channel: string;
+  exact_tactic: string;
+  expected_cac_usd: number;
+  expected_signups_per_month: number;
+  why_this_works: string;
+};
+type MoneyFlow = {
+  source: string;
+  share_pct: number;
+  monthly_estimate_usd: number;
+  notes: string;
+};
 type FunnelLink = {
   url: string;
   domain: string;
@@ -121,6 +141,9 @@ type Preview = {
     estimated_monthly_cost_usd: number;
     stack: string[];
   };
+  execution_sequence: ExecutionStep[];
+  marketing_playbook: MarketingChannel[];
+  money_flow: MoneyFlow[];
   one_paragraph_verdict: string;
   video: {
     id: string;
@@ -532,7 +555,7 @@ function PreviewCard({
         <img
           src={thumb}
           alt={v.title || preview.brand}
-          className="w-full aspect-video object-cover grayscale contrast-[1.15]"
+          className="w-full aspect-video object-cover saturate-100 contrast-[1.15]"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/30 to-transparent pointer-events-none" />
         {/* Hacker corner brackets */}
@@ -803,9 +826,151 @@ function PreviewCard({
           </Section>
         )}
 
+        {/* 08.5 — EXECUTION SEQUENCE (the playbook) */}
+        {preview.execution_sequence && preview.execution_sequence.length > 0 && (
+          <Section
+            i={8}
+            eyebrow="Execution playbook"
+            icon={<Lightning size={16} weight="duotone" />}
+            tone="amber"
+          >
+            <ol className="space-y-3">
+              {preview.execution_sequence.map((step, idx) => (
+                <li
+                  key={idx}
+                  className="border border-strong p-4"
+                  style={{
+                    borderRadius: 8,
+                    background:
+                      "color-mix(in oklab, var(--sec-amber) 4%, var(--surface))",
+                    borderLeft: `3px solid var(--sec-amber)`,
+                  }}
+                >
+                  <div className="flex items-baseline justify-between gap-3 mb-2">
+                    <div className="flex items-baseline gap-3">
+                      <span
+                        className="font-mono text-[11px] uppercase tracking-wider2 font-semibold"
+                        style={{ color: "var(--sec-amber)" }}
+                      >
+                        Week {step.week}
+                      </span>
+                      <span className="text-base font-semibold text-ink">
+                        {step.title}
+                      </span>
+                    </div>
+                    <span className="font-mono text-[11px] text-ink-dim tabnums flex-shrink-0">
+                      {step.how_long_hours}h
+                    </span>
+                  </div>
+                  <p className="text-sm text-ink-muted leading-relaxed">
+                    {step.what_you_do}
+                  </p>
+                  <p className="mt-2 text-[12px] text-ink-dim leading-relaxed">
+                    <span className="font-mono uppercase tracking-wider mr-1.5">key</span>
+                    {step.critical_success_factor}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </Section>
+        )}
+
+        {/* 08.7 — MARKETING PLAYBOOK */}
+        {preview.marketing_playbook && preview.marketing_playbook.length > 0 && (
+          <Section
+            i={9}
+            eyebrow="Marketing playbook"
+            icon={<Sparkle size={16} weight="duotone" />}
+            tone="violet"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {preview.marketing_playbook.map((ch, idx) => (
+                <div
+                  key={idx}
+                  className="border border-strong p-4"
+                  style={{
+                    borderRadius: 8,
+                    background:
+                      "color-mix(in oklab, var(--sec-violet) 4%, var(--surface))",
+                  }}
+                >
+                  <div className="flex items-baseline justify-between gap-3 mb-2">
+                    <h4 className="text-base font-semibold text-ink">{ch.channel}</h4>
+                    <span
+                      className="font-mono text-[11px] tabnums flex-shrink-0"
+                      style={{ color: "var(--sec-violet)" }}
+                    >
+                      CAC ${ch.expected_cac_usd}
+                    </span>
+                  </div>
+                  <p className="text-sm text-ink leading-relaxed">{ch.exact_tactic}</p>
+                  <div className="mt-3 flex items-baseline gap-3 text-[11px] font-mono">
+                    <span className="text-ink-dim">
+                      <span className="tabnums" style={{ color: "var(--sec-green)" }}>
+                        ~{ch.expected_signups_per_month}
+                      </span>{" "}
+                      signups/mo
+                    </span>
+                  </div>
+                  <p className="mt-2 text-[12px] text-ink-muted leading-relaxed italic">
+                    {ch.why_this_works}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* 08.8 — MONEY FLOW */}
+        {preview.money_flow && preview.money_flow.length > 0 && (
+          <Section
+            i={10}
+            eyebrow="Money flow — where the dollars actually come from"
+            icon={<CurrencyDollar size={16} weight="duotone" />}
+            tone="green"
+          >
+            <div className="space-y-2">
+              {preview.money_flow.map((m, idx) => (
+                <div key={idx} className="grid grid-cols-[1fr_auto] gap-4 items-center">
+                  <div>
+                    <div className="flex items-baseline justify-between gap-3 mb-1">
+                      <span className="text-sm font-semibold text-ink">{m.source}</span>
+                      <span
+                        className="font-mono text-[12px] tabnums font-semibold flex-shrink-0"
+                        style={{ color: "var(--sec-green)" }}
+                      >
+                        {m.share_pct}% · {fmtUSD(m.monthly_estimate_usd)}/mo
+                      </span>
+                    </div>
+                    <div
+                      className="h-2 overflow-hidden"
+                      style={{
+                        borderRadius: 2,
+                        background:
+                          "color-mix(in oklab, var(--sec-green) 8%, var(--surface-2))",
+                      }}
+                    >
+                      <div
+                        className="h-full"
+                        style={{
+                          background: "var(--sec-green)",
+                          width: `${Math.max(2, Math.min(100, m.share_pct))}%`,
+                        }}
+                      />
+                    </div>
+                    <p className="mt-1 text-[12px] text-ink-muted leading-relaxed">
+                      {m.notes}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
         {/* 09 — BUILD PATH */}
         <Section
-          i={8}
+          i={11}
           eyebrow={d.section_build}
           icon={<Hammer size={16} weight="duotone" />}
           tone="cyan"
@@ -1010,7 +1175,7 @@ function PreviewCard({
                   <img
                     src={rv.thumbnail}
                     alt={rv.title}
-                    className="w-full aspect-video object-cover grayscale group-hover:grayscale-0 transition"
+                    className="w-full aspect-video object-cover saturate-100 group-hover:saturate-100-0 transition"
                   />
                   <div className="p-3">
                     <p className="text-xs text-ink leading-tight line-clamp-2">
