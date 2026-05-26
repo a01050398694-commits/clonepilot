@@ -87,6 +87,38 @@ export type GeminiResult<T> = {
   model: string;
 };
 
+/** Collect every Gemini API key the env has — primary + numbered backups.
+ * Returned in declaration order. Empty strings filtered out. */
+export function geminiKeys(): string[] {
+  const all = [
+    process.env.GEMINI_API_KEY,
+    process.env.GEMINI_API_KEY_2,
+    process.env.GEMINI_API_KEY_3,
+    process.env.GEMINI_API_KEY_4,
+    process.env.GOOGLE_AI_API_KEY,
+    process.env.NEXT_PUBLIC_GOOGLE_AI_KEY,
+  ]
+    .map((k) => (k ?? "").trim())
+    .filter(Boolean);
+  // Dedup while keeping order.
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const k of all) {
+    if (!seen.has(k)) {
+      seen.add(k);
+      out.push(k);
+    }
+  }
+  return out;
+}
+
+function isQuotaError(err: unknown): boolean {
+  const s = (err as { status?: number })?.status;
+  if (s === 429) return true;
+  const m = err instanceof Error ? err.message : "";
+  return /\b429\b|RESOURCE_EXHAUSTED|quota|rate.?limit/i.test(m);
+}
+
 async function singleGeminiCall<T>(
   apiKey: string,
   model: string,
@@ -202,9 +234,9 @@ function parseJsonLoose<T>(s: string): T {
 }
 
 /** Return parsed JSON via Gemini's response_mime_type=application/json mode.
- * Useful when the target schema is too loose for function-calling. */
+ * Walks every available Gemini key + model combination on 429/quota errors. */
 export async function callGeminiJson<T>(opts: {
-  apiKey: string;
+  apiKey?: string;
   model?: string;
   system: string;
   userText: string;
@@ -213,36 +245,49 @@ export async function callGeminiJson<T>(opts: {
   const secondary =
     primary === "gemini-2.5-flash" ? "gemini-2.0-flash" : "gemini-2.5-flash";
 
-  const tryWithRetry = async (model: string) => {
-    try {
-      return await singleGeminiText(
-        opts.apiKey,
-        model,
-        opts.system,
-        opts.userText,
-        "application/json",
-      );
-    } catch (err) {
-      if (!isTransientStatus(err)) throw err;
-      await new Promise((r) => setTimeout(r, 2500));
-      return singleGeminiText(
-        opts.apiKey,
-        model,
-        opts.system,
-        opts.userText,
-        "application/json",
-      );
-    }
-  };
+  // Build key list — if explicit apiKey was passed, use only that; otherwise
+  // try every key the env exposes, in declared order.
+  const keys = opts.apiKey ? [opts.apiKey] : geminiKeys();
+  if (keys.length === 0) throw new Error("No Gemini API key configured");
 
-  let res;
-  try {
-    res = await tryWithRetry(primary);
-  } catch (err) {
-    if (!isTransientStatus(err)) throw err;
-    res = await tryWithRetry(secondary);
+  let lastErr: unknown = new Error("no attempts");
+  for (const key of keys) {
+    for (const model of [primary, secondary]) {
+      try {
+        const res = await singleGeminiText(
+          key,
+          model,
+          opts.system,
+          opts.userText,
+          "application/json",
+        );
+        return { ok: true, value: parseJsonLoose<T>(res.text), model: res.model };
+      } catch (err) {
+        lastErr = err;
+        // 429/quota → move on to next key/model immediately
+        if (isQuotaError(err)) continue;
+        // Other transient → small backoff, retry same combo once
+        if (isTransientStatus(err)) {
+          await new Promise((r) => setTimeout(r, 1500));
+          try {
+            const res = await singleGeminiText(
+              key,
+              model,
+              opts.system,
+              opts.userText,
+              "application/json",
+            );
+            return { ok: true, value: parseJsonLoose<T>(res.text), model: res.model };
+          } catch (err2) {
+            lastErr = err2;
+            continue;
+          }
+        }
+        // Hard error (4XX schema, etc.) — try next model on same key
+      }
+    }
   }
-  return { ok: true, value: parseJsonLoose<T>(res.text), model: res.model };
+  throw lastErr;
 }
 
 function isMalformedFC(err: unknown): boolean {
@@ -250,12 +295,10 @@ function isMalformedFC(err: unknown): boolean {
   return /MALFORMED_FUNCTION_CALL|no function call/i.test(m);
 }
 
-/** Try primary model, on transient error retry once after backoff, then try
- * secondary model. On MALFORMED_FUNCTION_CALL (Gemini fails to emit valid
- * function args), fall back to JSON-mode plain generation with the same
- * schema described in the prompt. */
+/** Try every available Gemini key × (primary, secondary) model combo.
+ * On 429/quota → next combo. On MALFORMED_FUNCTION_CALL → JSON-mode fallback. */
 export async function callGeminiTool<T>(opts: {
-  apiKey: string;
+  apiKey?: string;
   model?: string;
   system: string;
   userText: string;
@@ -265,51 +308,55 @@ export async function callGeminiTool<T>(opts: {
   const secondary =
     primary === "gemini-2.5-flash" ? "gemini-2.0-flash" : "gemini-2.5-flash";
 
-  const tryWithRetry = async (
-    model: string,
-  ): Promise<{ args: T; model: string }> => {
-    try {
-      return await singleGeminiCall<T>(
-        opts.apiKey,
-        model,
-        opts.system,
-        opts.userText,
-        opts.tool,
-      );
-    } catch (err) {
-      if (!isTransientStatus(err)) throw err;
-      await new Promise((r) => setTimeout(r, 2500));
-      return singleGeminiCall<T>(
-        opts.apiKey,
-        model,
-        opts.system,
-        opts.userText,
-        opts.tool,
-      );
-    }
-  };
+  const keys = opts.apiKey ? [opts.apiKey] : geminiKeys();
+  if (keys.length === 0) throw new Error("No Gemini API key configured");
 
-  try {
-    const res = await tryWithRetry(primary);
-    return { ok: true, args: res.args, model: res.model };
-  } catch (err) {
-    // Transient → retry on secondary model
-    if (isTransientStatus(err)) {
+  let lastErr: unknown = new Error("no attempts");
+  let malformed = false;
+  for (const key of keys) {
+    for (const model of [primary, secondary]) {
       try {
-        const res = await tryWithRetry(secondary);
+        const res = await singleGeminiCall<T>(
+          key,
+          model,
+          opts.system,
+          opts.userText,
+          opts.tool,
+        );
         return { ok: true, args: res.args, model: res.model };
-      } catch (err2) {
-        if (!isMalformedFC(err2)) throw err2;
-        // continue to JSON mode below
+      } catch (err) {
+        lastErr = err;
+        if (isMalformedFC(err)) {
+          malformed = true;
+          continue;
+        }
+        if (isQuotaError(err)) continue;
+        if (isTransientStatus(err)) {
+          await new Promise((r) => setTimeout(r, 1500));
+          try {
+            const res = await singleGeminiCall<T>(
+              key,
+              model,
+              opts.system,
+              opts.userText,
+              opts.tool,
+            );
+            return { ok: true, args: res.args, model: res.model };
+          } catch (err2) {
+            lastErr = err2;
+            if (isMalformedFC(err2)) malformed = true;
+            continue;
+          }
+        }
+        // Other 4XX schema errors — try next model
       }
-    } else if (!isMalformedFC(err)) {
-      throw err;
     }
+  }
 
-    // MALFORMED_FUNCTION_CALL fallback — ask Gemini to return the args
-    // object directly via JSON mode. The tool's input_schema describes the
-    // shape; we embed it in the prompt so the model knows the contract.
-    console.error("[llm-fallback] Gemini function call failed, falling back to JSON mode");
+  // If every key/model combo failed AND at least one was MALFORMED_FUNCTION_CALL,
+  // fall back to JSON mode with the schema embedded in the prompt.
+  if (malformed) {
+    console.error("[llm-fallback] All function-call attempts failed (malformed). Falling back to JSON mode.");
     const schemaHint = JSON.stringify(opts.tool.input_schema);
     const jsonPrompt = `${opts.userText}
 
@@ -318,11 +365,12 @@ ${schemaHint}
 
 Return the JSON object now.`;
     const res = await callGeminiJson<T>({
-      apiKey: opts.apiKey,
       model: secondary,
       system: opts.system,
       userText: jsonPrompt,
     });
     return { ok: true, args: res.value, model: res.model };
   }
+
+  throw lastErr;
 }

@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { isLang, type Lang } from "@/lib/i18n";
-import { callGeminiJson, shouldFallbackFromAnthropic } from "@/lib/llm-fallback";
+import {
+  callGeminiJson,
+  geminiKeys,
+  shouldFallbackFromAnthropic,
+} from "@/lib/llm-fallback";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -151,13 +155,10 @@ Call return_translated_preview now with the full translated object.`;
 
   // If env says Gemini-primary, skip Anthropic entirely (faster + cheaper while
   // Anthropic account is over the budget cap).
-  const geminiKey =
-    process.env.GEMINI_API_KEY ||
-    process.env.GOOGLE_AI_API_KEY ||
-    process.env.NEXT_PUBLIC_GOOGLE_AI_KEY ||
-    "";
+  const allGeminiKeys = geminiKeys();
+  const hasGemini = allGeminiKeys.length > 0;
   const geminiPrimary =
-    process.env.CLONEPILOT_GEMINI_PRIMARY?.trim() === "1" && Boolean(geminiKey);
+    process.env.CLONEPILOT_GEMINI_PRIMARY?.trim() === "1" && hasGemini;
 
   try {
     let result: unknown;
@@ -182,10 +183,10 @@ Call return_translated_preview now with the full translated object.`;
     } catch (err) {
       const isPrimarySkip =
         err instanceof Error && err.message.startsWith("gemini-primary:");
-      if (!isPrimarySkip && (!shouldFallbackFromAnthropic(err) || !geminiKey)) {
+      if (!isPrimarySkip && (!shouldFallbackFromAnthropic(err) || !hasGemini)) {
         throw err;
       }
-      if (!geminiKey) throw err;
+      if (!hasGemini) throw err;
       console.error(
         "[/api/translate] Anthropic failed, falling back to Gemini —",
         err instanceof Error ? err.message : err,
@@ -194,7 +195,6 @@ Call return_translated_preview now with the full translated object.`;
       // function calling — it returns `{}`. So fall back to JSON-mode plain
       // generation: ask for the translated JSON directly, then parse.
       const g = await callGeminiJson<Record<string, unknown>>({
-        apiKey: geminiKey,
         model:
           process.env.CLONEPILOT_MODEL_FALLBACK?.trim() || "gemini-2.5-flash",
         system:
@@ -218,7 +218,22 @@ Call return_translated_preview now with the full translated object.`;
     };
     return NextResponse.json({ ok: true, translated: merged });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "unknown";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    const raw = err instanceof Error ? err.message : "unknown";
+    console.error("[/api/translate] failed", err);
+    let friendly = raw;
+    let status = 500;
+    if (/quota|429|RESOURCE_EXHAUSTED|rate.?limit/i.test(raw)) {
+      friendly =
+        "Translation is at capacity. Please retry in about 60 seconds.";
+      status = 503;
+    } else if (/5\d\d|overloaded|timeout|fetch failed/i.test(raw)) {
+      friendly =
+        "The translation provider is overloaded right now. Try again in a minute.";
+      status = 503;
+    }
+    return NextResponse.json(
+      { error: friendly, _raw: raw },
+      { status },
+    );
   }
 }

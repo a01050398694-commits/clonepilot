@@ -11,7 +11,11 @@ import {
   rateLimitCheck,
   clientIp,
 } from "@/lib/analyze-cache";
-import { callGeminiTool, shouldFallbackFromAnthropic } from "@/lib/llm-fallback";
+import {
+  callGeminiTool,
+  geminiKeys,
+  shouldFallbackFromAnthropic,
+} from "@/lib/llm-fallback";
 import {
   fetchTopComments,
   analyzeCommentStats,
@@ -1245,13 +1249,10 @@ Call extract_business_preview now. Output English. Be concise but punchy — ope
     let providerUsed = "anthropic";
     let modelUsed = model;
 
-    const geminiKey =
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_AI_API_KEY ||
-      process.env.NEXT_PUBLIC_GOOGLE_AI_KEY ||
-      "";
+    const allGeminiKeys = geminiKeys();
+    const hasGemini = allGeminiKeys.length > 0;
     const geminiPrimary =
-      process.env.CLONEPILOT_GEMINI_PRIMARY?.trim() === "1" && Boolean(geminiKey);
+      process.env.CLONEPILOT_GEMINI_PRIMARY?.trim() === "1" && hasGemini;
 
     try {
       if (geminiPrimary) {
@@ -1274,17 +1275,16 @@ Call extract_business_preview now. Output English. Be concise but punchy — ope
     } catch (err) {
       const isPrimarySkip =
         err instanceof Error && err.message.startsWith("gemini-primary:");
-      if (!isPrimarySkip && (!shouldFallbackFromAnthropic(err) || !geminiKey)) {
+      if (!isPrimarySkip && (!shouldFallbackFromAnthropic(err) || !hasGemini)) {
         throw err;
       }
-      if (!geminiKey) throw err;
+      if (!hasGemini) throw err;
       console.error(
         "[/api/analyze] Anthropic failed, falling back to Gemini —",
         err instanceof Error ? err.message : err,
       );
       const g = await callGeminiTool<ExtractArgs>({
-        apiKey: geminiKey,
-        model: process.env.CLONEPILOT_MODEL_FALLBACK?.trim() || "gemini-2.0-flash",
+        model: process.env.CLONEPILOT_MODEL_FALLBACK?.trim() || "gemini-2.5-flash",
         system: SYSTEM_PROMPT,
         userText,
         tool: EXTRACT_TOOL,
@@ -1316,9 +1316,28 @@ Call extract_business_preview now. Output English. Be concise but punchy — ope
       },
     });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "unknown error";
-    // Surface stack to Vercel runtime logs for future debugging.
+    const raw = err instanceof Error ? err.message : "unknown error";
     console.error("[/api/analyze] failed", err);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    // Friendly mapping — never expose raw "gemini 429: quota exceeded" or
+    // "Anthropic 529 overloaded" to a non-technical user.
+    let friendly = raw;
+    let status = 500;
+    if (/quota|429|RESOURCE_EXHAUSTED|rate.?limit/i.test(raw)) {
+      friendly =
+        "All AI providers are momentarily at capacity. Please retry in about 60 seconds.";
+      status = 503;
+    } else if (/5\d\d|overloaded|timeout|fetch failed/i.test(raw)) {
+      friendly =
+        "The AI provider is overloaded right now. Please try again in a minute.";
+      status = 503;
+    } else if (/transcript|no captionTracks|captions/i.test(raw)) {
+      friendly =
+        "Couldn't pull a transcript for this video. Try a different video or wait — title + description fallback should still work.";
+      status = 422;
+    }
+    return NextResponse.json(
+      { error: friendly, _raw: raw },
+      { status },
+    );
   }
 }
