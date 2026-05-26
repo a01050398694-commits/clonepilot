@@ -295,6 +295,123 @@ function isMalformedFC(err: unknown): boolean {
   return /MALFORMED_FUNCTION_CALL|no function call/i.test(m);
 }
 
+/* ─── Generic OpenAI-compatible call (used by OpenAI, OpenRouter, Cerebras) */
+
+async function callOpenAICompatible<T>(opts: {
+  endpoint: string;
+  apiKey: string;
+  model: string;
+  system: string;
+  userText: string;
+  maxTokens?: number;
+  extraHeaders?: Record<string, string>;
+}): Promise<{ value: T; model: string }> {
+  const body = {
+    model: opts.model,
+    messages: [
+      { role: "system", content: opts.system },
+      { role: "user", content: opts.userText },
+    ],
+    response_format: { type: "json_object" },
+    temperature: 0.4,
+    max_tokens: opts.maxTokens ?? 8_000,
+  };
+  const r = await fetch(opts.endpoint, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${opts.apiKey}`,
+      ...opts.extraHeaders,
+    },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(180_000),
+  });
+  if (!r.ok) {
+    const text = await r.text().catch(() => "");
+    const err = new Error(`${r.status}: ${text.slice(0, 400)}`);
+    (err as Error & { status?: number }).status = r.status;
+    throw err;
+  }
+  type Resp = {
+    choices?: Array<{
+      message?: { content?: string };
+      finish_reason?: string;
+    }>;
+  };
+  const j = (await r.json()) as Resp;
+  const text = j.choices?.[0]?.message?.content ?? "";
+  if (!text) throw new Error(`empty (finish=${j.choices?.[0]?.finish_reason ?? "?"})`);
+  return { value: parseJsonLoose<T>(text), model: opts.model };
+}
+
+/* ─── OpenAI GPT-4o-mini — best instruction following on the cheap side */
+
+export async function callOpenAIJson<T>(opts: {
+  system: string;
+  userText: string;
+  model?: string;
+}): Promise<{ ok: true; value: T; model: string }> {
+  const apiKey = (process.env.OPENAI_API_KEY ?? "").trim();
+  if (!apiKey) throw new Error("No OPENAI_API_KEY configured");
+  const model = opts.model ?? "gpt-4o-mini";
+  const res = await callOpenAICompatible<T>({
+    endpoint: "https://api.openai.com/v1/chat/completions",
+    apiKey,
+    model,
+    system: opts.system,
+    userText: opts.userText,
+    maxTokens: 8_000,
+  });
+  return { ok: true, value: res.value, model: res.model };
+}
+
+/* ─── Cerebras (Llama 3.3 70B, free tier, ~10x faster than Groq) */
+
+export async function callCerebrasJson<T>(opts: {
+  system: string;
+  userText: string;
+  model?: string;
+}): Promise<{ ok: true; value: T; model: string }> {
+  const apiKey = (process.env.CEREBRAS_API_KEY ?? "").trim();
+  if (!apiKey) throw new Error("No CEREBRAS_API_KEY configured");
+  const model = opts.model ?? "llama-3.3-70b";
+  const res = await callOpenAICompatible<T>({
+    endpoint: "https://api.cerebras.ai/v1/chat/completions",
+    apiKey,
+    model,
+    system: opts.system,
+    userText: opts.userText,
+    maxTokens: 8_000,
+  });
+  return { ok: true, value: res.value, model: res.model };
+}
+
+/* ─── OpenRouter (multi-model gateway, has free models) */
+
+export async function callOpenRouterJson<T>(opts: {
+  system: string;
+  userText: string;
+  model?: string;
+}): Promise<{ ok: true; value: T; model: string }> {
+  const apiKey = (process.env.OPENROUTER_API_KEY ?? "").trim();
+  if (!apiKey) throw new Error("No OPENROUTER_API_KEY configured");
+  // Free models on OpenRouter — gpt-oss-120b is large and instruction-following.
+  const model = opts.model ?? "openai/gpt-oss-120b:free";
+  const res = await callOpenAICompatible<T>({
+    endpoint: "https://openrouter.ai/api/v1/chat/completions",
+    apiKey,
+    model,
+    system: opts.system,
+    userText: opts.userText,
+    maxTokens: 8_000,
+    extraHeaders: {
+      "http-referer": "https://clonepilot-gallery.vercel.app",
+      "x-title": "ClonePilot",
+    },
+  });
+  return { ok: true, value: res.value, model: res.model };
+}
+
 /* ─── Groq (OpenAI-compatible) — 3rd-tier fallback ───────────────────── */
 
 /** Call Groq's chat-completions endpoint with JSON-mode response_format.

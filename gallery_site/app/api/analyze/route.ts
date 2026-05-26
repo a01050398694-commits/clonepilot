@@ -12,8 +12,11 @@ import {
   clientIp,
 } from "@/lib/analyze-cache";
 import {
+  callCerebrasJson,
   callGeminiJson,
   callGroqJson,
+  callOpenAIJson,
+  callOpenRouterJson,
   geminiKeys,
   shouldFallbackFromAnthropic,
 } from "@/lib/llm-fallback";
@@ -1397,6 +1400,8 @@ Call extract_business_preview now. Output English. Be concise but punchy — ope
     let args: ExtractArgs;
     let providerUsed = "anthropic";
     let modelUsed = model;
+    let geminiFailReason: string | null = null;
+    let anthropicFailReason: string | null = null;
 
     const allGeminiKeys = geminiKeys();
     const hasGemini = allGeminiKeys.length > 0;
@@ -1424,6 +1429,10 @@ Call extract_business_preview now. Output English. Be concise but punchy — ope
     } catch (err) {
       const isPrimarySkip =
         err instanceof Error && err.message.startsWith("gemini-primary:");
+      if (!isPrimarySkip) {
+        anthropicFailReason =
+          err instanceof Error ? err.message.slice(0, 200) : "unknown";
+      }
       if (!isPrimarySkip && (!shouldFallbackFromAnthropic(err) || !hasGemini)) {
         throw err;
       }
@@ -1461,41 +1470,118 @@ ${geminiClip}`;
         providerUsed = "gemini";
         modelUsed = g.model;
       } catch (geminiErr) {
-        // Last-resort: Groq Llama 3.3 via OpenAI-compatible JSON mode.
-        // Groq free tier has a strict ~12k TPM cap, so we build a LEAN
-        // user text — short transcript, compact grounding, fewer comments.
-        if (!process.env.GROQ_API_KEY) throw geminiErr;
+        // Gemini exhausted. Try ladder of fallbacks in order of quality:
+        //   1) OpenAI gpt-4o-mini   (~$0.001/call, best instruction following)
+        //   2) Cerebras llama-3.3-70b  (free, fast, decent following)
+        //   3) OpenRouter gpt-oss-120b:free  (free large MoE)
+        //   4) Groq llama-3.3-70b (12k TPM cap, lean prompt — last resort)
+        geminiFailReason =
+          geminiErr instanceof Error
+            ? geminiErr.message.slice(0, 300)
+            : "unknown";
         console.error(
-          "[/api/analyze] Gemini exhausted, trying Groq —",
+          "[/api/analyze] Gemini failed, walking the fallback ladder —",
           geminiErr instanceof Error ? geminiErr.message : geminiErr,
         );
-        const groqClip = transcript.text.slice(0, 4_500);
-        const groqComments = topComments
-          .slice(0, 4)
-          .map((c) => `(${c.likes}♥) ${c.text.replace(/\s+/g, " ").slice(0, 70)}`)
-          .join(" | ");
-        const groqGrounding = `VIDEO: ${videoMeta.title} | channel "${videoMeta.channel}" (subs ${fmtNum(videoMeta.channel_subscribers)}, age ${channelAgeYears?.toFixed(1) ?? "?"}y) | views ${fmtNum(videoMeta.view_count)}
-DESCRIPTION (first 400ch): ${desc.slice(0, 400).replace(/\n/g, " | ")}
-LINKS: ${descFindings.funnel_links.slice(0, 4).map((l) => l.domain).join(", ") || "none"} | PRICES: ${descFindings.price_mentions_usd.slice(0, 4).join(", ") || "none"} | COURSE KW: ${descFindings.course_keyword_hits.slice(0, 4).join(", ") || "none"}
-TRENDS: ${trendsLine.slice(0, 200)} | HN: ${hnCount} | WIKI: ${wikiFound ? "yes" : "no"} | REDDIT: ${reddit.count}
-COMMENT BOT: ${commentStats.bot_ratio_0_100}/100 | emoji ${commentStats.emoji_only_ratio}% | praise ${commentStats.generic_praise_ratio}%
-TOP COMMENTS: ${groqComments || "(none)"}
-${transcriptError ? "(transcript missing — cap confidence at 35)" : ""}`;
-        // NO schema JSON in prompt — it blows the TPM budget. Schema is
-        // described compactly in SYSTEM_PROMPT_GROQ instead.
-        const groqUser = `Analyze this YouTube business video. Output ONLY the JSON object described in the system prompt.
 
-${groqGrounding}
+        // Build the same lean user text we'll feed every fallback.
+        const fbClip = transcript.text.slice(0, 8_000);
+        const fbUser = `Analyze this YouTube business video. Output ONLY the JSON object described in the system prompt.
+
+VIDEO: ${videoMeta.title} | channel "${videoMeta.channel}" (subs ${fmtNum(videoMeta.channel_subscribers)}, age ${channelAgeYears?.toFixed(1) ?? "?"}y) | views ${fmtNum(videoMeta.view_count)}
+DESCRIPTION (first 800ch): ${desc.slice(0, 800).replace(/\n/g, " | ")}
+LINKS: ${descFindings.funnel_links.slice(0, 6).map((l) => `${l.domain}${l.is_course_hint ? "*" : ""}`).join(", ") || "none"} | PRICES: ${descFindings.price_mentions_usd.slice(0, 6).join(", ") || "none"} | COURSE KW: ${descFindings.course_keyword_hits.slice(0, 5).join(", ") || "none"}
+TRENDS: ${trendsLine} | HN: ${hnCount} | WIKI: ${wikiFound ? "yes" : "no"} | REDDIT: ${reddit.count}
+COMMENTS: bot ${commentStats.bot_ratio_0_100}/100 | emoji ${commentStats.emoji_only_ratio}% | praise ${commentStats.generic_praise_ratio}% | total ${commentStats.total}
+TOP COMMENTS: ${topComments.slice(0, 6).map((c) => `(${c.likes}♥) ${c.text.replace(/\s+/g, " ").slice(0, 90)}`).join(" | ") || "(none)"}
+${transcriptError ? "(transcript fetch failed — cap confidence at 35)" : ""}
+
+TRANSCRIPT (${fbClip.length} chars):
+${fbClip}`;
+
+        const fallbacks: Array<{
+          name: string;
+          call: () => Promise<{ value: ExtractArgs; model: string }>;
+        }> = [];
+        if (process.env.OPENAI_API_KEY) {
+          fallbacks.push({
+            name: "openai",
+            call: async () => {
+              const r = await callOpenAIJson<ExtractArgs>({
+                system: SYSTEM_PROMPT_GROQ,
+                userText: fbUser,
+              });
+              return { value: r.value, model: r.model };
+            },
+          });
+        }
+        if (process.env.CEREBRAS_API_KEY) {
+          fallbacks.push({
+            name: "cerebras",
+            call: async () => {
+              const r = await callCerebrasJson<ExtractArgs>({
+                system: SYSTEM_PROMPT_GROQ,
+                userText: fbUser,
+              });
+              return { value: r.value, model: r.model };
+            },
+          });
+        }
+        if (process.env.OPENROUTER_API_KEY) {
+          fallbacks.push({
+            name: "openrouter",
+            call: async () => {
+              const r = await callOpenRouterJson<ExtractArgs>({
+                system: SYSTEM_PROMPT_GROQ,
+                userText: fbUser,
+              });
+              return { value: r.value, model: r.model };
+            },
+          });
+        }
+        if (process.env.GROQ_API_KEY) {
+          fallbacks.push({
+            name: "groq",
+            call: async () => {
+              // Even leaner for Groq's 12k TPM
+              const groqClip = transcript.text.slice(0, 4_500);
+              const groqUser = `Analyze this YouTube business video. Output ONLY the JSON described in the system prompt.
+
+VIDEO: ${videoMeta.title} | channel "${videoMeta.channel}" (subs ${fmtNum(videoMeta.channel_subscribers)})
+DESC: ${desc.slice(0, 400).replace(/\n/g, " | ")}
+LINKS: ${descFindings.funnel_links.slice(0, 4).map((l) => l.domain).join(", ") || "none"} | PRICES: ${descFindings.price_mentions_usd.slice(0, 4).join(", ") || "none"}
+COMMENT BOT: ${commentStats.bot_ratio_0_100}/100 | total ${commentStats.total}
 
 TRANSCRIPT (${groqClip.length} chars):
 ${groqClip}`;
-        const gr = await callGroqJson<ExtractArgs>({
-          system: SYSTEM_PROMPT_GROQ,
-          userText: groqUser,
-        });
-        args = gr.value;
-        providerUsed = "groq";
-        modelUsed = gr.model;
+              const r = await callGroqJson<ExtractArgs>({
+                system: SYSTEM_PROMPT_GROQ,
+                userText: groqUser,
+              });
+              return { value: r.value, model: r.model };
+            },
+          });
+        }
+
+        let walked: { value: ExtractArgs; model: string; name: string } | null = null;
+        let lastFbErr: unknown = geminiErr;
+        for (const fb of fallbacks) {
+          try {
+            const r = await fb.call();
+            walked = { ...r, name: fb.name };
+            break;
+          } catch (e) {
+            lastFbErr = e;
+            console.error(
+              `[/api/analyze] ${fb.name} fallback failed:`,
+              e instanceof Error ? e.message.slice(0, 200) : e,
+            );
+          }
+        }
+        if (!walked) throw lastFbErr;
+        args = walked.value;
+        providerUsed = walked.name;
+        modelUsed = walked.model;
       }
     }
     const preview: AnalyzePreview = {
@@ -1517,6 +1603,10 @@ ${groqClip}`;
         transcript_error: transcriptError,
         provider_used: providerUsed,
         model_used: modelUsed,
+        gemini_fail_reason: geminiFailReason,
+        anthropic_fail_reason: anthropicFailReason,
+        gemini_keys_count: allGeminiKeys.length,
+        groq_key_present: Boolean(process.env.GROQ_API_KEY),
         source: "fresh",
       },
     });
