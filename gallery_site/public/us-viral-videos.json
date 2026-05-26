@@ -4,7 +4,7 @@
     "title": "Joe Rogan Experience #1309 - Naval Ravikant",
     "channel": "PowerfulJRE",
     "published": "2019-06-05T02:25:12Z",
-    "thumb": "https://i.ytimg.com/vi/3qHkcs3kG44/maxresdefault.jpg",
+    "thumb": "https://i.ytimg.com/vi/3qHkcs3kG44/hqdefault.jpg",
     "views": 14448065,
     "likes": 303992,
     "defaultLang": "en-US",
@@ -30,7 +30,7 @@
     "title": "Lecture 1 - How to Start a Startup (Sam Altman, Dustin Moskovitz)",
     "channel": "YC Root Access",
     "published": "2014-09-23T23:42:32Z",
-    "thumb": "https://i.ytimg.com/vi/CBYhVcO4WgI/maxresdefault.jpg",
+    "thumb": "https://i.ytimg.com/vi/CBYhVcO4WgI/hqdefault.jpg",
     "views": 5128875,
     "likes": 115223,
     "defaultLang": "en-US",
@@ -85,11 +85,27 @@
     "topics": []
   },
   {
+    "id": "nVyD6THcvDQ",
+    "title": "99% of Beginners Don&#39;t Know the Basics of AI",
+    "channel": "Jeff Su",
+    "published": "2024-09-03T13:00:49Z",
+    "thumb": "https://i.ytimg.com/vi/nVyD6THcvDQ/maxresdefault.jpg",
+    "views": 3170631,
+    "likes": 66626,
+    "defaultLang": "en-US",
+    "durationSec": 612,
+    "category": "27",
+    "topics": [
+      "https://en.wikipedia.org/wiki/Knowledge",
+      "https://en.wikipedia.org/wiki/Technology"
+    ]
+  },
+  {
     "id": "j3TeLsaKzAM",
     "title": "THE 4-HOUR WORKWEEK BY TIM FERRISS - BEST ANIMATED BOOK SUMMARY",
     "channel": "FightMediocrity",
     "published": "2015-02-14T04:26:02Z",
-    "thumb": "https://i.ytimg.com/vi/j3TeLsaKzAM/maxresdefault.jpg",
+    "thumb": "https://i.ytimg.com/vi/j3TeLsaKzAM/hqdefault.jpg",
     "views": 3102943,
     "likes": 60178,
     "defaultLang": "en",
@@ -145,7 +161,7 @@
     "title": "Competition is for Losers with Peter Thiel (How to Start a Startup 2014: 5)",
     "channel": "Y Combinator",
     "published": "2017-03-22T19:32:28Z",
-    "thumb": "https://i.ytimg.com/vi/3Fx5Q8xGU8k/maxresdefault.jpg",
+    "thumb": "https://i.ytimg.com/vi/3Fx5Q8xGU8k/hqdefault.jpg",
     "views": 2344092,
     "likes": 47004,
     "defaultLang": "en",
@@ -217,6 +233,21 @@
     ]
   },
   {
+    "id": "RJGo6K3-gHg",
+    "title": "These 5 AI Businesses Will Make You $1M (With Zero Employees)",
+    "channel": "Dan Martell",
+    "published": "2025-10-03T13:00:56Z",
+    "thumb": "https://i.ytimg.com/vi/RJGo6K3-gHg/maxresdefault.jpg",
+    "views": 1849554,
+    "likes": 52766,
+    "defaultLang": "en",
+    "durationSec": 906,
+    "category": "27",
+    "topics": [
+      "https://en.wikipedia.org/wiki/Business"
+    ]
+  },
+  {
     "id": "nIk3DedjxJM",
     "title": "&quot;I&#39;m Broke, What Business Do I Start?&quot;",
     "channel": "Alex Hormozi",
@@ -241,6 +272,21 @@
     "durationSec": 858,
     "category": "27",
     "topics": []
+  },
+  {
+    "id": "Qgi5hb7yxjU",
+    "title": "I Tried 500+ AI Tools, These 9 Will Make You Rich",
+    "channel": "Simon Squibb",
+    "published": "2026-01-28T16:01:24Z",
+    "thumb": "https://i.ytimg.com/vi/Qgi5hb7yxjU/maxresdefault.jpg",
+    "views": 1723721,
+    "likes": 62227,
+    "defaultLang": "en",
+    "durationSec": 688,
+    "category": "27",
+    "topics": [
+      "https://en.wikipedia.org/wiki/Technology"
+    ]
   },
   {
     "id": "GSoPsdlCc6c",
@@ -273,6 +319,21 @@
     ]
   },
   {
+    "id": "3aV5-q8vRz8",
+    "title": "How to use ChatGPT to build Business Ideas, Sites &amp; Personal Projects",
+    "channel": "Adrian Twarog",
+    "published": "2022-12-15T10:37:01Z",
+    "thumb": "https://i.ytimg.com/vi/3aV5-q8vRz8/maxresdefault.jpg",
+    "views": 1518829,
+    "likes": 31877,
+    "defaultLang": "en",
+    "durationSec": 887,
+    "category": "28",
+    "topics": [
+      "https://en.wikipedia.org/wiki/Technology"
+    ]
+  },
+  {
     "id": "Th8JoIan4dg",
     "title": "How to Get and Evaluate Startup Ideas | Startup School",
     "channel": "Y Combinator",
@@ -286,6 +347,19 @@
     "topics": [
       "https://en.wikipedia.org/wiki/Business"
     ]
+  },
+  {
+    "id": "cgFFQmry8n4",
+    "title": "4 BEST AI Businesses To Start Before 2026 (For Beginners)",
+    "channel": "Jordan Welch",
+    "published": "2025-11-06T17:37:02Z",
+    "thumb": "https://i.ytimg.com/vi/cgFFQmry8n4/maxresdefault.jpg",
+    "views": 1503659,
+    "likes": 59247,
+    "defaultLang": "en",
+    "durationSec": 1477,
+    "category": "27",
+    "topics": []
   },
   {
     "id": "HxEQCHpZzHk",
@@ -428,6 +502,81 @@
     "category": "25",
     "topics": [
       "https://en.wikipedia.org/wiki/Society"
+    ]
+  },
+  {
+    "id": "67zh8_yiPh4",
+    "title": "I Built 3 SaaS Apps to $200K MRR: Here&#39;s My Exact Playbook",
+    "channel": "Starter Story",
+    "published": "2025-11-02T18:00:13Z",
+    "thumb": "https://i.ytimg.com/vi/67zh8_yiPh4/maxresdefault.jpg",
+    "views": 855972,
+    "likes": 24522,
+    "defaultLang": "en-US",
+    "durationSec": 819,
+    "category": "22",
+    "topics": [
+      "https://en.wikipedia.org/wiki/Business",
+      "https://en.wikipedia.org/wiki/Lifestyle_(sociology)"
+    ]
+  },
+  {
+    "id": "7zPQV1BSH_k",
+    "title": "23 Ways to Use ChatGPT So Well it Feels Like Cheating",
+    "channel": "Dan Martell",
+    "published": "2025-10-17T16:00:15Z",
+    "thumb": "https://i.ytimg.com/vi/7zPQV1BSH_k/maxresdefault.jpg",
+    "views": 810480,
+    "likes": 27548,
+    "defaultLang": "en",
+    "durationSec": 992,
+    "category": "27",
+    "topics": []
+  },
+  {
+    "id": "180KJQryGwc",
+    "title": "How I Built a SaaS Startup (From Idea to Revenue)",
+    "channel": "Kevin Park",
+    "published": "2025-02-13T22:31:49Z",
+    "thumb": "https://i.ytimg.com/vi/180KJQryGwc/maxresdefault.jpg",
+    "views": 748642,
+    "likes": 18934,
+    "defaultLang": "en",
+    "durationSec": 393,
+    "category": "28",
+    "topics": [
+      "https://en.wikipedia.org/wiki/Business",
+      "https://en.wikipedia.org/wiki/Technology"
+    ]
+  },
+  {
+    "id": "cxcb55zr2Q8",
+    "title": "How AI is breaking the SaaS business model...",
+    "channel": "Fireship",
+    "published": "2026-02-17T18:17:11Z",
+    "thumb": "https://i.ytimg.com/vi/cxcb55zr2Q8/maxresdefault.jpg",
+    "views": 748285,
+    "likes": 26199,
+    "defaultLang": "en",
+    "durationSec": 302,
+    "category": "28",
+    "topics": [
+      "https://en.wikipedia.org/wiki/Technology"
+    ]
+  },
+  {
+    "id": "YGSi2kvolYY",
+    "title": "I Built A Business From Scratch Only Following ChatGPT&#39;s Advice",
+    "channel": "3.7Million",
+    "published": "2025-12-06T18:58:10Z",
+    "thumb": "https://i.ytimg.com/vi/YGSi2kvolYY/maxresdefault.jpg",
+    "views": 699025,
+    "likes": 26337,
+    "defaultLang": "en",
+    "durationSec": 1048,
+    "category": "22",
+    "topics": [
+      "https://en.wikipedia.org/wiki/Lifestyle_(sociology)"
     ]
   }
 ]

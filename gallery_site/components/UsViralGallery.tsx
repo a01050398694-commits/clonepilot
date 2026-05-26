@@ -35,6 +35,7 @@ export function UsViralGallery({ videos }: { videos: ViralVideo[] }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(true);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     const el = scrollerRef.current;
@@ -53,9 +54,35 @@ export function UsViralGallery({ videos }: { videos: ViralVideo[] }) {
     };
   }, []);
 
+  // Auto-scroll: pixel-perfect creep with snap-back-to-start.
+  // Pauses on hover OR when user interacts (interaction sets paused=true via handlers).
+  useEffect(() => {
+    if (paused) return;
+    const el = scrollerRef.current;
+    if (!el) return;
+    let last = performance.now();
+    let raf = 0;
+    const SPEED_PX_PER_SEC = 28; // gentle drift
+    const tick = (now: number) => {
+      const dt = Math.min(80, now - last);
+      last = now;
+      // Loop: when we hit the right boundary, jump back to start
+      const max = el.scrollWidth - el.clientWidth;
+      if (max > 0) {
+        let next = el.scrollLeft + (SPEED_PX_PER_SEC * dt) / 1000;
+        if (next >= max - 1) next = 0;
+        el.scrollLeft = next;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [paused]);
+
   function scrollBy(dir: 1 | -1) {
     const el = scrollerRef.current;
     if (!el) return;
+    setPaused(true);
     el.scrollBy({ left: dir * (el.clientWidth * 0.9), behavior: "smooth" });
   }
 
@@ -132,11 +159,16 @@ export function UsViralGallery({ videos }: { videos: ViralVideo[] }) {
 
       <div
         ref={scrollerRef}
-        className="flex overflow-x-auto gap-5 pb-4 snap-x snap-mandatory scroll-smooth"
+        className="flex overflow-x-auto gap-5 pb-4"
         style={{
           scrollbarWidth: "thin",
           scrollbarColor: "var(--border-strong) transparent",
         }}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onTouchStart={() => setPaused(true)}
+        onTouchEnd={() => setTimeout(() => setPaused(false), 4000)}
+        onPointerDown={() => setPaused(true)}
       >
         {videos.map((v, idx) => (
           <ViralCard
