@@ -323,20 +323,44 @@ export async function callGroqJson<T>(opts: {
     // 12k TPM. Our input is ~2.5k, so 8k output leaves headroom.
     max_tokens: 8_000,
   };
-  const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(180_000),
-  });
-  if (!r.ok) {
-    const text = await r.text().catch(() => "");
-    const err = new Error(`groq ${r.status}: ${text.slice(0, 300)}`);
-    (err as Error & { status?: number }).status = r.status;
-    throw err;
+  async function once() {
+    const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(180_000),
+    });
+    if (!r.ok) {
+      const text = await r.text().catch(() => "");
+      const err = new Error(`groq ${r.status}: ${text.slice(0, 400)}`);
+      (err as Error & { status?: number }).status = r.status;
+      throw err;
+    }
+    return r;
+  }
+
+  let r: Response;
+  try {
+    r = await once();
+  } catch (firstErr) {
+    // 429 with sliding-window TPM: Groq tells us the wait. Honor it once,
+    // up to 25s, then retry. Anything longer → bubble up.
+    const msg = firstErr instanceof Error ? firstErr.message : "";
+    const status = (firstErr as { status?: number })?.status;
+    const m = /try again in (\d+(?:\.\d+)?)s/i.exec(msg);
+    if (status === 429 && m) {
+      const waitS = Math.min(25, Math.ceil(parseFloat(m[1]) + 1));
+      console.error(
+        `[groq] 429 — honoring backoff for ${waitS}s then retrying once`,
+      );
+      await new Promise((res) => setTimeout(res, waitS * 1000));
+      r = await once();
+    } else {
+      throw firstErr;
+    }
   }
   type Resp = {
     choices?: Array<{
