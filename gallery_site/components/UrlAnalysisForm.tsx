@@ -346,79 +346,158 @@ export function UrlAnalysisForm({
 /* ─── loading panel ────────────────────────────────────────────────── */
 
 function LoadingPanel({ d }: { d: Dict["analyze_form"] }) {
-  const [lines, setLines] = useState<string[]>([]);
-  const steps = useMemo(
+  // 7 visible stages, each given an estimated weight so the progress bar
+  // matches reality — the LLM call eats most of the wait.
+  const stages = useMemo(
     () => [
-      "fetch:video.metadata",
-      "fetch:transcript.chain",
-      "fetch:channel.velocity",
-      "fetch:youtube.comments x30",
-      "fetch:google.trends x3",
-      "fetch:reddit.search",
-      "fetch:hn.algolia",
-      "fetch:wikipedia.search",
-      "fetch:wayback.first-seen",
-      "parse:description.funnel",
-      "stat:comment.bot-heuristic",
-      "llm:reverse-engineer.business",
+      { label: "Reading video metadata", weight: 4 },
+      { label: "Fetching transcript", weight: 8 },
+      { label: "Pulling channel velocity + comments", weight: 6 },
+      { label: "Cross-checking Trends / Reddit / Wikipedia", weight: 8 },
+      { label: "Forensics on description (links / prices)", weight: 4 },
+      { label: "Reverse-engineering the business model", weight: 18 },
+      { label: "Distilling the lessons taught in the video", weight: 14 },
     ],
     [],
   );
+
+  const totalWeight = stages.reduce((a, s) => a + s.weight, 0);
+  const [elapsed, setElapsed] = useState(0);
+  const [tipIdx, setTipIdx] = useState(0);
+
+  const tips = useMemo(
+    () => [
+      "Checking how the comments look (genuine vs bot-inflated)…",
+      "Comparing claimed revenue against verifiable footprint…",
+      "Looking for funnel-ladder rungs in the description…",
+      "Sizing the realistic year-1 market for this niche…",
+      "Re-teaching the video as if it were a paid course…",
+      "Listing what the creator deliberately did NOT show you…",
+      "Estimating where every dollar actually comes from…",
+    ],
+    [],
+  );
+
   useEffect(() => {
-    let i = 0;
-    const t = setInterval(() => {
-      i = Math.min(i + 1, steps.length);
-      setLines(steps.slice(0, i));
-    }, 700);
+    const t0 = Date.now();
+    const t = setInterval(() => setElapsed((Date.now() - t0) / 1000), 300);
     return () => clearInterval(t);
-  }, [steps]);
+  }, []);
+
+  useEffect(() => {
+    const t = setInterval(() => setTipIdx((i) => (i + 1) % tips.length), 3200);
+    return () => clearInterval(t);
+  }, [tips.length]);
+
+  // expected total ~ 35s, but cap visible progress at 92% so it never claims
+  // "done" before the network call actually returns.
+  const expectedTotal = 35;
+  const pct = Math.min(92, (elapsed / expectedTotal) * 100);
+
+  // Map progress percentage to current stage.
+  let cumulative = 0;
+  let currentStageIdx = stages.length - 1;
+  for (let i = 0; i < stages.length; i++) {
+    cumulative += (stages[i].weight / totalWeight) * 100;
+    if (pct < cumulative) {
+      currentStageIdx = i;
+      break;
+    }
+  }
 
   return (
-    <div className="border border-strong bg-surface" style={{ borderRadius: 2 }}>
-      <div className="flex items-center justify-between px-5 h-9 border-b border-strong bg-surface-2">
-        <div className="flex items-center gap-2">
-          <span className="inline-block h-1.5 w-1.5 rounded-full breathe" style={{ background: "var(--brand)" }} />
-          <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-muted">
+    <div
+      className="border border-strong bg-surface overflow-hidden"
+      style={{ borderRadius: 12 }}
+    >
+      <div className="flex items-center justify-between px-6 h-11 border-b border-strong bg-surface-2">
+        <div className="flex items-center gap-2.5">
+          <span
+            className="inline-block h-2 w-2 rounded-full breathe"
+            style={{ background: "var(--brand)" }}
+          />
+          <p className="text-[11px] font-mono uppercase tracking-wider2 text-ink-muted font-semibold">
             {d.submitting}
           </p>
         </div>
-        <p className="text-[10px] font-mono tracking-wider text-ink-dim">
-          ~30–60s
+        <p className="text-[11px] font-mono tracking-wider tabnums text-ink-dim">
+          {elapsed.toFixed(0)}s · ~30–60s
         </p>
       </div>
-      <div className="p-6">
-        <p className="text-xs text-ink-muted font-mono mb-4">
+
+      <div className="px-8 py-9 md:px-10 md:py-10">
+        {/* Big progress bar with coral fill */}
+        <div className="mb-7">
+          <div
+            className="h-1.5 w-full overflow-hidden border border-strong"
+            style={{
+              borderRadius: 999,
+              background: "color-mix(in oklab, var(--brand) 5%, var(--surface-2))",
+            }}
+          >
+            <div
+              className="h-full transition-all duration-500 ease-out"
+              style={{
+                width: `${pct}%`,
+                background:
+                  "linear-gradient(90deg, var(--brand), color-mix(in oklab, var(--brand) 60%, white))",
+                boxShadow: "0 0 14px color-mix(in oklab, var(--brand) 40%, transparent)",
+              }}
+            />
+          </div>
+          <div className="mt-2 flex items-baseline justify-between text-[10px] font-mono uppercase tracking-wider2 text-ink-dim">
+            <span>Stage {currentStageIdx + 1} of {stages.length}</span>
+            <span className="tabnums">{Math.round(pct)}%</span>
+          </div>
+        </div>
+
+        {/* Current stage — big, friendly */}
+        <p className="text-[20px] md:text-[22px] text-ink font-semibold leading-[1.35] tracking-tight break-keep max-w-[44ch]">
+          {stages[currentStageIdx].label}
+          <span className="term-cursor inline-block ml-1" style={{ background: "var(--brand)" }} />
+        </p>
+
+        {/* Rotating tip — keeps the user feeling alive */}
+        <p
+          key={tipIdx}
+          className="mt-4 text-[13.5px] text-ink-muted leading-[1.7] italic break-keep max-w-[60ch] fade-up"
+          style={{ ["--i" as string]: 0 }}
+        >
+          {tips[tipIdx]}
+        </p>
+
+        {/* Stage list — checkmarks for the ones we passed */}
+        <ul className="mt-7 space-y-1.5 font-mono text-[11.5px]">
+          {stages.map((s, i) => {
+            const done = i < currentStageIdx;
+            const active = i === currentStageIdx;
+            return (
+              <li
+                key={i}
+                className="flex items-baseline gap-2.5"
+                style={{
+                  color: done
+                    ? "var(--text-muted)"
+                    : active
+                      ? "var(--text)"
+                      : "var(--text-dim)",
+                }}
+              >
+                <span
+                  className="inline-block w-3 flex-shrink-0 tabnums"
+                  style={{ color: active ? "var(--brand)" : undefined }}
+                >
+                  {done ? "✓" : active ? "▸" : "·"}
+                </span>
+                <span className={active ? "font-semibold" : ""}>{s.label}</span>
+              </li>
+            );
+          })}
+        </ul>
+
+        <p className="mt-7 text-[11px] font-mono text-ink-dim leading-relaxed break-keep">
           {d.submitting_hint}
         </p>
-        <div className="font-mono text-[11px] space-y-1 min-h-[180px]">
-          {lines.map((l, i) => (
-            <p
-              key={l}
-              className="text-ink-muted fade-up"
-              style={{ ["--i" as string]: i }}
-            >
-              <span className="text-ink-dim">[{String(i + 1).padStart(2, "0")}]</span>{" "}
-              {l}
-              <span className="text-ink">{" ✓"}</span>
-            </p>
-          ))}
-          {lines.length < 12 && (
-            <p className="text-ink">
-              <span className="text-ink-dim">
-                [{String(lines.length + 1).padStart(2, "0")}]
-              </span>{" "}
-              <span className="text-ink-muted">running</span>
-              <span className="term-cursor" />
-            </p>
-          )}
-        </div>
-        <div className="mt-4 h-px w-full bg-strong" />
-        <div
-          className="mt-4 h-1 w-full overflow-hidden border border-strong ind-bar"
-          style={{ borderRadius: 1 }}
-        >
-          <span />
-        </div>
       </div>
     </div>
   );
