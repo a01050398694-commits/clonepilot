@@ -179,14 +179,14 @@ const EN: Dict = {
     badge: "Open-source MCP — v0.1",
     titleRich: (Em) => (
       <>
-        YouTube business video,
+        YouTube business video
         <br />
-        <span className="text-ink-muted">in.</span>{" "}
-        <Em>Deployed site,</Em> out.
+        <span className="text-ink-muted">in</span>{" "}
+        <Em>deployed site</Em> out
       </>
     ),
     subtitle:
-      "ClonePilot is an open-source MCP for Claude Code, Cursor, and Codex. Paste any business video. Get a Next.js landing page, Stripe checkout, email capture, a deep market report in five languages, and a live Vercel URL.",
+      "ClonePilot is an open-source MCP for Claude Code, Cursor, and Codex. Paste any business video. Get a Next.js landing page, Stripe checkout, email capture, a deep market report in five languages, and a live Vercel URL",
     cta_install: "Install for free",
     cta_see_reports: "See live reports",
     cta_github: "GitHub",
@@ -203,27 +203,27 @@ const EN: Dict = {
   },
   how: {
     eyebrow: "How it works",
-    title: "Three calls. One live site.",
+    title: "Three calls. One live site",
     steps: [
       {
-        title: "Drop a YouTube URL into Claude Code.",
-        body: "Any business video — interview, founder demo, course landing. ClonePilot fetches the transcript via Supadata with a fallback chain.",
+        title: "Drop a YouTube URL into Claude Code",
+        body: "Any business video — interview, founder demo, course landing. ClonePilot fetches the transcript via Supadata with a fallback chain",
       },
       {
-        title: "Claude calls analyze_deep — twelve sections, five languages.",
-        body: "Blueprint, pricing tiers, market trend, competitors, SEO pack, six prioritized risks, 90-day GTM, and a confidence score that tells you which API keys to add for higher fidelity.",
+        title: "Claude calls analyze_deep — twelve sections, five languages",
+        body: "Blueprint, pricing tiers, market trend, competitors, SEO pack, six prioritized risks, 90-day GTM, and a confidence score that tells you which API keys to add for higher fidelity",
       },
       {
-        title: "scaffold + deploy hand back a live Vercel URL.",
-        body: "Next.js 15, Tailwind, Stripe buy buttons, Resend lead capture, and an auto-generated SVG favicon. Median time end-to-end: under two minutes.",
+        title: "scaffold + deploy hand back a live Vercel URL",
+        body: "Next.js 15, Tailwind, Stripe buy buttons, Resend lead capture, and an auto-generated SVG favicon. Median time end-to-end: under two minutes",
       },
     ],
   },
   gallery: {
     eyebrow: "Live reports",
-    title: "Real videos. Real deep-analysis reports.",
+    title: "Real videos. Real deep-analysis reports",
     updated: "Updated",
-    empty: "Reports are still generating. Refresh in a couple of minutes.",
+    empty: "Reports are still generating. Refresh in a couple of minutes",
     badge_full: "Full report",
     badge_landing: "Landing only",
     confidence_label: "Confidence",
@@ -236,7 +236,7 @@ const EN: Dict = {
   },
   waitlist: {
     eyebrow: "Pro launch",
-    title: "Email me when Pro opens.",
+    title: "Email me when Pro opens",
     bodyRich: (Em) => (
       <>
         The MCP is open-source and free today. Pro is the hosted convenience
@@ -256,9 +256,9 @@ const EN: Dict = {
     submit: "Analyze video",
     submitting: "Analyzing…",
     submitting_hint:
-      "Usually 30–60 seconds. AI is reading the transcript right now.",
+      "Usually 30–60 seconds. AI is reading the transcript right now",
     disclaimer:
-      "Free preview. No signup. The MCP itself is open-source — install once and run the full 12-section report inside your own Claude Code.",
+      "Free preview. No signup. The MCP itself is open-source — install once and run the full 12-section report inside your own Claude Code",
     card_brand: "Brand",
     card_tagline: "Tagline",
     card_target: "Target",
@@ -313,7 +313,7 @@ const EN: Dict = {
     section_clone_cta: "Build this with Claude",
     clone_cta_title: "Want this site live in 2 minutes?",
     clone_cta_body:
-      "ClonePilot's open-source MCP runs analyze_deep + scaffold + deploy inside your own Claude Code. Free tier: 1 build/month.",
+      "ClonePilot's open-source MCP runs analyze_deep + scaffold + deploy inside your own Claude Code. Free tier: 1 build/month",
     clone_cta_btn: "Install ClonePilot →",
     card_translate_label: "Translate this card:",
     card_translating: "Translating…",
@@ -322,10 +322,10 @@ const EN: Dict = {
     placeholder_email: "you@startup.com",
     submit: "Join waitlist",
     submitting: "Saving…",
-    ok_title: "You are on the list.",
-    ok_position_template: "You are #{n} on the list.",
-    ok_in: "You are in.",
-    ok_hint: "One email when Pro launches. Nothing else.",
+    ok_title: "You are on the list",
+    ok_position_template: "You are #{n} on the list",
+    ok_in: "You are in",
+    ok_hint: "One email when Pro launches. Nothing else",
   },
 };
 
@@ -342,14 +342,14 @@ const KO: Dict = {
     badge: "오픈소스 MCP — v0.1",
     titleRich: (Em) => (
       <>
-        유튜브 사업 영상을 넣으면,
+        유튜브 사업 영상 넣으면
         <br />
         <span className="text-ink-muted">바로</span>{" "}
-        <Em>배포된 사이트</Em>가 나옵니다.
+        <Em>배포된 사이트</Em>
       </>
     ),
     subtitle:
-      "ClonePilot은 Claude Code · Cursor · Codex용 오픈소스 MCP입니다. 사업 영상 아무거나 붙여넣으면 Next.js 랜딩페이지, Stripe 결제, 이메일 수집, 5개 언어 시장 리포트, 그리고 실제로 도는 Vercel 주소까지 받아갑니다.",
+      "ClonePilot은 Claude Code · Cursor · Codex용 오픈소스 MCP입니다. 사업 영상 아무거나 붙여넣으면 Next.js 랜딩페이지, Stripe 결제, 이메일 수집, 5개 언어 시장 리포트, 그리고 실제로 도는 Vercel 주소까지 받아갑니다",
     cta_install: "무료로 설치",
     cta_see_reports: "실제 리포트 보기",
     cta_github: "GitHub",
@@ -366,27 +366,27 @@ const KO: Dict = {
   },
   how: {
     eyebrow: "동작 방식",
-    title: "MCP 호출 3번. 라이브 사이트 1개.",
+    title: "MCP 호출 3번. 라이브 사이트 1개",
     steps: [
       {
-        title: "Claude Code에 유튜브 URL을 던집니다.",
-        body: "사업 영상이면 뭐든 — 인터뷰, 창업자 데모, 강의 랜딩페이지. ClonePilot이 Supadata와 폴백 체인으로 자막을 가져옵니다.",
+        title: "Claude Code에 유튜브 URL을 던집니다",
+        body: "사업 영상이면 뭐든 — 인터뷰, 창업자 데모, 강의 랜딩페이지. ClonePilot이 Supadata와 폴백 체인으로 자막을 가져옵니다",
       },
       {
-        title: "Claude가 analyze_deep을 호출 — 12개 섹션, 5개 언어.",
-        body: "사업 구조, 가격 티어, 시장 트렌드, 경쟁사, SEO 팩, 우선순위 위험 6개, 90일 진출 전략, 그리고 어떤 API 키를 추가해야 정확도가 올라가는지 알려주는 신뢰도 점수까지.",
+        title: "Claude가 analyze_deep을 호출 — 12개 섹션, 5개 언어",
+        body: "사업 구조, 가격 티어, 시장 트렌드, 경쟁사, SEO 팩, 우선순위 위험 6개, 90일 진출 전략, 그리고 어떤 API 키를 추가해야 정확도가 올라가는지 알려주는 신뢰도 점수까지",
       },
       {
-        title: "scaffold + deploy로 실제 Vercel 주소가 손에 잡힙니다.",
-        body: "Next.js 15, Tailwind, Stripe 결제 버튼, Resend 리드 수집, 자동 생성된 SVG 파비콘까지. 처음부터 끝까지 보통 2분 미만.",
+        title: "scaffold + deploy로 실제 Vercel 주소가 손에 잡힙니다",
+        body: "Next.js 15, Tailwind, Stripe 결제 버튼, Resend 리드 수집, 자동 생성된 SVG 파비콘까지. 처음부터 끝까지 보통 2분 미만",
       },
     ],
   },
   gallery: {
     eyebrow: "최신 리포트",
-    title: "실제 영상. 진짜 심층 분석 리포트.",
+    title: "실제 영상. 진짜 심층 분석 리포트",
     updated: "업데이트",
-    empty: "리포트 생성 중입니다. 몇 분 뒤 새로고침해주세요.",
+    empty: "리포트 생성 중입니다. 몇 분 뒤 새로고침해주세요",
     badge_full: "풀 리포트",
     badge_landing: "랜딩만",
     confidence_label: "신뢰도",
@@ -399,7 +399,7 @@ const KO: Dict = {
   },
   waitlist: {
     eyebrow: "Pro 출시",
-    title: "Pro 열리면 알려드립니다.",
+    title: "Pro 열리면 알려드립니다",
     bodyRich: (Em) => (
       <>
         MCP 자체는 오늘부터 오픈소스로 무료입니다. Pro는 호스팅 편의 레이어 —
@@ -417,9 +417,9 @@ const KO: Dict = {
     url_placeholder: "https://www.youtube.com/watch?v=...",
     submit: "분석 시작",
     submitting: "분석 중…",
-    submitting_hint: "보통 30~60초 걸립니다. AI가 자막을 읽고 있어요.",
+    submitting_hint: "보통 30~60초 걸립니다. AI가 자막을 읽고 있어요",
     disclaimer:
-      "무료 미리보기. 가입 불필요. MCP 자체는 오픈소스 — 한 번 설치하면 본인 Claude Code에서 12섹션 풀 리포트를 직접 돌릴 수 있습니다.",
+      "무료 미리보기. 가입 불필요. MCP 자체는 오픈소스 — 한 번 설치하면 본인 Claude Code에서 12섹션 풀 리포트를 직접 돌릴 수 있습니다",
     card_brand: "브랜드",
     card_tagline: "한 줄 소개",
     card_target: "타깃",
@@ -474,7 +474,7 @@ const KO: Dict = {
     section_clone_cta: "Claude로 직접 빌드",
     clone_cta_title: "이 사이트 2분 안에 라이브로 받고 싶다면?",
     clone_cta_body:
-      "ClonePilot 오픈소스 MCP가 본인 Claude Code 안에서 analyze_deep + scaffold + deploy를 다 돌립니다. 무료 티어: 월 1빌드.",
+      "ClonePilot 오픈소스 MCP가 본인 Claude Code 안에서 analyze_deep + scaffold + deploy를 다 돌립니다. 무료 티어: 월 1빌드",
     clone_cta_btn: "ClonePilot 설치 →",
     card_translate_label: "이 카드 번역:",
     card_translating: "번역 중…",
@@ -483,10 +483,10 @@ const KO: Dict = {
     placeholder_email: "you@startup.com",
     submit: "대기열 등록",
     submitting: "저장 중…",
-    ok_title: "대기열에 등록됐습니다.",
-    ok_position_template: "대기 순번 #{n}입니다.",
-    ok_in: "등록 완료.",
-    ok_hint: "Pro 출시 때 메일 1통만 보냅니다. 그 외 없음.",
+    ok_title: "대기열에 등록됐습니다",
+    ok_position_template: "대기 순번 #{n}입니다",
+    ok_in: "등록 완료",
+    ok_hint: "Pro 출시 때 메일 1통만 보냅니다. 그 외 없음",
   },
 };
 
@@ -503,14 +503,14 @@ const JA: Dict = {
     badge: "オープンソースMCP — v0.1",
     titleRich: (Em) => (
       <>
-        YouTubeのビジネス動画を入れたら、
+        YouTubeのビジネス動画を入れたら
         <br />
         <span className="text-ink-muted">そのまま</span>{" "}
-        <Em>デプロイ済みのサイト</Em>が出てきます。
+        <Em>デプロイ済みのサイト</Em>
       </>
     ),
     subtitle:
-      "ClonePilotはClaude Code・Cursor・Codex向けのオープンソースMCPです。ビジネス動画を貼り付けるだけで、Next.jsランディング、Stripe決済、メール収集、5言語の市場レポート、実際に動くVercel URLが返ってきます。",
+      "ClonePilotはClaude Code・Cursor・Codex向けのオープンソースMCPです。ビジネス動画を貼り付けるだけで、Next.jsランディング、Stripe決済、メール収集、5言語の市場レポート、実際に動くVercel URLが返ってきます",
     cta_install: "無料でインストール",
     cta_see_reports: "実際のレポートを見る",
     cta_github: "GitHub",
@@ -527,27 +527,27 @@ const JA: Dict = {
   },
   how: {
     eyebrow: "仕組み",
-    title: "MCPコール3回。ライブサイト1個。",
+    title: "MCPコール3回。ライブサイト1個",
     steps: [
       {
-        title: "Claude CodeにYouTube URLを貼ります。",
-        body: "ビジネス動画なら何でも — インタビュー、創業者デモ、講座ランディング。ClonePilotがSupadataとフォールバック群でトランスクリプトを取得します。",
+        title: "Claude CodeにYouTube URLを貼ります",
+        body: "ビジネス動画なら何でも — インタビュー、創業者デモ、講座ランディング。ClonePilotがSupadataとフォールバック群でトランスクリプトを取得します",
       },
       {
-        title: "Claudeがanalyze_deepを実行 — 12セクション・5言語。",
-        body: "ビジネス設計図、料金ティア、市場トレンド、競合、SEOパック、優先度付きリスク6件、90日のGTM、そして精度を上げるために追加すべきAPIキーを示す信頼度スコアまで。",
+        title: "Claudeがanalyze_deepを実行 — 12セクション・5言語",
+        body: "ビジネス設計図、料金ティア、市場トレンド、競合、SEOパック、優先度付きリスク6件、90日のGTM、そして精度を上げるために追加すべきAPIキーを示す信頼度スコアまで",
       },
       {
-        title: "scaffold + deployで実際のVercel URLが手に入ります。",
-        body: "Next.js 15、Tailwind、Stripe決済ボタン、Resendリード収集、自動生成のSVGファビコンまで。端から端まで通常2分未満。",
+        title: "scaffold + deployで実際のVercel URLが手に入ります",
+        body: "Next.js 15、Tailwind、Stripe決済ボタン、Resendリード収集、自動生成のSVGファビコンまで。端から端まで通常2分未満",
       },
     ],
   },
   gallery: {
     eyebrow: "最新レポート",
-    title: "本物の動画。本物の深掘りレポート。",
+    title: "本物の動画。本物の深掘りレポート",
     updated: "更新",
-    empty: "レポート生成中です。数分後に再読み込みしてください。",
+    empty: "レポート生成中です。数分後に再読み込みしてください",
     badge_full: "フルレポート",
     badge_landing: "ランディングのみ",
     confidence_label: "信頼度",
@@ -560,7 +560,7 @@ const JA: Dict = {
   },
   waitlist: {
     eyebrow: "Pro公開",
-    title: "Pro公開時に通知します。",
+    title: "Pro公開時に通知します",
     bodyRich: (Em) => (
       <>
         MCP本体は今日からオープンソースで無料。Proはホスティング版 — APIキーは
@@ -578,9 +578,9 @@ const JA: Dict = {
     url_placeholder: "https://www.youtube.com/watch?v=...",
     submit: "解析開始",
     submitting: "解析中…",
-    submitting_hint: "通常30〜60秒。AIがトランスクリプトを読んでいます。",
+    submitting_hint: "通常30〜60秒。AIがトランスクリプトを読んでいます",
     disclaimer:
-      "無料プレビュー。登録不要。MCP本体はオープンソース — 一度入れれば自分のClaude Code内で12セクションのフルレポートを直接実行できます。",
+      "無料プレビュー。登録不要。MCP本体はオープンソース — 一度入れれば自分のClaude Code内で12セクションのフルレポートを直接実行できます",
     card_brand: "ブランド",
     card_tagline: "キャッチコピー",
     card_target: "ターゲット",
@@ -635,7 +635,7 @@ const JA: Dict = {
     section_clone_cta: "Claudeで直接ビルド",
     clone_cta_title: "このサイトを2分でライブ公開?",
     clone_cta_body:
-      "ClonePilotのオープンソースMCPが自分のClaude Code内でanalyze_deep + scaffold + deployを全部走らせます。無料: 月1ビルド。",
+      "ClonePilotのオープンソースMCPが自分のClaude Code内でanalyze_deep + scaffold + deployを全部走らせます。無料: 月1ビルド",
     clone_cta_btn: "ClonePilotをインストール →",
     card_translate_label: "このカードを翻訳:",
     card_translating: "翻訳中…",
@@ -644,10 +644,10 @@ const JA: Dict = {
     placeholder_email: "you@startup.com",
     submit: "ウェイトリストに登録",
     submitting: "保存中…",
-    ok_title: "ウェイトリストに登録しました。",
-    ok_position_template: "ウェイトリスト #{n} です。",
-    ok_in: "登録完了。",
-    ok_hint: "Pro公開時にメール1通のみ。それ以外送りません。",
+    ok_title: "ウェイトリストに登録しました",
+    ok_position_template: "ウェイトリスト #{n} です",
+    ok_in: "登録完了",
+    ok_hint: "Pro公開時にメール1通のみ。それ以外送りません",
   },
 };
 
@@ -664,14 +664,14 @@ const ZH: Dict = {
     badge: "开源 MCP — v0.1",
     titleRich: (Em) => (
       <>
-        丢一个 YouTube 商业视频进去,
+        丢一个 YouTube 商业视频进去
         <br />
         <span className="text-ink-muted">直接</span>{" "}
-        <Em>拿到已部署的网站</Em>。
+        <Em>拿到已部署的网站</Em>
       </>
     ),
     subtitle:
-      "ClonePilot 是面向 Claude Code、Cursor 和 Codex 的开源 MCP。粘贴任意商业视频,即可获得 Next.js 落地页、Stripe 收款、邮件抓取、五种语言的市场报告,以及一个真正在线的 Vercel 网址。",
+      "ClonePilot 是面向 Claude Code、Cursor 和 Codex 的开源 MCP。粘贴任意商业视频,即可获得 Next.js 落地页、Stripe 收款、邮件抓取、五种语言的市场报告,以及一个真正在线的 Vercel 网址",
     cta_install: "免费安装",
     cta_see_reports: "查看实时报告",
     cta_github: "GitHub",
@@ -688,27 +688,27 @@ const ZH: Dict = {
   },
   how: {
     eyebrow: "工作方式",
-    title: "三次调用。一个上线站点。",
+    title: "三次调用。一个上线站点",
     steps: [
       {
-        title: "把 YouTube 链接丢进 Claude Code。",
-        body: "任何商业视频都行 —— 访谈、创始人演示、课程落地页。ClonePilot 通过 Supadata 加备用方案抓取字幕。",
+        title: "把 YouTube 链接丢进 Claude Code",
+        body: "任何商业视频都行 —— 访谈、创始人演示、课程落地页。ClonePilot 通过 Supadata 加备用方案抓取字幕",
       },
       {
-        title: "Claude 调用 analyze_deep —— 十二个板块, 五种语言。",
-        body: "蓝图、定价分层、市场趋势、竞品、SEO 包、六项优先级风险、90 天 GTM, 还有一个告诉你该补哪些 API 密钥提升精度的置信度分数。",
+        title: "Claude 调用 analyze_deep —— 十二个板块, 五种语言",
+        body: "蓝图、定价分层、市场趋势、竞品、SEO 包、六项优先级风险、90 天 GTM, 还有一个告诉你该补哪些 API 密钥提升精度的置信度分数",
       },
       {
-        title: "scaffold + deploy 直接给你一个上线的 Vercel 网址。",
-        body: "Next.js 15、Tailwind、Stripe 收款按钮、Resend 线索收集, 还有自动生成的 SVG 网站图标。端到端中位时间不到两分钟。",
+        title: "scaffold + deploy 直接给你一个上线的 Vercel 网址",
+        body: "Next.js 15、Tailwind、Stripe 收款按钮、Resend 线索收集, 还有自动生成的 SVG 网站图标。端到端中位时间不到两分钟",
       },
     ],
   },
   gallery: {
     eyebrow: "实时报告",
-    title: "真实视频。真实深度分析报告。",
+    title: "真实视频。真实深度分析报告",
     updated: "更新",
-    empty: "报告生成中。请几分钟后刷新。",
+    empty: "报告生成中。请几分钟后刷新",
     badge_full: "完整报告",
     badge_landing: "仅落地页",
     confidence_label: "置信度",
@@ -721,7 +721,7 @@ const ZH: Dict = {
   },
   waitlist: {
     eyebrow: "Pro 上线",
-    title: "Pro 开放时通知我。",
+    title: "Pro 开放时通知我",
     bodyRich: (Em) => (
       <>
         MCP 今天起开源免费。Pro 是托管便利层 —— API 密钥全部在服务端、无限构建、
@@ -738,9 +738,9 @@ const ZH: Dict = {
     url_placeholder: "https://www.youtube.com/watch?v=...",
     submit: "开始分析",
     submitting: "分析中…",
-    submitting_hint: "通常 30~60 秒。AI 正在阅读字幕。",
+    submitting_hint: "通常 30~60 秒。AI 正在阅读字幕",
     disclaimer:
-      "免费预览。无需注册。MCP 本身开源 —— 装一次就能在自己的 Claude Code 里直接运行 12 个板块的完整报告。",
+      "免费预览。无需注册。MCP 本身开源 —— 装一次就能在自己的 Claude Code 里直接运行 12 个板块的完整报告",
     card_brand: "品牌",
     card_tagline: "一句话介绍",
     card_target: "目标用户",
@@ -795,7 +795,7 @@ const ZH: Dict = {
     section_clone_cta: "用 Claude 直接构建",
     clone_cta_title: "想 2 分钟内把这个站点跑起来?",
     clone_cta_body:
-      "ClonePilot 开源 MCP 在你自己的 Claude Code 里跑 analyze_deep + scaffold + deploy。免费档: 月 1 次构建。",
+      "ClonePilot 开源 MCP 在你自己的 Claude Code 里跑 analyze_deep + scaffold + deploy。免费档: 月 1 次构建",
     clone_cta_btn: "安装 ClonePilot →",
     card_translate_label: "翻译此卡片:",
     card_translating: "翻译中…",
@@ -804,10 +804,10 @@ const ZH: Dict = {
     placeholder_email: "you@startup.com",
     submit: "加入等候名单",
     submitting: "保存中…",
-    ok_title: "已加入等候名单。",
-    ok_position_template: "等候名单 #{n}。",
-    ok_in: "已加入。",
-    ok_hint: "Pro 上线时仅发送一封邮件。除此之外没有别的。",
+    ok_title: "已加入等候名单",
+    ok_position_template: "等候名单 #{n}",
+    ok_in: "已加入",
+    ok_hint: "Pro 上线时仅发送一封邮件。除此之外没有别的",
   },
 };
 
@@ -824,14 +824,14 @@ const ES: Dict = {
     badge: "MCP open-source — v0.1",
     titleRich: (Em) => (
       <>
-        Mete un vídeo de negocio de YouTube,
+        Mete un vídeo de negocio de YouTube
         <br />
         <span className="text-ink-muted">y sale</span>{" "}
-        <Em>una web desplegada</Em>.
+        <Em>una web desplegada</Em>
       </>
     ),
     subtitle:
-      "ClonePilot es un MCP open-source para Claude Code, Cursor y Codex. Pega cualquier vídeo de negocio. Obtén una landing en Next.js, checkout con Stripe, captura de emails, un reporte de mercado en cinco idiomas y una URL de Vercel en vivo.",
+      "ClonePilot es un MCP open-source para Claude Code, Cursor y Codex. Pega cualquier vídeo de negocio. Obtén una landing en Next.js, checkout con Stripe, captura de emails, un reporte de mercado en cinco idiomas y una URL de Vercel en vivo",
     cta_install: "Instalar gratis",
     cta_see_reports: "Ver reportes en vivo",
     cta_github: "GitHub",
@@ -848,27 +848,27 @@ const ES: Dict = {
   },
   how: {
     eyebrow: "Cómo funciona",
-    title: "Tres llamadas. Un sitio en vivo.",
+    title: "Tres llamadas. Un sitio en vivo",
     steps: [
       {
-        title: "Suelta una URL de YouTube en Claude Code.",
-        body: "Cualquier vídeo de negocio: entrevista, demo de fundador, landing de curso. ClonePilot obtiene el transcript vía Supadata con una cadena de fallback.",
+        title: "Suelta una URL de YouTube en Claude Code",
+        body: "Cualquier vídeo de negocio: entrevista, demo de fundador, landing de curso. ClonePilot obtiene el transcript vía Supadata con una cadena de fallback",
       },
       {
-        title: "Claude llama a analyze_deep — doce secciones, cinco idiomas.",
-        body: "Blueprint, niveles de precio, tendencia de mercado, competencia, paquete SEO, seis riesgos priorizados, GTM a 90 días y un puntaje de confianza que te dice qué API keys añadir para más precisión.",
+        title: "Claude llama a analyze_deep — doce secciones, cinco idiomas",
+        body: "Blueprint, niveles de precio, tendencia de mercado, competencia, paquete SEO, seis riesgos priorizados, GTM a 90 días y un puntaje de confianza que te dice qué API keys añadir para más precisión",
       },
       {
-        title: "scaffold + deploy te devuelven una URL de Vercel en vivo.",
-        body: "Next.js 15, Tailwind, botones de pago de Stripe, captura de leads con Resend y un favicon SVG auto-generado. Tiempo total: menos de dos minutos.",
+        title: "scaffold + deploy te devuelven una URL de Vercel en vivo",
+        body: "Next.js 15, Tailwind, botones de pago de Stripe, captura de leads con Resend y un favicon SVG auto-generado. Tiempo total: menos de dos minutos",
       },
     ],
   },
   gallery: {
     eyebrow: "Reportes en vivo",
-    title: "Vídeos reales. Reportes de análisis profundo reales.",
+    title: "Vídeos reales. Reportes de análisis profundo reales",
     updated: "Actualizado",
-    empty: "Los reportes aún se están generando. Refresca en unos minutos.",
+    empty: "Los reportes aún se están generando. Refresca en unos minutos",
     badge_full: "Reporte completo",
     badge_landing: "Sólo landing",
     confidence_label: "Confianza",
@@ -881,7 +881,7 @@ const ES: Dict = {
   },
   waitlist: {
     eyebrow: "Lanzamiento Pro",
-    title: "Avísame cuando abra Pro.",
+    title: "Avísame cuando abra Pro",
     bodyRich: (Em) => (
       <>
         El MCP es open-source y gratis hoy. Pro es la capa de conveniencia
@@ -901,9 +901,9 @@ const ES: Dict = {
     submit: "Analizar vídeo",
     submitting: "Analizando…",
     submitting_hint:
-      "Normalmente 30–60 segundos. La IA está leyendo el transcript.",
+      "Normalmente 30–60 segundos. La IA está leyendo el transcript",
     disclaimer:
-      "Vista previa gratis. Sin registro. El MCP en sí es open-source — instálalo una vez y ejecuta el reporte completo de 12 secciones dentro de tu propio Claude Code.",
+      "Vista previa gratis. Sin registro. El MCP en sí es open-source — instálalo una vez y ejecuta el reporte completo de 12 secciones dentro de tu propio Claude Code",
     card_brand: "Marca",
     card_tagline: "Lema",
     card_target: "Público",
@@ -958,7 +958,7 @@ const ES: Dict = {
     section_clone_cta: "Constrúyelo con Claude",
     clone_cta_title: "¿Quieres este sitio en vivo en 2 minutos?",
     clone_cta_body:
-      "El MCP open-source de ClonePilot ejecuta analyze_deep + scaffold + deploy dentro de tu propio Claude Code. Gratis: 1 build/mes.",
+      "El MCP open-source de ClonePilot ejecuta analyze_deep + scaffold + deploy dentro de tu propio Claude Code. Gratis: 1 build/mes",
     clone_cta_btn: "Instalar ClonePilot →",
     card_translate_label: "Traducir esta tarjeta:",
     card_translating: "Traduciendo…",
@@ -967,10 +967,10 @@ const ES: Dict = {
     placeholder_email: "you@startup.com",
     submit: "Unirme a la lista",
     submitting: "Guardando…",
-    ok_title: "Estás en la lista.",
-    ok_position_template: "Eres el #{n} de la lista.",
-    ok_in: "Listo.",
-    ok_hint: "Un único email cuando Pro se lance. Nada más.",
+    ok_title: "Estás en la lista",
+    ok_position_template: "Eres el #{n} de la lista",
+    ok_in: "Listo",
+    ok_hint: "Un único email cuando Pro se lance. Nada más",
   },
 };
 

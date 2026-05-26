@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   ArrowsClockwise,
@@ -10,6 +10,7 @@ import {
   Warning,
   WarningOctagon,
   Check,
+  CaretDown,
   CurrencyDollar,
   Hammer,
   PlayCircle,
@@ -30,13 +31,13 @@ import { cardLabels } from "@/lib/i18n-card-v2";
 
 export type CardLang = Lang | "ar";
 const CARD_LANGS: readonly CardLang[] = ["en", "ko", "ja", "zh", "es", "ar"];
-const CARD_LANG_LABELS: Record<CardLang, string> = {
-  en: "EN",
-  ko: "KO",
-  ja: "JA",
-  zh: "ZH",
-  es: "ES",
-  ar: "AR",
+const CARD_COUNTRY: Record<CardLang, string> = {
+  en: "USA",
+  ko: "KOREA",
+  ja: "JAPAN",
+  zh: "CHINA",
+  es: "SPAIN",
+  ar: "ARAB",
 };
 const CARD_LANG_NAMES: Record<CardLang, string> = {
   ...LANG_NAMES,
@@ -578,41 +579,16 @@ function PreviewCard({
         )}
       </div>
 
-      {/* ─── LANG TOGGLE row — big, prominent, coral active ─── */}
-      <div className="px-5 py-4 border-b border-strong bg-surface-2/40 flex items-center justify-between gap-4 flex-wrap">
+      {/* ─── LANG TOGGLE row — elegant dropdown ─── */}
+      <div className="px-6 py-4 border-b border-strong bg-surface-2/40 flex items-center justify-between gap-4 flex-wrap">
         <p className="text-[12px] font-mono uppercase tracking-wider2 text-ink-muted">
-          &gt; {d.card_translate_label}
+          {d.card_translate_label}
         </p>
-        <div
-          className="inline-flex items-center border border-strong bg-bg p-[3px]"
-          style={{ borderRadius: 8 }}
-        >
-          {CARD_LANGS.map((l) => {
-            const active = l === cardLang;
-            const isLoading = translating === l;
-            return (
-              <button
-                key={l}
-                type="button"
-                onClick={() => pickLang(l)}
-                title={CARD_LANG_NAMES[l]}
-                className={[
-                  "px-3.5 py-1.5 text-[13px] font-mono uppercase tracking-wider transition select-none",
-                  active
-                    ? "text-bg font-semibold"
-                    : "text-ink-muted hover:text-ink hover:bg-surface-2",
-                  isLoading ? "opacity-40 cursor-wait" : "",
-                ].join(" ")}
-                style={{
-                  borderRadius: 5,
-                  ...(active ? { background: "var(--brand)" } : {}),
-                }}
-              >
-                {CARD_LANG_LABELS[l]}
-              </button>
-            );
-          })}
-        </div>
+        <CardLangDropdown
+          current={cardLang}
+          translating={translating}
+          onPick={pickLang}
+        />
       </div>
 
       {/* ─── BODY: stagger fade-up sections ─── */}
@@ -623,15 +599,15 @@ function PreviewCard({
         {/* 01 — BRAND + VERDICT */}
         <Section i={0} tone="amber">
           <p
-            className="text-[10px] font-mono uppercase tracking-wider2"
+            className="text-[12px] font-mono uppercase tracking-wider2 font-semibold mb-3"
             style={{ color: "var(--sec-amber)" }}
           >
-            [01] {d.card_brand}
+            {d.card_brand}
           </p>
-          <h3 className="mt-1 text-3xl sm:text-4xl font-bold tracking-tightest text-ink leading-none">
+          <h2 className="text-4xl sm:text-5xl font-bold tracking-tightest text-ink leading-[1.05]">
             {preview.brand}
-          </h3>
-          <p className="mt-3 text-base text-ink-muted leading-relaxed">
+          </h2>
+          <p className="mt-4 text-lg text-ink-muted leading-relaxed">
             {preview.tagline}
           </p>
 
@@ -676,7 +652,7 @@ function PreviewCard({
         </Section>
 
         {/* 03 — 6 GAUGES */}
-        <Section i={2} eyebrow={`[02] ${d.card_signals}`} tone="neutral">
+        <Section i={2} eyebrow={d.card_signals} tone="neutral">
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
             <CircleGauge label={cl.gauge_clone} value={preview.clone_feasibility_0_100} />
             <CircleGauge label={cl.gauge_honesty} value={preview.honesty_score_0_100} />
@@ -694,8 +670,8 @@ function PreviewCard({
         {/* 04 — FUNNEL LADDER */}
         <Section
           i={3}
-          eyebrow={`[03] ${cl.section_funnel}`}
-          icon={<Stairs size={12} weight="duotone" />}
+          eyebrow={cl.section_funnel}
+          icon={<Stairs size={16} weight="duotone" />}
           tone="red"
         >
           {preview.funnel_ladder.length === 0 ? (
@@ -708,8 +684,8 @@ function PreviewCard({
         {/* 05 — MARKET REALITY */}
         <Section
           i={4}
-          eyebrow={`[04] ${d.section_market}`}
-          icon={<Crosshair size={12} weight="duotone" />}
+          eyebrow={d.section_market}
+          icon={<Crosshair size={16} weight="duotone" />}
           tone="blue"
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[var(--border)] border border-strong" style={{ borderRadius: 2 }}>
@@ -752,8 +728,8 @@ function PreviewCard({
         {/* 06 — REVENUE FORECAST */}
         <Section
           i={5}
-          eyebrow={`[05] ${d.section_forecast}`}
-          icon={<CurrencyDollar size={12} weight="duotone" />}
+          eyebrow={d.section_forecast}
+          icon={<CurrencyDollar size={16} weight="duotone" />}
           tone="green"
         >
           <div className="space-y-2">
@@ -785,19 +761,19 @@ function PreviewCard({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {preview.red_flags.length > 0 ? (
                 <FlagPanel
-                  eyebrow={`[06] ${d.card_red_flags} (${preview.red_flags.length})`}
+                  eyebrow={`${d.card_red_flags} · ${preview.red_flags.length}`}
                   flags={preview.red_flags}
                   variant="danger"
                 />
               ) : (
-                <div className="border border-strong p-4 flex items-center gap-2 text-xs text-ink-muted" style={{ borderRadius: 2 }}>
+                <div className="border border-strong p-4 flex items-center gap-2 text-sm text-ink-muted" style={{ borderRadius: 6 }}>
                   <Check size={14} weight="bold" />
                   {d.card_no_red_flags}
                 </div>
               )}
               {preview.green_flags.length > 0 && (
                 <FlagPanel
-                  eyebrow={`[07] ${cl.section_green_flags} (${preview.green_flags.length})`}
+                  eyebrow={`${cl.section_green_flags} · ${preview.green_flags.length}`}
                   flags={preview.green_flags}
                   variant="positive"
                 />
@@ -810,8 +786,8 @@ function PreviewCard({
         {preview.insider_tips.length > 0 && (
           <Section
             i={7}
-            eyebrow={`[08] ${d.section_tips}`}
-            icon={<Lightbulb size={12} weight="duotone" />}
+            eyebrow={d.section_tips}
+            icon={<Lightbulb size={16} weight="duotone" />}
             tone="yellow"
           >
             <ol className="space-y-2">
@@ -830,8 +806,8 @@ function PreviewCard({
         {/* 09 — BUILD PATH */}
         <Section
           i={8}
-          eyebrow={`[09] ${d.section_build}`}
-          icon={<Hammer size={12} weight="duotone" />}
+          eyebrow={d.section_build}
+          icon={<Hammer size={16} weight="duotone" />}
           tone="cyan"
         >
           <div className="grid grid-cols-3 gap-px bg-[var(--border)] border border-strong" style={{ borderRadius: 2 }}>
@@ -865,8 +841,8 @@ function PreviewCard({
         {/* 10 — EXTERNAL FOOTPRINT */}
         <Section
           i={9}
-          eyebrow={`[10] ${cl.section_signals_external}`}
-          icon={<RssSimple size={12} weight="duotone" />}
+          eyebrow={cl.section_signals_external}
+          icon={<RssSimple size={16} weight="duotone" />}
           tone="violet"
         >
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[var(--border)] border border-strong" style={{ borderRadius: 2 }}>
@@ -919,8 +895,8 @@ function PreviewCard({
         {/* 11 — DESCRIPTION FORENSICS */}
         <Section
           i={10}
-          eyebrow={`[11] ${cl.section_description}`}
-          icon={<FileText size={12} weight="duotone" />}
+          eyebrow={cl.section_description}
+          icon={<FileText size={16} weight="duotone" />}
           tone="orange"
         >
           <div className="grid grid-cols-3 gap-px bg-[var(--border)] border border-strong mb-3" style={{ borderRadius: 2 }}>
@@ -997,8 +973,8 @@ function PreviewCard({
         {/* 12 — COMMENT FINGERPRINT */}
         <Section
           i={11}
-          eyebrow={`[12] ${cl.section_comments}`}
-          icon={<ChatCircle size={12} weight="duotone" />}
+          eyebrow={cl.section_comments}
+          icon={<ChatCircle size={16} weight="duotone" />}
           tone="gray"
         >
           {cs.total === 0 ? (
@@ -1017,8 +993,8 @@ function PreviewCard({
         {preview.related_videos.length > 0 && (
           <Section
             i={12}
-            eyebrow={`[13] ${d.section_related}`}
-            icon={<PlayCircle size={12} weight="duotone" />}
+            eyebrow={d.section_related}
+            icon={<PlayCircle size={16} weight="duotone" />}
             tone="gray"
           >
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-[var(--border)] border border-strong" style={{ borderRadius: 2 }}>
@@ -1054,8 +1030,8 @@ function PreviewCard({
         {/* 14 — TOP RISK */}
         <Section
           i={13}
-          eyebrow={`[14] ${d.card_risk}`}
-          icon={<Warning size={12} weight="duotone" />}
+          eyebrow={d.card_risk}
+          icon={<Warning size={16} weight="duotone" />}
           tone="red"
         >
           <p className="text-sm text-ink leading-relaxed">{preview.top_risk}</p>
@@ -1064,8 +1040,8 @@ function PreviewCard({
         {/* 15 — RAW SIGNALS CHIPS */}
         <Section
           i={14}
-          eyebrow={`[15] raw.signals`}
-          icon={<ChartBar size={12} weight="duotone" />}
+          eyebrow="Raw signals"
+          icon={<ChartBar size={16} weight="duotone" />}
           tone="gray"
         >
           <div className="flex flex-wrap gap-1.5 text-[10px] font-mono">
@@ -1170,24 +1146,30 @@ function Section({
   const toneColor = TONE_VAR[tone];
   return (
     <div
-      className="p-6 fade-up relative"
+      className="px-8 py-10 md:px-10 fade-up relative"
       style={{ ["--i" as string]: i }}
     >
-      {toneColor && (
-        <span
-          aria-hidden
-          className="absolute left-0 top-6 bottom-6 w-[2px]"
-          style={{ background: toneColor, opacity: 0.75 }}
-        />
-      )}
       {eyebrow && (
-        <p
-          className="text-[11px] font-mono uppercase tracking-wider2 mb-4 flex items-center gap-1.5 font-semibold"
-          style={{ color: toneColor ?? "var(--text-dim)" }}
-        >
-          {icon}
-          {eyebrow}
-        </p>
+        <div className="flex items-center gap-3 mb-6">
+          {icon && toneColor && (
+            <span
+              className="inline-flex h-7 w-7 items-center justify-center"
+              style={{
+                color: toneColor,
+                background: `color-mix(in oklab, ${toneColor} 14%, transparent)`,
+                borderRadius: 6,
+              }}
+            >
+              {icon}
+            </span>
+          )}
+          <h3
+            className="text-[22px] md:text-[26px] font-semibold tracking-tightish leading-none"
+            style={{ color: toneColor ?? "var(--text)" }}
+          >
+            {eyebrow}
+          </h3>
+        </div>
       )}
       {children}
     </div>
@@ -1389,6 +1371,105 @@ function FlagPanel({
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+function CardLangDropdown({
+  current,
+  translating,
+  onPick,
+}: {
+  current: CardLang;
+  translating: CardLang | null;
+  onPick: (l: CardLang) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function onDoc(e: MouseEvent) {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative inline-block">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="inline-flex items-center gap-2 h-9 px-3.5 border border-strong bg-bg hover:bg-surface-2 transition text-[13px] font-mono tracking-wider text-ink"
+        style={{ borderRadius: 6 }}
+      >
+        <span className="font-semibold">{CARD_COUNTRY[current]}</span>
+        {translating ? (
+          <span
+            className="inline-block h-2 w-2 rounded-full breathe"
+            style={{ background: "var(--brand)" }}
+          />
+        ) : (
+          <CaretDown
+            size={11}
+            weight="bold"
+            className={`text-ink-dim transition-transform ${open ? "rotate-180" : ""}`}
+          />
+        )}
+      </button>
+      {open && (
+        <div
+          role="listbox"
+          className="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[180px] border border-strong bg-surface overflow-hidden"
+          style={{
+            borderRadius: 8,
+            boxShadow:
+              "0 16px 40px -12px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)",
+          }}
+        >
+          {CARD_LANGS.map((l) => {
+            const active = l === current;
+            const isLoading = translating === l;
+            return (
+              <button
+                key={l}
+                role="option"
+                aria-selected={active}
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onPick(l);
+                }}
+                disabled={isLoading}
+                className={`group w-full flex items-center justify-between gap-3 px-3.5 py-2.5 text-left transition ${active ? "" : "hover:bg-surface-2"} ${isLoading ? "opacity-40" : ""}`}
+                style={
+                  active
+                    ? {
+                        background:
+                          "color-mix(in oklab, var(--brand) 12%, transparent)",
+                      }
+                    : undefined
+                }
+              >
+                <div className="flex flex-col">
+                  <span
+                    className="font-mono text-[12px] uppercase tracking-wider font-semibold"
+                    style={active ? { color: "var(--brand)" } : { color: "var(--text)" }}
+                  >
+                    {CARD_COUNTRY[l]}
+                  </span>
+                  <span className="text-[11px] text-ink-dim mt-0.5">
+                    {CARD_LANG_NAMES[l]}
+                  </span>
+                </div>
+                {active && (
+                  <Check size={14} weight="bold" style={{ color: "var(--brand)" }} />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -81,7 +81,7 @@ const EN: ReportDict = {
     "Set AHREFS_API_KEY in your .env to unlock TAM/SAM/SOM + 3-scenario ARR. (Trend score alone isn't enough signal — needs search-volume + CPC.)",
   forecast_scenario: "Scenario",
   forecast_signups: "Monthly signups",
-  forecast_paid: "Paid conv.",
+  forecast_paid: "Paid conv",
   forecast_arpu: "ARPU (annual)",
   forecast_arr: "ARR",
   forecast_scenario_conservative: "Conservative",
@@ -95,7 +95,7 @@ const EN: ReportDict = {
   competitors_empty_hint_prefix:
     "No competitors fetched. Set ",
   competitors_empty_hint_suffix:
-    " in your .env to scan for 5-8 closest competitors automatically.",
+    " in your .env to scan for 5-8 closest competitors automatically",
   competitor_traffic_suffix: "/mo",
   section_market_trend: "Market trend",
   stat_5_year_trend: "5-year trend",
@@ -126,11 +126,11 @@ const EN: ReportDict = {
   section_data_quality: "Data quality",
   dq_fallbacks_label: "fallbacks used",
   dq_confidence_explanation:
-    "Confidence reflects how many data sources contributed. Add API keys to your .env to raise it toward 100.",
+    "Confidence reflects how many data sources contributed. Add API keys to your .env to raise it toward 100",
   bottom_cta_eyebrow: "▶ Build your own",
   bottom_cta_title: "Want a deep report like this for your favorite video?",
   bottom_cta_body:
-    "ClonePilot ships an analyze_deep MCP tool. Drop it in Claude Code, paste a YouTube URL, get this report + a deployed Next.js site.",
+    "ClonePilot ships an analyze_deep MCP tool. Drop it in Claude Code, paste a YouTube URL, get this report + a deployed Next.js site",
   bottom_cta_install: "Install free →",
   bottom_cta_pricing: "See Pro pricing",
 };
@@ -148,7 +148,7 @@ const KO: ReportDict = {
   section_pricing_tiers: "추출된 가격 티어",
   section_revenue_forecast: "수익 예측",
   forecast_empty_hint:
-    ".env에 AHREFS_API_KEY를 넣으면 TAM/SAM/SOM + 3가지 시나리오 ARR이 열립니다. (트렌드 점수만으로는 신호 부족 — 검색량 + CPC가 필요).",
+    ".env에 AHREFS_API_KEY를 넣으면 TAM/SAM/SOM + 3가지 시나리오 ARR이 열립니다. (트렌드 점수만으로는 신호 부족 — 검색량 + CPC가 필요)",
   forecast_scenario: "시나리오",
   forecast_signups: "월 가입자",
   forecast_paid: "유료 전환",
@@ -164,7 +164,7 @@ const KO: ReportDict = {
   section_competitors: "경쟁사",
   competitors_empty_hint_prefix: "경쟁사 가져오지 못함. .env에 ",
   competitors_empty_hint_suffix:
-    "를 넣으면 가장 가까운 경쟁사 5~8개를 자동 스캔합니다.",
+    "를 넣으면 가장 가까운 경쟁사 5~8개를 자동 스캔합니다",
   competitor_traffic_suffix: "/월",
   section_market_trend: "시장 트렌드",
   stat_5_year_trend: "5년 트렌드",
@@ -195,11 +195,11 @@ const KO: ReportDict = {
   section_data_quality: "데이터 품질",
   dq_fallbacks_label: "사용된 폴백",
   dq_confidence_explanation:
-    "신뢰도는 몇 개 데이터 소스가 기여했는지를 반영합니다. .env에 API 키를 추가하면 100에 가까워집니다.",
+    "신뢰도는 몇 개 데이터 소스가 기여했는지를 반영합니다. .env에 API 키를 추가하면 100에 가까워집니다",
   bottom_cta_eyebrow: "▶ 직접 빌드해보기",
   bottom_cta_title: "본인이 좋아하는 영상에 대해 이런 심층 리포트를 받고 싶다면?",
   bottom_cta_body:
-    "ClonePilot은 analyze_deep MCP 도구를 제공합니다. Claude Code에 설치하고 유튜브 URL만 붙여넣으면 이런 리포트 + 배포된 Next.js 사이트까지 받습니다.",
+    "ClonePilot은 analyze_deep MCP 도구를 제공합니다. Claude Code에 설치하고 유튜브 URL만 붙여넣으면 이런 리포트 + 배포된 Next.js 사이트까지 받습니다",
   bottom_cta_install: "무료 설치 →",
   bottom_cta_pricing: "Pro 가격 보기",
 };
@@ -217,7 +217,7 @@ const JA: ReportDict = {
   section_pricing_tiers: "抽出された価格ティア",
   section_revenue_forecast: "収益予測",
   forecast_empty_hint:
-    ".envにAHREFS_API_KEYを設定するとTAM/SAM/SOM + 3シナリオARRが開放されます。(トレンドスコア単独ではシグナル不足 — 検索ボリューム + CPCが必要)。",
+    ".envにAHREFS_API_KEYを設定するとTAM/SAM/SOM + 3シナリオARRが開放されます。(トレンドスコア単独ではシグナル不足 — 検索ボリューム + CPCが必要)",
   forecast_scenario: "シナリオ",
   forecast_signups: "月間サインアップ",
   forecast_paid: "有料転換",
@@ -233,7 +233,7 @@ const JA: ReportDict = {
   section_competitors: "競合",
   competitors_empty_hint_prefix: "競合を取得できませんでした。.envに ",
   competitors_empty_hint_suffix:
-    " を設定すると最も近い競合5〜8件を自動スキャンします。",
+    " を設定すると最も近い競合5〜8件を自動スキャンします",
   competitor_traffic_suffix: "/月",
   section_market_trend: "市場トレンド",
   stat_5_year_trend: "5年トレンド",
@@ -264,11 +264,11 @@ const JA: ReportDict = {
   section_data_quality: "データ品質",
   dq_fallbacks_label: "使用されたフォールバック",
   dq_confidence_explanation:
-    "信頼度は寄与したデータソース数を反映します。.envにAPIキーを追加すると100に近づきます。",
+    "信頼度は寄与したデータソース数を反映します。.envにAPIキーを追加すると100に近づきます",
   bottom_cta_eyebrow: "▶ 自分でビルドする",
   bottom_cta_title: "お気に入りの動画でこんな深掘りレポートが欲しい?",
   bottom_cta_body:
-    "ClonePilotはanalyze_deep MCPツールを提供します。Claude Codeに入れてYouTube URLを貼るだけでこのレポート+デプロイ済みNext.jsサイトが手に入ります。",
+    "ClonePilotはanalyze_deep MCPツールを提供します。Claude Codeに入れてYouTube URLを貼るだけでこのレポート+デプロイ済みNext.jsサイトが手に入ります",
   bottom_cta_install: "無料インストール →",
   bottom_cta_pricing: "Pro料金を見る",
 };
@@ -286,7 +286,7 @@ const ZH: ReportDict = {
   section_pricing_tiers: "提取的定价档位",
   section_revenue_forecast: "收益预测",
   forecast_empty_hint:
-    "在 .env 中设置 AHREFS_API_KEY 即可解锁 TAM/SAM/SOM + 3 个场景 ARR。(仅有趋势分数信号不足 —— 需要搜索量 + CPC)。",
+    "在 .env 中设置 AHREFS_API_KEY 即可解锁 TAM/SAM/SOM + 3 个场景 ARR。(仅有趋势分数信号不足 —— 需要搜索量 + CPC)",
   forecast_scenario: "场景",
   forecast_signups: "月注册",
   forecast_paid: "付费转化",
@@ -302,7 +302,7 @@ const ZH: ReportDict = {
   section_competitors: "竞品",
   competitors_empty_hint_prefix: "未获取到竞品。在 .env 中设置 ",
   competitors_empty_hint_suffix:
-    " 即可自动扫描 5~8 个最接近的竞品。",
+    " 即可自动扫描 5~8 个最接近的竞品",
   competitor_traffic_suffix: "/月",
   section_market_trend: "市场趋势",
   stat_5_year_trend: "五年趋势",
@@ -333,11 +333,11 @@ const ZH: ReportDict = {
   section_data_quality: "数据质量",
   dq_fallbacks_label: "使用的回退",
   dq_confidence_explanation:
-    "置信度反映有多少数据源参与。在 .env 中添加 API 密钥可让它接近 100。",
+    "置信度反映有多少数据源参与。在 .env 中添加 API 密钥可让它接近 100",
   bottom_cta_eyebrow: "▶ 自己构建一个",
   bottom_cta_title: "想给你喜欢的视频做一份这样的深度报告吗?",
   bottom_cta_body:
-    "ClonePilot 提供 analyze_deep MCP 工具。装到 Claude Code 里, 粘贴一个 YouTube URL, 就能拿到这份报告 + 一个已部署的 Next.js 站点。",
+    "ClonePilot 提供 analyze_deep MCP 工具。装到 Claude Code 里, 粘贴一个 YouTube URL, 就能拿到这份报告 + 一个已部署的 Next.js 站点",
   bottom_cta_install: "免费安装 →",
   bottom_cta_pricing: "查看 Pro 定价",
 };
@@ -355,7 +355,7 @@ const ES: ReportDict = {
   section_pricing_tiers: "Tiers de precio extraídos",
   section_revenue_forecast: "Pronóstico de ingresos",
   forecast_empty_hint:
-    "Configura AHREFS_API_KEY en tu .env para desbloquear TAM/SAM/SOM + 3 escenarios de ARR. (Sólo la trend score no es señal suficiente — hace falta volumen de búsqueda + CPC).",
+    "Configura AHREFS_API_KEY en tu .env para desbloquear TAM/SAM/SOM + 3 escenarios de ARR. (Sólo la trend score no es señal suficiente — hace falta volumen de búsqueda + CPC)",
   forecast_scenario: "Escenario",
   forecast_signups: "Signups mensuales",
   forecast_paid: "Conv. pagadas",
@@ -372,7 +372,7 @@ const ES: ReportDict = {
   competitors_empty_hint_prefix:
     "No se obtuvieron competidores. Configura ",
   competitors_empty_hint_suffix:
-    " en tu .env para escanear automáticamente 5-8 competidores más cercanos.",
+    " en tu .env para escanear automáticamente 5-8 competidores más cercanos",
   competitor_traffic_suffix: "/mes",
   section_market_trend: "Tendencia de mercado",
   stat_5_year_trend: "Tendencia 5 años",
@@ -403,11 +403,11 @@ const ES: ReportDict = {
   section_data_quality: "Calidad de datos",
   dq_fallbacks_label: "fallbacks usados",
   dq_confidence_explanation:
-    "La confianza refleja cuántas fuentes de datos contribuyeron. Añade API keys a tu .env para subirla hacia 100.",
+    "La confianza refleja cuántas fuentes de datos contribuyeron. Añade API keys a tu .env para subirla hacia 100",
   bottom_cta_eyebrow: "▶ Construye el tuyo",
   bottom_cta_title: "¿Quieres un reporte profundo así para tu vídeo favorito?",
   bottom_cta_body:
-    "ClonePilot incluye la herramienta MCP analyze_deep. Suéltala en Claude Code, pega una URL de YouTube y obtén este reporte + un sitio Next.js desplegado.",
+    "ClonePilot incluye la herramienta MCP analyze_deep. Suéltala en Claude Code, pega una URL de YouTube y obtén este reporte + un sitio Next.js desplegado",
   bottom_cta_install: "Instalar gratis →",
   bottom_cta_pricing: "Ver precios Pro",
 };

@@ -74,7 +74,7 @@ const EN: CardLabels = {
   section_honest_value: "Real value buyers receive",
   funnel_observed_chip: "observed",
   funnel_inferred_chip: "inferred",
-  funnel_empty: "No funnel ladder detected.",
+  funnel_empty: "No funnel ladder detected",
   sig_reddit: "Reddit",
   sig_wayback: "First archived",
   sig_velocity_per_week: "uploads/wk",
@@ -88,10 +88,10 @@ const EN: CardLabels = {
   comments_bot_label: "Bot-likely",
   comments_emoji_label: "Emoji-only",
   comments_praise_label: "Short praise",
-  comments_empty: "No comments fetched (private or disabled).",
+  comments_empty: "No comments fetched (private or disabled)",
   observed_in_video: "observed",
   inferred_from_genre: "inferred",
-  one_paragraph_intro: "Read this before you spend money or months.",
+  one_paragraph_intro: "Read this before you spend money or months",
 };
 
 const KO: CardLabels = {
@@ -112,7 +112,7 @@ const KO: CardLabels = {
   section_honest_value: "사는 사람이 진짜 얻는 가치",
   funnel_observed_chip: "관찰됨",
   funnel_inferred_chip: "추정",
-  funnel_empty: "사다리 구조 미감지.",
+  funnel_empty: "사다리 구조 미감지",
   sig_reddit: "레딧",
   sig_wayback: "최초 아카이브",
   sig_velocity_per_week: "주당 업로드",
@@ -126,10 +126,10 @@ const KO: CardLabels = {
   comments_bot_label: "봇 의심",
   comments_emoji_label: "이모지만",
   comments_praise_label: "짧은 칭찬",
-  comments_empty: "댓글 미수집 (비공개 또는 차단).",
+  comments_empty: "댓글 미수집 (비공개 또는 차단)",
   observed_in_video: "관찰",
   inferred_from_genre: "추정",
-  one_paragraph_intro: "돈이나 시간을 쓰기 전에 이거 한 번 읽어.",
+  one_paragraph_intro: "돈이나 시간을 쓰기 전에 이거 한 번 읽어",
 };
 
 const JA: CardLabels = {
@@ -150,7 +150,7 @@ const JA: CardLabels = {
   section_honest_value: "買う人が本当に得るもの",
   funnel_observed_chip: "観測",
   funnel_inferred_chip: "推定",
-  funnel_empty: "階段構造は検出されず。",
+  funnel_empty: "階段構造は検出されず",
   sig_reddit: "Reddit",
   sig_wayback: "初アーカイブ",
   sig_velocity_per_week: "週あたり投稿",
@@ -164,10 +164,10 @@ const JA: CardLabels = {
   comments_bot_label: "ボット疑い",
   comments_emoji_label: "絵文字のみ",
   comments_praise_label: "短い称賛",
-  comments_empty: "コメント未取得(非公開または無効)。",
+  comments_empty: "コメント未取得(非公開または無効)",
   observed_in_video: "観測",
   inferred_from_genre: "推定",
-  one_paragraph_intro: "金や時間を投下する前に、これだけ読んでくれ。",
+  one_paragraph_intro: "金や時間を投下する前に、これだけ読んでくれ",
 };
 
 const ZH: CardLabels = {
@@ -188,7 +188,7 @@ const ZH: CardLabels = {
   section_honest_value: "买家真正能拿到的东西",
   funnel_observed_chip: "已观察",
   funnel_inferred_chip: "推断",
-  funnel_empty: "未检测到阶梯结构。",
+  funnel_empty: "未检测到阶梯结构",
   sig_reddit: "Reddit",
   sig_wayback: "首次存档",
   sig_velocity_per_week: "周上传量",
@@ -202,10 +202,10 @@ const ZH: CardLabels = {
   comments_bot_label: "疑似机器人",
   comments_emoji_label: "纯表情",
   comments_praise_label: "短赞美",
-  comments_empty: "未抓到评论(私有或被禁)。",
+  comments_empty: "未抓到评论(私有或被禁)",
   observed_in_video: "已观察",
   inferred_from_genre: "推断",
-  one_paragraph_intro: "在你花钱花时间之前,先看这段。",
+  one_paragraph_intro: "在你花钱花时间之前,先看这段",
 };
 
 const ES: CardLabels = {
@@ -226,7 +226,7 @@ const ES: CardLabels = {
   section_honest_value: "Valor real que recibe el comprador",
   funnel_observed_chip: "observado",
   funnel_inferred_chip: "inferido",
-  funnel_empty: "No se detectó escalera.",
+  funnel_empty: "No se detectó escalera",
   sig_reddit: "Reddit",
   sig_wayback: "Primer archivo",
   sig_velocity_per_week: "subidas/sem",
@@ -240,10 +240,10 @@ const ES: CardLabels = {
   comments_bot_label: "Probable bot",
   comments_emoji_label: "Solo emoji",
   comments_praise_label: "Elogio corto",
-  comments_empty: "Sin comentarios (privado o desactivado).",
+  comments_empty: "Sin comentarios (privado o desactivado)",
   observed_in_video: "observado",
   inferred_from_genre: "inferido",
-  one_paragraph_intro: "Léelo antes de gastar dinero o meses.",
+  one_paragraph_intro: "Léelo antes de gastar dinero o meses",
 };
 
 export const CARD_LABELS: Record<Lang, CardLabels> = {
