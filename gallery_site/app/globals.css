@@ -182,5 +182,22 @@ body::before {
   animation: ind-bar 1.4s linear infinite;
 }
 
+/* Infinite horizontal marquee for the US-viral slider.
+ * The track holds two copies of the items side-by-side and slides -50%.
+ * Hover pauses via .marquee:hover > .marquee-track.
+ */
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee 180s linear infinite;
+  will-change: transform;
+}
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+
 /* RTL helper for Arabic */
 html[dir="rtl"] body { letter-spacing: 0; }

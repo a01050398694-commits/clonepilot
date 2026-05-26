@@ -12,7 +12,7 @@ const RATE_LIMIT = new Map<string, number[]>();
 
 const ANALYZE_TTL_MS = 24 * 60 * 60 * 1000; // 24h — same video URL → same answer
 const RATE_WINDOW_MS = 60 * 1000;            // 1 minute window
-const RATE_MAX_PER_WINDOW = 4;               // 4 requests / IP / minute (free)
+const RATE_MAX_PER_WINDOW = 12;              // 12 requests / IP / minute (more forgiving)
 
 export function cacheGet<T>(key: string): T | null {
   const e = ANALYZE_CACHE.get(key);

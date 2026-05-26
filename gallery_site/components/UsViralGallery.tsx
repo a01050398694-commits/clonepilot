@@ -32,13 +32,17 @@ function fmtDuration(sec: number): string {
 }
 
 export function UsViralGallery({ videos }: { videos: ViralVideo[] }) {
-  const scrollerRef = useRef<HTMLDivElement>(null);
+  // Marquee mode = always-on CSS animation, no JS throttling.
+  // We render the videos TWICE in a flex track and animate translateX 0 → -50%.
+  // Manual nav (arrow buttons) switches us into a paused, draggable mode briefly.
+  const [manualMode, setManualMode] = useState(false);
+  const manualScrollerRef = useRef<HTMLDivElement>(null);
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(true);
-  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
-    const el = scrollerRef.current;
+    if (!manualMode) return;
+    const el = manualScrollerRef.current;
     if (!el) return;
     function update() {
       if (!el) return;
@@ -47,48 +51,21 @@ export function UsViralGallery({ videos }: { videos: ViralVideo[] }) {
     }
     update();
     el.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-    return () => {
-      el.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, []);
+    return () => el.removeEventListener("scroll", update);
+  }, [manualMode]);
 
-  // Auto-scroll: pixel-perfect creep with snap-back-to-start.
-  // Pauses on hover OR when user interacts (interaction sets paused=true via handlers).
-  useEffect(() => {
-    if (paused) return;
-    const el = scrollerRef.current;
-    if (!el) return;
-    let last = performance.now();
-    let raf = 0;
-    const SPEED_PX_PER_SEC = 28; // gentle drift
-    const tick = (now: number) => {
-      const dt = Math.min(80, now - last);
-      last = now;
-      // Loop: when we hit the right boundary, jump back to start
-      const max = el.scrollWidth - el.clientWidth;
-      if (max > 0) {
-        let next = el.scrollLeft + (SPEED_PX_PER_SEC * dt) / 1000;
-        if (next >= max - 1) next = 0;
-        el.scrollLeft = next;
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [paused]);
-
-  function scrollBy(dir: 1 | -1) {
-    const el = scrollerRef.current;
-    if (!el) return;
-    setPaused(true);
-    el.scrollBy({ left: dir * (el.clientWidth * 0.9), behavior: "smooth" });
+  function manualScrollBy(dir: 1 | -1) {
+    setManualMode(true);
+    // Wait a tick so the manual scroller renders first
+    requestAnimationFrame(() => {
+      const el = manualScrollerRef.current;
+      if (!el) return;
+      el.scrollBy({ left: dir * (el.clientWidth * 0.9), behavior: "smooth" });
+    });
   }
 
   function analyzeIt(videoId: string) {
     const url = `https://www.youtube.com/watch?v=${videoId}`;
-    // Fill the URL form at top of page + scroll to it + submit
     const inp = document.getElementById("ytUrl") as HTMLInputElement | null;
     if (!inp) {
       window.open(url, "_blank");
@@ -111,34 +88,24 @@ export function UsViralGallery({ videos }: { videos: ViralVideo[] }) {
 
   return (
     <div className="relative">
-      {/* Edge fade overlays for visual depth */}
+      {/* Edge fade overlays */}
       <div
         aria-hidden
-        className="absolute left-0 top-0 bottom-0 w-12 z-10 pointer-events-none"
-        style={{
-          background:
-            "linear-gradient(to right, var(--bg) 0%, transparent 100%)",
-          opacity: canLeft ? 1 : 0,
-          transition: "opacity 0.2s",
-        }}
+        className="absolute left-0 top-0 bottom-0 w-16 z-10 pointer-events-none"
+        style={{ background: "linear-gradient(to right, var(--bg), transparent)" }}
       />
       <div
         aria-hidden
-        className="absolute right-0 top-0 bottom-0 w-12 z-10 pointer-events-none"
-        style={{
-          background:
-            "linear-gradient(to left, var(--bg) 0%, transparent 100%)",
-          opacity: canRight ? 1 : 0,
-          transition: "opacity 0.2s",
-        }}
+        className="absolute right-0 top-0 bottom-0 w-16 z-10 pointer-events-none"
+        style={{ background: "linear-gradient(to left, var(--bg), transparent)" }}
       />
 
       {/* Arrow controls */}
       <div className="absolute -top-14 right-0 flex items-center gap-2 z-20">
         <button
           type="button"
-          onClick={() => scrollBy(-1)}
-          disabled={!canLeft}
+          onClick={() => manualScrollBy(-1)}
+          disabled={manualMode && !canLeft}
           className="inline-flex h-9 w-9 items-center justify-center border border-strong bg-surface hover:bg-surface-2 disabled:opacity-30 transition"
           style={{ borderRadius: 6 }}
           aria-label="Scroll left"
@@ -147,38 +114,60 @@ export function UsViralGallery({ videos }: { videos: ViralVideo[] }) {
         </button>
         <button
           type="button"
-          onClick={() => scrollBy(1)}
-          disabled={!canRight}
+          onClick={() => manualScrollBy(1)}
+          disabled={manualMode && !canRight}
           className="inline-flex h-9 w-9 items-center justify-center border border-strong bg-surface hover:bg-surface-2 disabled:opacity-30 transition"
           style={{ borderRadius: 6 }}
           aria-label="Scroll right"
         >
           <ArrowRight size={14} weight="bold" />
         </button>
+        {manualMode && (
+          <button
+            type="button"
+            onClick={() => setManualMode(false)}
+            className="inline-flex h-9 px-3 items-center justify-center border border-strong bg-surface hover:bg-surface-2 transition text-[11px] font-mono uppercase tracking-wider text-ink-muted hover:text-ink"
+            style={{ borderRadius: 6 }}
+          >
+            Auto
+          </button>
+        )}
       </div>
 
-      <div
-        ref={scrollerRef}
-        className="flex overflow-x-auto gap-5 pb-4"
-        style={{
-          scrollbarWidth: "thin",
-          scrollbarColor: "var(--border-strong) transparent",
-        }}
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        onTouchStart={() => setPaused(true)}
-        onTouchEnd={() => setTimeout(() => setPaused(false), 4000)}
-        onPointerDown={() => setPaused(true)}
-      >
-        {videos.map((v, idx) => (
-          <ViralCard
-            key={v.id}
-            v={v}
-            index={idx}
-            onAnalyze={() => analyzeIt(v.id)}
-          />
-        ))}
-      </div>
+      {manualMode ? (
+        // Manual mode: regular horizontal scroller with snap
+        <div
+          ref={manualScrollerRef}
+          className="flex overflow-x-auto gap-5 pb-4 snap-x snap-mandatory scroll-smooth"
+          style={{
+            scrollbarWidth: "thin",
+            scrollbarColor: "var(--border-strong) transparent",
+          }}
+        >
+          {videos.map((v, idx) => (
+            <ViralCard
+              key={v.id}
+              v={v}
+              index={idx}
+              onAnalyze={() => analyzeIt(v.id)}
+            />
+          ))}
+        </div>
+      ) : (
+        // Auto-scroll mode: CSS marquee with doubled track
+        <div className="marquee overflow-hidden">
+          <div className="marquee-track flex gap-5 pb-4 w-max">
+            {[...videos, ...videos].map((v, idx) => (
+              <ViralCard
+                key={`${v.id}-${idx}`}
+                v={v}
+                index={idx % videos.length}
+                onAnalyze={() => analyzeIt(v.id)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -213,14 +202,12 @@ function ViralCard({
             (e.currentTarget as HTMLImageElement).src = `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg`;
           }}
         />
-        {/* duration chip */}
         <span
           className="absolute bottom-2 right-2 px-1.5 py-0.5 text-[11px] font-mono text-ink bg-bg/80 backdrop-blur-sm"
           style={{ borderRadius: 3 }}
         >
           {fmtDuration(v.durationSec)}
         </span>
-        {/* views chip */}
         <span
           className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono font-semibold bg-bg/80 backdrop-blur-sm"
           style={{
@@ -232,7 +219,6 @@ function ViralCard({
           <Eye size={11} weight="bold" />
           {fmtViews(v.views)}
         </span>
-        {/* play overlay */}
         <span
           aria-hidden
           className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
@@ -243,10 +229,7 @@ function ViralCard({
         >
           <span
             className="inline-flex h-12 w-12 items-center justify-center"
-            style={{
-              background: "var(--brand)",
-              borderRadius: 999,
-            }}
+            style={{ background: "var(--brand)", borderRadius: 999 }}
           >
             <Play size={20} weight="fill" className="text-bg ml-0.5" />
           </span>
