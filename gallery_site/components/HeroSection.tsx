@@ -15,6 +15,8 @@ export function HeroSection({
   formDict: Dict["analyze_form"];
   lang: Lang;
 }) {
+  // CRITICAL: never re-mount UrlAnalysisForm conditionally — that resets its
+  // status/preview state. Toggle visibility via CSS instead.
   const [hasResult, setHasResult] = useState(false);
 
   return (
@@ -37,34 +39,48 @@ export function HeroSection({
         }}
       />
 
-      <div className="relative mx-auto max-w-[1100px] px-6 pt-24 pb-20 md:pt-32 md:pb-28">
-        {hasResult ? (
-          // After result — narrower form-only container
-          <div className="w-full lg:max-w-[1100px] mx-auto">
+      <div
+        className={
+          hasResult
+            ? "relative mx-auto max-w-[1100px] px-6 pt-16 pb-16"
+            : "relative mx-auto max-w-[1100px] px-6 pt-24 pb-20 md:pt-32 md:pb-28"
+        }
+      >
+        <div
+          className={
+            hasResult
+              ? "flex flex-col items-center"
+              : "flex flex-col items-center text-center"
+          }
+        >
+          {/* Hero text — hidden when result is shown, but DOM-stable */}
+          <div
+            className={`max-w-[820px] ${hasResult ? "hidden" : ""}`}
+          >
+            {heroSlot}
+          </div>
+
+          {/* The form — ALWAYS mounted. Only its wrapper width changes. */}
+          <div
+            className={
+              hasResult
+                ? "w-full lg:max-w-[1100px]"
+                : "w-full max-w-[680px] mt-12"
+            }
+          >
             <UrlAnalysisForm
               d={formDict}
               lang={lang}
               onResult={() => setHasResult(true)}
               onReset={() => setHasResult(false)}
             />
-          </div>
-        ) : (
-          // Centered hero — text on top, form below
-          <div className="flex flex-col items-center text-center">
-            <div className="max-w-[820px]">{heroSlot}</div>
-            <div className="w-full max-w-[680px] mt-12">
-              <UrlAnalysisForm
-                d={formDict}
-                lang={lang}
-                onResult={() => setHasResult(true)}
-                onReset={() => setHasResult(false)}
-              />
-              <div className="mt-4 px-1 text-[12px] text-ink-dim leading-relaxed text-center">
-                {skipQueueSlot}
-              </div>
+            <div
+              className={`mt-4 px-1 text-[12px] text-ink-dim leading-relaxed text-center ${hasResult ? "hidden" : ""}`}
+            >
+              {skipQueueSlot}
             </div>
           </div>
-        )}
+        </div>
       </div>
     </section>
   );
