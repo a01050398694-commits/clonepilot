@@ -90,7 +90,7 @@ function HeroText({ d, reportsShipped }: { d: Dict; reportsShipped: number }) {
   return (
     <>
       <div className="inline-flex items-center gap-2 rounded-full border border-strong bg-surface px-3 py-1 text-[11px] font-mono uppercase tracking-[0.18em] text-ink-muted">
-        <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent" />
+        <span className="inline-block h-1.5 w-1.5 rounded-full" style={{ background: "var(--brand)" }} />
         {d.hero.badge}
       </div>
 

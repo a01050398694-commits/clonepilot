@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { GithubLogo, Lightning } from "@phosphor-icons/react/dist/ssr";
+import { GithubLogo } from "@phosphor-icons/react/dist/ssr";
 import { LangToggleGlobal } from "./LangToggleGlobal";
 import type { Dict, Lang } from "@/lib/i18n";
 
@@ -7,13 +7,19 @@ export function SiteNav({ lang, d }: { lang: Lang; d: Dict }) {
   return (
     <header className="border-b border-strong/60 backdrop-blur-sm sticky top-0 z-30 bg-bg/85">
       <div className="mx-auto max-w-[1240px] h-14 px-6 flex items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2 group shrink-0">
-          <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-accent/15 text-accent border border-accent/30">
-            <Lightning size={13} weight="fill" />
+        <Link
+          href="/"
+          className="group shrink-0 text-[15px] font-mono tracking-tight text-ink"
+          aria-label="ClonePilot home"
+        >
+          <span className="font-semibold">Clone</span>
+          <span
+            className="font-semibold transition-colors"
+            style={{ color: "var(--brand)" }}
+          >
+            P
           </span>
-          <span className="text-[15px] font-semibold tracking-tightish text-ink group-hover:text-accent transition">
-            ClonePilot
-          </span>
+          <span className="font-semibold">ilot</span>
         </Link>
         <nav className="flex items-center gap-1 text-sm">
           <Link

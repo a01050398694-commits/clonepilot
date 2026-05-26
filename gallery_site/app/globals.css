@@ -46,6 +46,24 @@
   --accent-ring: rgba(255,255,255,0.22);
   --danger: var(--text);
   --warn: var(--text-muted);
+
+  /* Brand point (singular warm amber, Linear/Anthropic-style) */
+  --brand: #e0a458;
+  --brand-soft: rgba(224, 164, 88, 0.10);
+
+  /* Section semantic colors — desaturated, Stripe-docs feel.
+   * Only used as 1px left rail + eyebrow text + icon stroke.
+   * Never paint full backgrounds with these.
+   */
+  --sec-amber:  #d6a35a;  /* verdict — bottom line */
+  --sec-red:    #d46a6a;  /* funnel ladder · red flags · top risk */
+  --sec-blue:   #6f9ed8;  /* market reality */
+  --sec-green:  #74c08f;  /* revenue forecast · green flags */
+  --sec-yellow: #d8c25d;  /* insider tips */
+  --sec-cyan:   #6cc7d4;  /* build path */
+  --sec-violet: #a07ed4;  /* external footprint */
+  --sec-orange: #d6925a;  /* description forensics */
+  --sec-gray:   #8a8a8a;  /* comments · related videos · raw signals */
 }
 
 html, body {

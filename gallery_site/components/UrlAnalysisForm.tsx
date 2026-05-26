@@ -232,7 +232,7 @@ export function UrlAnalysisForm({
       {/* terminal-style header bar */}
       <div className="flex items-center justify-between px-5 h-9 border-b border-strong bg-surface-2">
         <div className="flex items-center gap-2">
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-ink breathe" />
+          <span className="inline-block h-1.5 w-1.5 rounded-full breathe" style={{ background: "var(--brand)" }} />
           <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-muted">
             {d.live_badge}
           </p>
@@ -331,7 +331,7 @@ function LoadingPanel({ d }: { d: Dict["analyze_form"] }) {
     <div className="border border-strong bg-surface" style={{ borderRadius: 2 }}>
       <div className="flex items-center justify-between px-5 h-9 border-b border-strong bg-surface-2">
         <div className="flex items-center gap-2">
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-ink breathe" />
+          <span className="inline-block h-1.5 w-1.5 rounded-full breathe" style={{ background: "var(--brand)" }} />
           <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-muted">
             {d.submitting}
           </p>
@@ -515,7 +515,7 @@ function PreviewCard({
       {/* ─── HEADER (terminal style) ─── */}
       <div className="flex items-center justify-between px-5 h-9 border-b border-strong bg-surface-2 font-mono text-[10px] uppercase tracking-wider2">
         <div className="flex items-center gap-2 text-ink-muted">
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-ink breathe" />
+          <span className="inline-block h-1.5 w-1.5 rounded-full breathe" style={{ background: "var(--brand)" }} />
           <span>{d.live_badge}</span>
           <span className="text-ink-dim">·</span>
           <span className="text-ink-dim">{v.id}</span>
@@ -541,7 +541,7 @@ function PreviewCard({
         <span aria-hidden className="absolute bottom-2 right-2 w-4 h-4 border-r border-b border-bright pointer-events-none" />
         {/* Tiny target reticle top-right of thumbnail */}
         <div className="absolute top-3 right-3 inline-flex items-center gap-1.5 px-2 py-0.5 bg-bg/70 backdrop-blur-sm border border-strong" style={{ borderRadius: 1 }}>
-          <span className="inline-block h-1 w-1 rounded-full bg-ink breathe" />
+          <span className="inline-block h-1 w-1 rounded-full breathe" style={{ background: "var(--brand)" }} />
           <span className="text-[9px] font-mono uppercase tracking-wider2 text-ink">decoded</span>
         </div>
         {/* Business model stamp — striped if course-funnel, solid if real-product */}
@@ -618,8 +618,11 @@ function PreviewCard({
         dir={isRtl ? "rtl" : "ltr"}
       >
         {/* 01 — BRAND + VERDICT */}
-        <Section i={0}>
-          <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim">
+        <Section i={0} tone="amber">
+          <p
+            className="text-[10px] font-mono uppercase tracking-wider2"
+            style={{ color: "var(--sec-amber)" }}
+          >
             [01] {d.card_brand}
           </p>
           <h3 className="mt-1 text-3xl sm:text-4xl font-bold tracking-tightest text-ink leading-none">
@@ -630,10 +633,17 @@ function PreviewCard({
           </p>
 
           <div
-            className="mt-6 border border-strong px-4 py-4 stripe-danger relative overflow-hidden"
-            style={{ borderRadius: 2 }}
+            className="mt-6 border px-4 py-4 relative overflow-hidden"
+            style={{
+              borderRadius: 2,
+              borderColor: "color-mix(in oklab, var(--sec-amber) 35%, var(--border-strong))",
+              background: "color-mix(in oklab, var(--sec-amber) 6%, var(--surface))",
+            }}
           >
-            <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim flex items-center gap-1.5">
+            <p
+              className="text-[10px] font-mono uppercase tracking-wider2 flex items-center gap-1.5"
+              style={{ color: "var(--sec-amber)" }}
+            >
               <FileText size={11} weight="bold" />
               {cl.section_verdict}
             </p>
@@ -644,7 +654,7 @@ function PreviewCard({
         </Section>
 
         {/* 02 — three strips: real revenue · why buyers pay · honest value */}
-        <Section i={1}>
+        <Section i={1} tone="amber">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[var(--border)] border border-strong" style={{ borderRadius: 2 }}>
             <StripCol
               label={d.card_real_revenue}
@@ -662,7 +672,7 @@ function PreviewCard({
         </Section>
 
         {/* 03 — 6 GAUGES */}
-        <Section i={2} eyebrow={`[02] ${d.card_signals}`}>
+        <Section i={2} eyebrow={`[02] ${d.card_signals}`} tone="neutral">
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
             <CircleGauge label={cl.gauge_clone} value={preview.clone_feasibility_0_100} />
             <CircleGauge label={cl.gauge_honesty} value={preview.honesty_score_0_100} />
@@ -682,6 +692,7 @@ function PreviewCard({
           i={3}
           eyebrow={`[03] ${cl.section_funnel}`}
           icon={<Stairs size={12} weight="duotone" />}
+          tone="red"
         >
           {preview.funnel_ladder.length === 0 ? (
             <p className="text-xs text-ink-dim font-mono">{cl.funnel_empty}</p>
@@ -695,6 +706,7 @@ function PreviewCard({
           i={4}
           eyebrow={`[04] ${d.section_market}`}
           icon={<Crosshair size={12} weight="duotone" />}
+          tone="blue"
         >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[var(--border)] border border-strong" style={{ borderRadius: 2 }}>
             <Cell label={d.market_tam} value={m.tam_summary} />
@@ -738,6 +750,7 @@ function PreviewCard({
           i={5}
           eyebrow={`[05] ${d.section_forecast}`}
           icon={<CurrencyDollar size={12} weight="duotone" />}
+          tone="green"
         >
           <div className="space-y-2">
             <ForecastBar label={d.forecast_conservative} value={f.conservative_arr_usd} max={fMax} weight="dim" />
@@ -764,7 +777,7 @@ function PreviewCard({
 
         {/* 07 — RED FLAGS + GREEN FLAGS (side by side when both present) */}
         {(preview.red_flags.length > 0 || preview.green_flags.length > 0) && (
-          <Section i={6}>
+          <Section i={6} tone="red">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {preview.red_flags.length > 0 ? (
                 <FlagPanel
@@ -795,6 +808,7 @@ function PreviewCard({
             i={7}
             eyebrow={`[08] ${d.section_tips}`}
             icon={<Lightbulb size={12} weight="duotone" />}
+            tone="yellow"
           >
             <ol className="space-y-2">
               {preview.insider_tips.map((tip, i) => (
@@ -814,6 +828,7 @@ function PreviewCard({
           i={8}
           eyebrow={`[09] ${d.section_build}`}
           icon={<Hammer size={12} weight="duotone" />}
+          tone="cyan"
         >
           <div className="grid grid-cols-3 gap-px bg-[var(--border)] border border-strong" style={{ borderRadius: 2 }}>
             <StatCell label={d.build_total_weeks} value={`${b.total_weeks}w`} />
@@ -848,6 +863,7 @@ function PreviewCard({
           i={9}
           eyebrow={`[10] ${cl.section_signals_external}`}
           icon={<RssSimple size={12} weight="duotone" />}
+          tone="violet"
         >
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[var(--border)] border border-strong" style={{ borderRadius: 2 }}>
             <StatCell label="Trend" value={s.trends ? `${s.trends.direction} ${s.trends.score}` : "—"} />
@@ -901,6 +917,7 @@ function PreviewCard({
           i={10}
           eyebrow={`[11] ${cl.section_description}`}
           icon={<FileText size={12} weight="duotone" />}
+          tone="orange"
         >
           <div className="grid grid-cols-3 gap-px bg-[var(--border)] border border-strong mb-3" style={{ borderRadius: 2 }}>
             <StatCell label={cl.desc_links_label} value={`${df.funnel_links.length}`} />
@@ -978,6 +995,7 @@ function PreviewCard({
           i={11}
           eyebrow={`[12] ${cl.section_comments}`}
           icon={<ChatCircle size={12} weight="duotone" />}
+          tone="gray"
         >
           {cs.total === 0 ? (
             <p className="text-xs text-ink-dim font-mono">{cl.comments_empty}</p>
@@ -997,6 +1015,7 @@ function PreviewCard({
             i={12}
             eyebrow={`[13] ${d.section_related}`}
             icon={<PlayCircle size={12} weight="duotone" />}
+            tone="gray"
           >
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-[var(--border)] border border-strong" style={{ borderRadius: 2 }}>
               {preview.related_videos.map((rv) => (
@@ -1033,12 +1052,18 @@ function PreviewCard({
           i={13}
           eyebrow={`[14] ${d.card_risk}`}
           icon={<Warning size={12} weight="duotone" />}
+          tone="red"
         >
           <p className="text-sm text-ink leading-relaxed">{preview.top_risk}</p>
         </Section>
 
         {/* 15 — RAW SIGNALS CHIPS */}
-        <Section i={14} eyebrow={`[15] raw.signals`} icon={<ChartBar size={12} weight="duotone" />}>
+        <Section
+          i={14}
+          eyebrow={`[15] raw.signals`}
+          icon={<ChartBar size={12} weight="duotone" />}
+          tone="gray"
+        >
           <div className="flex flex-wrap gap-1.5 text-[10px] font-mono">
             <Chip>{`▶ ${fmtNum(v.view_count)} ${d.sig_views}`}</Chip>
             {v.like_count != null && <Chip>{`♥ ${fmtNum(v.like_count)} ${d.sig_likes}`}</Chip>}
@@ -1090,21 +1115,62 @@ function PreviewCard({
 
 /* ─── small atoms ─────────────────────────────────────────────────── */
 
+type SectionTone =
+  | "amber"
+  | "red"
+  | "blue"
+  | "green"
+  | "yellow"
+  | "cyan"
+  | "violet"
+  | "orange"
+  | "gray"
+  | "neutral";
+
+const TONE_VAR: Record<SectionTone, string | null> = {
+  amber: "var(--sec-amber)",
+  red: "var(--sec-red)",
+  blue: "var(--sec-blue)",
+  green: "var(--sec-green)",
+  yellow: "var(--sec-yellow)",
+  cyan: "var(--sec-cyan)",
+  violet: "var(--sec-violet)",
+  orange: "var(--sec-orange)",
+  gray: "var(--sec-gray)",
+  neutral: null,
+};
+
 function Section({
   i,
   eyebrow,
   icon,
+  tone = "neutral",
   children,
 }: {
   i: number;
   eyebrow?: string;
   icon?: React.ReactNode;
+  tone?: SectionTone;
   children: React.ReactNode;
 }) {
+  const toneColor = TONE_VAR[tone];
   return (
-    <div className="p-6 fade-up" style={{ ["--i" as string]: i }}>
+    <div
+      className="p-6 fade-up relative"
+      style={{ ["--i" as string]: i }}
+    >
+      {toneColor && (
+        <span
+          aria-hidden
+          className="absolute left-0 top-6 bottom-6 w-px"
+          style={{ background: toneColor, opacity: 0.55 }}
+        />
+      )}
       {eyebrow && (
-        <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim mb-3 flex items-center gap-1.5">
+        <p
+          className="text-[10px] font-mono uppercase tracking-wider2 mb-3 flex items-center gap-1.5"
+          style={{ color: toneColor ?? "var(--text-dim)" }}
+        >
           {icon}
           {eyebrow}
         </p>
@@ -1290,9 +1356,13 @@ function FlagPanel({
       ? "border-strong stripe-danger"
       : "border-bright bg-surface-2";
   const bullet = variant === "danger" ? "■" : "□";
+  const eyeColor = variant === "danger" ? "var(--sec-red)" : "var(--sec-green)";
   return (
     <div className={`border ${wrap} p-4`} style={{ borderRadius: 2 }}>
-      <p className="text-[10px] font-mono uppercase tracking-wider2 text-ink-dim mb-2">
+      <p
+        className="text-[10px] font-mono uppercase tracking-wider2 mb-2"
+        style={{ color: eyeColor }}
+      >
         {eyebrow}
       </p>
       <ul className="space-y-1.5">
