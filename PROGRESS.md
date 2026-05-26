@@ -1,6 +1,103 @@
 # PROGRESS — ClonePilot MCP
 
-_Last updated: 2026-05-26 — v3 monochrome hacker 톤 + 분석 엔진 극한 업그레이드. 사용자가 자는 동안 자율 작업. 신규 데이터 소스 6개 (Reddit / Wayback / channel velocity / YouTube comments / multi-keyword Trends / description forensics), 신규 분석 필드 11개 (green_flags · why_buyers_pay · honest_value · bot_inflation · real_proof · hype_vs_reality · funnel_ladder · one_paragraph_verdict 등), 무채색 hacker 디자인 (흰/검/회만, 모노 폰트, 1px 샤프 보더, 스캔라인 overlay), card lang 토글에 Arabic 추가 (6언어), 자연 번역 (반말 톤 강제 — 파파고 톤 절대 금지)._
+_Last updated: 2026-05-26 (저녁) — v3.10 라이브. coral accent + 컬러 분리 카드 + US viral 30+ AI 슬라이더 (CSS marquee 자동스크롤) + execution playbook + marketing playbook + money flow + Gemini fallback 3-stage. 모든 알려진 버그 잡혔음._
+
+---
+
+## 🟢 새 세션 진입 — 30초 컨텍스트
+
+**라이브 사이트**: https://clonepilot-gallery.vercel.app (v3.10, 마지막 commit `8a82455`)
+
+**현재 상태**:
+- ✅ 분석 동작 (Anthropic 한도 풀리는 06/01까지 Gemini 2.5 Flash로 자동 폴백)
+- ✅ 번역 동작 (Gemini는 JSON-mode 사용, EN/KO/JA/ZH/ES/AR 6언어)
+- ✅ 홈 hero — 중앙 정렬, 코랄 radial backdrop, 88px 헤드라인, 마침표 다 제거
+- ✅ Lang toggle — 우아한 드롭다운, 국가명 (USA · KOREA · JAPAN · CHINA · SPAIN), 활성 코랄
+- ✅ 카드 16 섹션 + 새 3 섹션 (execution playbook / marketing playbook / money flow)
+- ✅ 카드 섹션별 의미론 컬러 (amber/red/blue/green/yellow/cyan/violet/orange)
+- ✅ US viral 40개 슬라이더 (CSS marquee 85px/sec drift, hover pause), 한국 BlogFlow 카드 제거
+- ✅ 썸네일 컬러 (이전 grayscale 제거됨), AI 영상 10개 포함 (Jeff Su, Dan Martell, Fireship, Simon Squibb 등)
+- ✅ ANALYZE 버튼 누르면 폼에 URL 자동 채움 + 스크롤 + 자동 제출
+
+**검증**: 마지막 prod 호출 (JRE Naval clip `l2AbxWr6I4s`) → HTTP 200 / 30s / business_model:course-funnel / exec:8 marketing:5 money:5 / friend-tone verdict.
+
+## 🚨 알려진 한계 (사용자가 액션해야 풀림)
+
+1. **Anthropic 계정 전체 한도 hit** — 4개 키 다 같은 메시지: `"regain access on 2026-06-01"`. **06/01 자동 풀림** 또는 사용자가 console.anthropic.com/settings/limits에서 cap 올리면 즉시 복구. 그동안 Gemini fallback으로 100% 정상 동작.
+2. **Supadata plan quota 소진** — 새 키 받았지만 같은 계정 plan에 묶여서 0/100. 새 이메일로 가입해야 quota 리셋. transcript fetch 실패 → title+desc만으로 분석 → confidence 35 정도. 사용자가 새 이메일 가입하면 50→70+로 점프.
+3. **Vercel iad1 IP가 YouTube 차단** — youtube-transcript / innertube / page-scrape 다 prod에서 fail. localhost에선 정상. 위 supadata 키 풀리면 자동 해결.
+
+## ⚡ Vercel env 현재 상태 (방금 박은 거)
+
+| Key | 값 | 메모 |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | sk-ant-api03-NO4o... (key #4 K-Fashion) | 한도 hit, 06/01 풀림 |
+| `CLONEPILOT_MODEL_BLUEPRINT` | `claude-haiku-4-5-20251001` | Anthropic 풀리면 Haiku 자동 사용 (10x 저렴) |
+| `GEMINI_API_KEY` | AIzaSyCCSa9IKNyNmYJf6uUHzuQhdFQfLvfIB7Y (key #2) | 정상, fallback 주력 |
+| `CLONEPILOT_MODEL_FALLBACK` | `gemini-2.5-flash` | 별도 quota pool, 살아 있음 |
+| `SUPADATA_API_KEY` | sd_63ddae05a5d539... | quota 0 (사용자 새 키 발급 대기) |
+| `YOUTUBE_API_KEY` | (기존) | 정상 |
+
+## 🔑 백업 Anthropic 키 (전부 같은 계정 = 다 막힘)
+`E:\claude\API_REGISTRY.md` §2-1 참조. 06/01 풀리면 그대로 동작. 사용자가 다른 계정 새 키 만들면 즉시 swap 가능.
+
+## 💸 비용 모델 (현재)
+- 사용자 비용 = **0원** (Gemini 무료 tier로 운영 중)
+- Anthropic 풀려서 Haiku로 가도 ~$0.005/분석
+- 캐시 24h TTL by videoId → 같은 URL 재요청 = 0원
+- IP rate-limit 12 req/min/IP (이전 4에서 풀음)
+
+## 🗂️ v3 시리즈 커밋 로그 (2026-05-26)
+| 버전 | 커밋 | 핵심 |
+|---|---|---|
+| v3 | `811f594` | monochrome hacker 톤 + 6개 신규 fetcher + 11 신규 필드 |
+| v3.1 | `71eea77` | section 컬러 코딩 + 로고 텍스트화 + amber accent |
+| v3.2 | `2a6b1d7` | Anthropic 한도 hit → Gemini fallback 자동 도입 |
+| v3.3 | `e68c856` | translate 버그 fix (Gemini JSON mode) + coral 강화 + 타이포 키움 |
+| v3.4 | `924c3bb` | lang dropdown (국가명 USA/KOREA/...) + 마침표 전체 제거 + 카드 editorial |
+| v3.5 | `e9e3c1c` | execution_sequence + marketing_playbook + money_flow 추가 + 홈 hero 중앙 정렬 + 썸네일 컬러 |
+| v3.6 | `d054020` | US viral 30 슬라이더로 갤러리 교체 (한국 BlogFlow 제거) |
+| v3.7 | `a046bf4` | AI 사업 영상 10개 추가 + 썸네일 검증 |
+| v3.8 | `114ea5b` | CSS marquee 자동 스크롤 (RAF 백그라운드 throttle 회피) |
+| v3.9 | `7d5a958` | **CRITICAL** form re-mount 버그 fix (분석 결과 사라지던 거 잡음) |
+| v3.10 | `8a82455` | Gemini MALFORMED_FUNCTION_CALL → JSON mode 폴백, secondary 모델 이름 교정 |
+
+## 🪤 잡힌 GOTCHA (앞으로 같은 짓 금지)
+
+**GOTCHA #20**: React에서 조건부 두 위치에서 같은 컴포넌트를 렌더하면 unmount/remount 되어 state가 통째 사라짐. HeroSection.tsx에서 hasResult로 form을 분기 렌더했더니 분석 성공 후 폼 리셋되는 버그. → **단일 mount + CSS visibility 토글로 해결.** v3.9 commit 참조.
+
+**GOTCHA #21**: Gemini function calling은 Anthropic의 느슨한 `type: object` 스키마를 받으면 `args:{}` 빈 객체 반환. translate route에서 발생. → **JSON-mode (response_mime_type=application/json)로 폴백, parseJsonLoose로 ```json fence 벗기기.**
+
+**GOTCHA #22**: Gemini가 큰 schema + 긴 출력 시 `MALFORMED_FUNCTION_CALL` 던짐. → **input_schema를 prompt에 embed해서 JSON-mode로 폴백.** v3.10.
+
+**GOTCHA #23**: 브라우저는 RAF를 백그라운드 탭에서 5-10x throttle함. JS 기반 자동 스크롤 → 안 보임. → **CSS `@keyframes marquee` + 트랙 2회 복제로 무한 loop.** v3.8.
+
+**GOTCHA #24**: Anthropic spend cap은 키별이 아니라 **계정 단위**. 한 계정에서 키 4개 발급해도 모두 같은 한도. → 진짜 풀려면 (1) console.anthropic.com에서 cap 올림 OR (2) 다른 계정 새 키 OR (3) 다른 provider로 fallback. ClonePilot은 (3) 선택.
+
+**GOTCHA #25**: Vercel iad1 IP가 YouTube의 transcript endpoint 차단. youtubei.js/youtube-transcript/page-scrape 다 `fetch failed`. **Supadata 같은 외부 transcript provider 필수.** Supadata도 plan-level quota라 같은 계정 새 키는 도움 안 됨 — 새 이메일 가입 필요.
+
+## 📊 PROD 분석 깊이 — 새 카드 섹션
+
+이제 카드는 16개 섹션 (v3.5+):
+
+1. **Brand + Verdict** (amber tinted box, 친구 톤 한 문단)
+2. **3 strips**: Likely real revenue / Why buyers pay / Honest value
+3. **6 gauges** (신호등 색): clone / honesty / confidence / hype / bot inflation / real proof
+4. **Funnel ladder** (red, 강의팔이 사다리 단계 + 가격)
+5. **Market reality** (blue, TAM/SAM/SOM + 경쟁사)
+6. **Revenue forecast** (green, conservative/base/aggressive 3 시나리오)
+7. **Red flags + Green flags** (side-by-side, red/green tinted)
+8. **Insider tips** (yellow, 5개 운영자 꿀팁)
+9. **Execution playbook** ★ NEW (amber) — 7-12 주차별 step, 시간, 핵심 성공 요인
+10. **Marketing playbook** ★ NEW (violet) — 4-6 채널 + CAC + 예상 가입자
+11. **Money flow** ★ NEW (green) — 5+ 수익원 + 비중 % + 월 $
+12. **Build path** (cyan, 빌드 로드맵 + 스택)
+13. **External footprint** (violet, Trends/HN/Reddit/Wayback/Velocity)
+14. **Description forensics** (orange, 링크/키워드/가격 mention)
+15. **Comment fingerprint** (gray, bot/emoji/generic 비율)
+16. **Related videos** + Top risk + Raw signals + CTA
+
+---
 
 ## 🟢 v3 한 줄 요약 (2026-05-26 새벽 자율 작업)
 
