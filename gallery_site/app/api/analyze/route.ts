@@ -13,6 +13,7 @@ import {
 } from "@/lib/analyze-cache";
 import {
   callGeminiTool,
+  callGroqJson,
   geminiKeys,
   shouldFallbackFromAnthropic,
 } from "@/lib/llm-fallback";
@@ -1283,15 +1284,33 @@ Call extract_business_preview now. Output English. Be concise but punchy — ope
         "[/api/analyze] Anthropic failed, falling back to Gemini —",
         err instanceof Error ? err.message : err,
       );
-      const g = await callGeminiTool<ExtractArgs>({
-        model: process.env.CLONEPILOT_MODEL_FALLBACK?.trim() || "gemini-2.5-flash",
-        system: SYSTEM_PROMPT,
-        userText,
-        tool: EXTRACT_TOOL,
-      });
-      args = g.args;
-      providerUsed = "gemini";
-      modelUsed = g.model;
+      try {
+        const g = await callGeminiTool<ExtractArgs>({
+          model: process.env.CLONEPILOT_MODEL_FALLBACK?.trim() || "gemini-2.5-flash",
+          system: SYSTEM_PROMPT,
+          userText,
+          tool: EXTRACT_TOOL,
+        });
+        args = g.args;
+        providerUsed = "gemini";
+        modelUsed = g.model;
+      } catch (geminiErr) {
+        // Last-resort: Groq Llama 3.3 via OpenAI-compatible JSON mode.
+        if (!process.env.GROQ_API_KEY) throw geminiErr;
+        console.error(
+          "[/api/analyze] Gemini exhausted, trying Groq —",
+          geminiErr instanceof Error ? geminiErr.message : geminiErr,
+        );
+        const schemaHint = JSON.stringify(EXTRACT_TOOL.input_schema);
+        const groqUser = `${userText}\n\nIMPORTANT — your output MUST be a single JSON object exactly matching this schema (no markdown, no commentary, JUST the JSON):\n${schemaHint}\n\nReturn the JSON object now.`;
+        const gr = await callGroqJson<ExtractArgs>({
+          system: SYSTEM_PROMPT,
+          userText: groqUser,
+        });
+        args = gr.value;
+        providerUsed = "groq";
+        modelUsed = gr.model;
+      }
     }
     const preview: AnalyzePreview = {
       ...args,

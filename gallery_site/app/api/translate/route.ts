@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { isLang, type Lang } from "@/lib/i18n";
 import {
   callGeminiJson,
+  callGroqJson,
   geminiKeys,
   shouldFallbackFromAnthropic,
 } from "@/lib/llm-fallback";
@@ -194,14 +195,30 @@ Call return_translated_preview now with the full translated object.`;
       // Gemini doesn't respect Anthropic's loose `type: "object"` schema in
       // function calling — it returns `{}`. So fall back to JSON-mode plain
       // generation: ask for the translated JSON directly, then parse.
-      const g = await callGeminiJson<Record<string, unknown>>({
-        model:
-          process.env.CLONEPILOT_MODEL_FALLBACK?.trim() || "gemini-2.5-flash",
-        system:
-          "You are a professional translator. Output ONLY valid JSON matching the input shape. No markdown, no commentary.",
-        userText: userText + "\n\nRespond with ONLY the translated JSON object (no `translated` wrapper, just the object itself).",
-      });
-      result = g.value;
+      try {
+        const g = await callGeminiJson<Record<string, unknown>>({
+          model:
+            process.env.CLONEPILOT_MODEL_FALLBACK?.trim() || "gemini-2.5-flash",
+          system:
+            "You are a professional translator. Output ONLY valid JSON matching the input shape. No markdown, no commentary.",
+          userText: userText + "\n\nRespond with ONLY the translated JSON object (no `translated` wrapper, just the object itself).",
+        });
+        result = g.value;
+      } catch (geminiErr) {
+        if (!process.env.GROQ_API_KEY) throw geminiErr;
+        console.error(
+          "[/api/translate] Gemini exhausted, trying Groq —",
+          geminiErr instanceof Error ? geminiErr.message : geminiErr,
+        );
+        const gr = await callGroqJson<Record<string, unknown>>({
+          system:
+            "You are a professional translator. Output ONLY valid JSON matching the input shape. No markdown, no commentary.",
+          userText:
+            userText +
+            "\n\nRespond with ONLY the translated JSON object (no `translated` wrapper, just the object itself).",
+        });
+        result = gr.value;
+      }
     }
     if (!result) {
       return NextResponse.json({ error: "empty translated" }, { status: 502 });

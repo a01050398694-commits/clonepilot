@@ -295,6 +295,95 @@ function isMalformedFC(err: unknown): boolean {
   return /MALFORMED_FUNCTION_CALL|no function call/i.test(m);
 }
 
+/* ─── Groq (OpenAI-compatible) — 3rd-tier fallback ───────────────────── */
+
+/** Call Groq's chat-completions endpoint with JSON-mode response_format.
+ * Groq's free tier is generous and survives when Gemini quotas are spent. */
+export async function callGroqJson<T>(opts: {
+  apiKey?: string;
+  model?: string;
+  system: string;
+  userText: string;
+}): Promise<{ ok: true; value: T; model: string }> {
+  const apiKey = (opts.apiKey ?? process.env.GROQ_API_KEY ?? "").trim();
+  if (!apiKey) throw new Error("No GROQ_API_KEY configured");
+  const model = opts.model ?? "llama-3.3-70b-versatile";
+  const body = {
+    model,
+    messages: [
+      { role: "system", content: opts.system },
+      { role: "user", content: opts.userText },
+    ],
+    response_format: { type: "json_object" },
+    temperature: 0.4,
+    max_tokens: 16_384,
+  };
+  const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(180_000),
+  });
+  if (!r.ok) {
+    const text = await r.text().catch(() => "");
+    const err = new Error(`groq ${r.status}: ${text.slice(0, 300)}`);
+    (err as Error & { status?: number }).status = r.status;
+    throw err;
+  }
+  type Resp = {
+    choices?: Array<{
+      message?: { content?: string };
+      finish_reason?: string;
+    }>;
+  };
+  const j = (await r.json()) as Resp;
+  const text = j.choices?.[0]?.message?.content ?? "";
+  if (!text) {
+    throw new Error(
+      `groq empty (finish=${j.choices?.[0]?.finish_reason ?? "?"})`,
+    );
+  }
+  return { ok: true, value: parseJsonLoose<T>(text), model };
+}
+
+/** Convenience: try Gemini (multi-key) first, then Groq as final safety net.
+ * Returns whichever completes. */
+export async function callJsonResilient<T>(opts: {
+  system: string;
+  userText: string;
+  geminiModel?: string;
+  groqModel?: string;
+  schemaHint?: string;
+}): Promise<{ ok: true; value: T; provider: "gemini" | "groq"; model: string }> {
+  try {
+    const g = await callGeminiJson<T>({
+      model: opts.geminiModel,
+      system: opts.system,
+      userText: opts.userText,
+    });
+    return { ok: true, value: g.value, provider: "gemini", model: g.model };
+  } catch (geminiErr) {
+    if (!process.env.GROQ_API_KEY) throw geminiErr;
+    console.error(
+      "[llm-fallback] Gemini exhausted, trying Groq —",
+      geminiErr instanceof Error ? geminiErr.message : geminiErr,
+    );
+    const groqText =
+      opts.schemaHint
+        ? `${opts.userText}\n\nIMPORTANT — your output MUST be a single JSON object matching this schema:\n${opts.schemaHint}\n\nReturn the JSON object now.`
+        : opts.userText;
+    const g = await callGroqJson<T>({
+      model: opts.groqModel,
+      system: opts.system,
+      userText: groqText,
+    });
+    return { ok: true, value: g.value, provider: "groq", model: g.model };
+  }
+}
+
 /** Try every available Gemini key × (primary, secondary) model combo.
  * On 429/quota → next combo. On MALFORMED_FUNCTION_CALL → JSON-mode fallback. */
 export async function callGeminiTool<T>(opts: {
