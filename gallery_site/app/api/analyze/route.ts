@@ -991,7 +991,40 @@ COURSE_DISTILLED STYLE (NEW — read this carefully — THIS IS THE USER'S #1 RE
 - specific_tactics: this is where you write GOLD — exact playbook moves. "Run TikTok Spark Ads at $30/day for 7 days, pause anything below 2% CTR." "Use Notion + Tally for first MVP, switch to Webflow only after $5k MRR." NO generic advice — only things an operator could literally execute Monday morning.
 - what_creator_left_out: the hidden costs, the timeline reality (creator says "3 weeks", real founders take 5 months), the tools they really use vs what they show, the unpaid hours, the failed iterations.
 - if_you_apply_this: realistic forecast. e.g. "Following every step exactly, expect ~$500-2000 MRR by month 6 IF you publish 3x/week AND survive the first 90 days of zero traction. ~70% of people quit by month 3."
-- course_quality_0_100: separate from honesty. A scammy funnel can still teach real tactics (high quality, low honesty). A boring real-product video can have low course_quality but high honesty.`;
+- course_quality_0_100: separate from honesty. A scammy funnel can still teach real tactics (high quality, low honesty). A boring real-product video can have low course_quality but high honesty.
+
+# GOOD vs BAD examples — your output must match the GOOD pattern
+
+BAD lesson_chunk (banned — this is a "summary", not a "lesson"):
+{
+  "headline": "Overcoming challenges",
+  "teaching": "You can learn from failures and use them as opportunities for growth.",
+  "example_or_quote": "The entrepreneur shares their experiences.",
+  "why_it_matters": "It helps you grow."
+}
+WHY IT FAILS: vague, abstract, nothing actionable, no numbers, references "the creator" instead of teaching.
+
+GOOD lesson_chunk (this is what we want):
+{
+  "headline": "Pick a niche where the keyword has 1k-10k monthly searches AND no SaaS competitor yet",
+  "teaching": "You sort Ahrefs by search volume between 1,000 and 10,000 in your target language. You skip any keyword where the top 3 results are existing SaaS — saturated. You write down the top 30 candidates and rank by 'how angry would the searcher be paying $19/mo to fix this'.",
+  "example_or_quote": "Creator picks 'AI blog writer for Naver' — 4,400 monthly searches, no Korean SaaS competing, founders of Naver SEO blogs willing to pay $29/mo.",
+  "why_it_matters": "90% of cloners pick a saturated niche (AI image, GPT wrapper). This 5-minute filter is the difference between $5k MRR and quitting at $200."
+}
+
+BAD specific_tactics (banned):
+- "Create a content calendar to plan and organize content"
+- "Use social media to promote and engage with the audience"
+- "Focus on quality content"
+
+GOOD specific_tactics:
+- "Buy 'AI blog writer' clicks on Naver SmartAd at ₩400 max CPC; pause keywords that don't convert in 7 days"
+- "First 10 customers: cold-DM 50 Korean Naver bloggers offering free 3-month access in exchange for a screenshot review"
+- "Use Tally + Notion for the MVP (free) — don't touch Webflow until $3k MRR — saves 80 hours of design rabbithole"
+- "Charge $29/mo from day 1. Free tier kills conversion. Offer 14-day refund instead"
+- "Pricing page test: Korean copy + ₩ pricing converts 3-4x better than English + $ in this niche"
+
+EVERY tactic must contain at least one of: a tool name, a price, a percentage, a script line, or a platform. Generic advice = failure.`;
 
 /**
  * Compact system prompt for Groq fallback. Embeds a TIGHT schema description
@@ -1027,6 +1060,39 @@ For specific_tactics: GOLD ONLY. "Run TikTok Spark Ads at $30/day for 7 days, pa
 For what_creator_left_out: the dirty truth. The 5 months it really took. The hidden VA cost. The $3k tool stack they didn't mention. The 12 failed iterations.
 
 For if_you_apply_this: realistic 6-month outcome with specific MRR/users/follower numbers. e.g. "$500-2,000 MRR by month 6 IF you publish 3x/week AND survive the first 90 days of zero traction. ~70% quit by month 3."
+
+# GOOD vs BAD lesson_chunk examples — match the GOOD pattern
+
+BAD (banned):
+{
+  "headline": "Overcoming challenges",
+  "teaching": "You can learn from failures and use them as opportunities for growth.",
+  "example_or_quote": "The entrepreneur in the video shares their experiences.",
+  "why_it_matters": "It helps you grow."
+}
+WHY IT'S BAD: vague abstractions. Nothing the reader can DO. No numbers. No tools. No "creator" references.
+
+GOOD (do this):
+{
+  "headline": "Pick a niche where the keyword has 1k-10k monthly searches AND no SaaS competitor yet",
+  "teaching": "You sort Ahrefs by search volume between 1,000 and 10,000 in your language. You skip anything where the top 3 results are existing SaaS — that means it's saturated. You write down the top 30 candidates and rank by 'how angry would the searcher be paying $19/mo to fix this'.",
+  "example_or_quote": "Creator picks 'AI blog writer for Naver' — 4,400 monthly searches, no Korean SaaS competing, founder of Naver SEO blogs willing to pay $29/mo.",
+  "why_it_matters": "90% of cloners pick a saturated niche (AI image, GPT wrapper). This 5-minute filter is what separates the ones who hit $5k MRR from the ones who quit at $200."
+}
+
+BAD specific_tactics:
+- "Create a content calendar to plan and organize content"
+- "Use social media to promote and engage with the audience"
+- "Focus on quality content"
+
+GOOD specific_tactics:
+- "Buy 'AI blog writer' clicks on Naver SmartAd at ₩400 max CPC; pause keywords that don't convert in 7 days"
+- "First 10 customers: cold-DM 50 Korean Naver bloggers offering free 3-month access in exchange for a screenshot review"
+- "Use Tally + Notion for the MVP (free) — don't touch Webflow until $3k MRR — saves 80 hours of design rabbithole"
+- "Charge $29/mo from day 1. Free tier kills conversion. Offer 14-day refund instead"
+- "Pricing page test: Korean copy + ₩ pricing converts 3-4x better than English + $ in this niche"
+
+Every tactic must contain at least one of: a tool name, a price, a percentage, a script line, or a platform. If you write generic advice, you have failed the task.
 
 REQUIRED JSON SHAPE (omit nothing):
 {
