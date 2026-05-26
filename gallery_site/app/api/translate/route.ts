@@ -243,7 +243,11 @@ Call return_translated_preview now with the full translated object.`;
       friendly =
         "Translation is at capacity. Please retry in about 60 seconds.";
       status = 503;
-    } else if (/5\d\d|overloaded|timeout|fetch failed/i.test(raw)) {
+    } else if (/\b413\b|too large|exceeds.*limit|context.*length|tokens.*per.*minute|TPM/i.test(raw)) {
+      friendly =
+        "This card is too long for the backup translation provider right now. Please retry in 60 seconds.";
+      status = 503;
+    } else if (/5\d\d|overloaded|timeout|fetch failed|ECONN|ENOTFOUND/i.test(raw)) {
       friendly =
         "The translation provider is overloaded right now. Try again in a minute.";
       status = 503;

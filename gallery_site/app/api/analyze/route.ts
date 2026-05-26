@@ -984,7 +984,7 @@ PLAYBOOK STYLE:
 - marketing_playbook reads like an internal Slack from someone who has run this business. "Drop $500 into r/Entrepreneur ads, expect ~30 signups, CAC $17, this works because that sub trusts personal-brand content."
 - money_flow reads like a leaked P&L. Where every dollar comes from, not what they marketed.
 
-COURSE_DISTILLED STYLE (NEW — read this carefully):
+COURSE_DISTILLED STYLE (NEW — read this carefully — THIS IS THE USER'S #1 REQUEST):
 - Treat the video like a $500 paid course you just took. Your job is to be the TA who hands the student a perfect study guide so they don't need to rewatch.
 - lesson_chunks: 5-8 chunks. Each headline = punchy lesson title ("Why your first 10 customers can't come from cold ads"). teaching = you, the TA, RE-TEACHING the lesson clearly in 2-3 sentences — not paraphrasing the creator, not "the creator says X". Just teach it. example_or_quote = a real example, number, or near-quote the creator used. If transcript is weak, INFER a plausible example based on the genre. why_it_matters = practical relevance to the cloner.
 - frameworks_taught: only if the video actually has named systems. If the creator says "the 3-step lead magnet method", capture it. If purely anecdotal, empty.
@@ -992,6 +992,38 @@ COURSE_DISTILLED STYLE (NEW — read this carefully):
 - what_creator_left_out: the hidden costs, the timeline reality (creator says "3 weeks", real founders take 5 months), the tools they really use vs what they show, the unpaid hours, the failed iterations.
 - if_you_apply_this: realistic forecast. e.g. "Following every step exactly, expect ~$500-2000 MRR by month 6 IF you publish 3x/week AND survive the first 90 days of zero traction. ~70% of people quit by month 3."
 - course_quality_0_100: separate from honesty. A scammy funnel can still teach real tactics (high quality, low honesty). A boring real-product video can have low course_quality but high honesty.`;
+
+/**
+ * Compact system prompt for Groq fallback. Same intent but ~70% shorter so
+ * the request fits inside Groq's free-tier ~12k TPM limit.
+ */
+const SYSTEM_PROMPT_GROQ = `You are ClonePilot — brutally honest market analyst + master teacher. Two jobs in one report:
+
+A) REVERSE-ENGINEER THE BUSINESS:
+- Real product or get-rich-quick funnel?
+- Realistic year-1 revenue if cloned (USD, concrete numbers)
+- Where the money REALLY comes from
+- Why buyers pay anyway (sunk-cost, identity, FOMO, accountability, etc.)
+- Honest value the buyer gets vs hype
+
+B) DISTILL THE VIDEO LIKE A PAID COURSE — the user's #1 request:
+- 5-8 lesson_chunks: punchy headline + YOUR re-teaching of the idea (not paraphrase) + example/quote + why_it_matters
+- 1-4 named frameworks with steps + use_when
+- 5-10 specific_tactics: exact tools/prices/scripts. NO "be consistent" fluff
+- 3-5 what_creator_left_out: hidden costs / real timeline / tools they actually use
+- if_you_apply_this: realistic 6-month outcome with concrete numbers
+- course_quality_0_100 separate from honesty
+
+NON-NEGOTIABLE OUTPUT RULES:
+- Output English. Operator-level not corporate.
+- NEVER return "unclear" / "need more data". Infer from genre if signals weak.
+- ALL required fields present, every array non-empty (use the minimum count specified).
+- Numbers concrete in USD.
+- one_paragraph_verdict reads like a friend over coffee, direct, no hedging.
+- business_model: never "unclear" unless the URL isn't a business video.
+- execution_sequence ≥7 steps, marketing_playbook ≥4, money_flow ≥5, insider_tips =5.
+- funnel_ladder: 3-5 rungs if business_model is funnel-ish; is_observed=false for inferred ones.
+- course_distilled.lesson_chunks ≥5 always.`;
 
 /* ─── main POST handler ────────────────────────────────────────────────── */
 
@@ -1296,15 +1328,37 @@ Call extract_business_preview now. Output English. Be concise but punchy — ope
         modelUsed = g.model;
       } catch (geminiErr) {
         // Last-resort: Groq Llama 3.3 via OpenAI-compatible JSON mode.
+        // Groq free tier has a strict ~12k TPM cap, so we build a LEAN
+        // user text — short transcript, compact grounding, fewer comments.
         if (!process.env.GROQ_API_KEY) throw geminiErr;
         console.error(
           "[/api/analyze] Gemini exhausted, trying Groq —",
           geminiErr instanceof Error ? geminiErr.message : geminiErr,
         );
+        const groqClip = transcript.text.slice(0, 5_500);
+        const groqComments = topComments
+          .slice(0, 5)
+          .map((c) => `(${c.likes}♥) ${c.text.replace(/\s+/g, " ").slice(0, 80)}`)
+          .join(" | ");
+        const groqGrounding = `VIDEO: ${videoMeta.title} | channel "${videoMeta.channel}" (subs ${fmtNum(videoMeta.channel_subscribers)}, age ${channelAgeYears?.toFixed(1) ?? "?"}y) | views ${fmtNum(videoMeta.view_count)}
+DESCRIPTION (first 500ch): ${desc.slice(0, 500).replace(/\n/g, " | ")}
+FUNNEL LINKS: ${descFindings.funnel_links.slice(0, 5).map((l) => l.domain).join(", ") || "none"} | PRICES: ${descFindings.price_mentions_usd.slice(0, 5).join(", ") || "none"} | COURSE KW: ${descFindings.course_keyword_hits.slice(0, 5).join(", ") || "none"}
+TRENDS: ${trendsLine} | HN: ${hnCount} | WIKI: ${wikiFound ? "yes" : "no"} | REDDIT: ${reddit.count}
+COMMENT BOT-RATIO: ${commentStats.bot_ratio_0_100}/100 | emoji-only ${commentStats.emoji_only_ratio}% | praise ${commentStats.generic_praise_ratio}%
+TOP COMMENTS: ${groqComments || "(none)"}
+${transcriptError ? "(transcript fetch failed — cap confidence at 35)" : ""}`;
         const schemaHint = JSON.stringify(EXTRACT_TOOL.input_schema);
-        const groqUser = `${userText}\n\nIMPORTANT — your output MUST be a single JSON object exactly matching this schema (no markdown, no commentary, JUST the JSON):\n${schemaHint}\n\nReturn the JSON object now.`;
+        const groqUser = `Analyze this YouTube business video. Reverse-engineer the business AND distill the lessons as if it were a paid course.
+
+${groqGrounding}
+
+TRANSCRIPT (${groqClip.length} chars):
+${groqClip}
+
+Output a single JSON object matching this exact schema (no markdown fences, no commentary, just the JSON):
+${schemaHint}`;
         const gr = await callGroqJson<ExtractArgs>({
-          system: SYSTEM_PROMPT,
+          system: SYSTEM_PROMPT_GROQ,
           userText: groqUser,
         });
         args = gr.value;
@@ -1345,7 +1399,11 @@ Call extract_business_preview now. Output English. Be concise but punchy — ope
       friendly =
         "All AI providers are momentarily at capacity. Please retry in about 60 seconds.";
       status = 503;
-    } else if (/5\d\d|overloaded|timeout|fetch failed/i.test(raw)) {
+    } else if (/\b413\b|too large|exceeds.*limit|context.*length|tokens.*per.*minute|TPM/i.test(raw)) {
+      friendly =
+        "This video is too long for our backup AI. Please try a shorter video, or wait 60 seconds and retry.";
+      status = 503;
+    } else if (/5\d\d|overloaded|timeout|fetch failed|ECONN|ENOTFOUND/i.test(raw)) {
       friendly =
         "The AI provider is overloaded right now. Please try again in a minute.";
       status = 503;
